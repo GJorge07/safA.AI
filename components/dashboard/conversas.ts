@@ -37,6 +37,7 @@ export function salvarConversa(conversa: Conversa): void {
     const lista = listarConversas().filter((c) => c.id !== conversa.id);
     lista.unshift(conversa);
     window.localStorage.setItem(CHAVE, JSON.stringify(lista.slice(0, MAX_CONVERSAS)));
+    window.dispatchEvent(new Event("safa:conversas"));
   } catch {
     // localStorage indisponível (modo privado, quota etc.) — ignora.
   }

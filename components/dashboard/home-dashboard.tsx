@@ -4,7 +4,6 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Filter, Maximize2, X } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select } from "@/components/ui/select";
-import { Button } from "@/components/ui/button";
 import { AgentHero } from "./agent-hero";
 import { FluxoCaixaChart } from "./fluxo-caixa-chart";
 import { ChartModal } from "./chart-modal";

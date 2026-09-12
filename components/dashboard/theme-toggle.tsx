@@ -1,23 +1,27 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
 import { Moon, Sun } from "lucide-react";
 
 const CHAVE = "safa:tema";
 
+function observarTema(onChange: () => void) {
+  const observer = new MutationObserver(onChange);
+  observer.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+  return () => observer.disconnect();
+}
+
+function lerTema() {
+  return document.documentElement.getAttribute("data-theme") === "light" ? "light" : "dark";
+}
+
 // Escuro é o padrão do produto — o atributo data-theme="light" na tag
 // <html> é a única coisa que muda. Ver o script anti-flash em app/layout.tsx.
 export function ThemeToggle() {
-  const [tema, setTema] = useState<"dark" | "light">("dark");
-
-  useEffect(() => {
-    const atual = document.documentElement.getAttribute("data-theme") === "light" ? "light" : "dark";
-    setTema(atual);
-  }, []);
+  const tema = useSyncExternalStore(observarTema, lerTema, () => "dark");
 
   function alternar() {
     const novo = tema === "dark" ? "light" : "dark";
-    setTema(novo);
     if (novo === "light") {
       document.documentElement.setAttribute("data-theme", "light");
     } else {

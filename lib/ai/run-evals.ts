@@ -5,8 +5,7 @@ function comparable(value: unknown): unknown {
   if (Array.isArray(value)) {
     return value.map((item) => {
       if (typeof item === "object" && item !== null && "evidencia" in item) {
-        const { evidencia: _evidence, ...rest } = item as Record<string, unknown>;
-        return rest;
+        return Object.fromEntries(Object.entries(item).filter(([key]) => key !== "evidencia"));
       }
       return comparable(item);
     });

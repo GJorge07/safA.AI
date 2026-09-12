@@ -15,19 +15,19 @@ test("aceita o contexto financeiro mockado", () => {
 });
 
 test("rejeita valor financeiro negativo", () => {
-  const mock = loadMock() as any;
+  const mock = contextoFinanceiroSchema.parse(loadMock());
   mock.dados.resumo.pendente = -1;
   assert.equal(contextoFinanceiroSchema.safeParse(mock).success, false);
 });
 
 test("rejeita data que não esteja em ISO", () => {
-  const mock = loadMock() as any;
+  const mock = contextoFinanceiroSchema.parse(loadMock());
   mock.dados.dataReferencia = "12/09/2026";
   assert.equal(contextoFinanceiroSchema.safeParse(mock).success, false);
 });
 
 test("limita o tamanho da pergunta", () => {
-  const mock = loadMock() as any;
+  const mock = contextoFinanceiroSchema.parse(loadMock());
   mock.pergunta = "a".repeat(501);
   assert.equal(contextoFinanceiroSchema.safeParse(mock).success, false);
 });

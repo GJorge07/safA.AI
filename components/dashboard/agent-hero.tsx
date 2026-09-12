@@ -1,9 +1,22 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowUp, MessageSquareText } from "lucide-react";
 import { listarConversas, type Conversa } from "./conversas";
+
+function observarConversas(onChange: () => void) {
+  window.addEventListener("storage", onChange);
+  window.addEventListener("safa:conversas", onChange);
+  return () => {
+    window.removeEventListener("storage", onChange);
+    window.removeEventListener("safa:conversas", onChange);
+  };
+}
+
+function lerConversas() {
+  return JSON.stringify(listarConversas().slice(0, 5));
+}
 
 function formatData(iso: string) {
   return new Date(iso).toLocaleDateString("pt-BR", { day: "2-digit", month: "short" });
@@ -28,11 +41,8 @@ function emojiSaudacao(): string {
 export function AgentHero() {
   const router = useRouter();
   const [pergunta, setPergunta] = useState("");
-  const [conversas, setConversas] = useState<Conversa[]>([]);
-
-  useEffect(() => {
-    setConversas(listarConversas().slice(0, 5));
-  }, []);
+  const snapshot = useSyncExternalStore(observarConversas, lerConversas, () => "[]");
+  const conversas: Conversa[] = JSON.parse(snapshot);
 
   function enviar() {
     const texto = pergunta.trim();
