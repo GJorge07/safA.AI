@@ -7,6 +7,24 @@ import {
   type RespostaFinanceira,
 } from "./schemas";
 
+export function validateAnswerContractCitations(
+  answer: RespostaFinanceira,
+  validContractIds: Iterable<string>,
+): RespostaFinanceira {
+  const allowed = new Set(validContractIds);
+  const invalidCitations = answer.contratosCitados.filter(
+    (contractId) => !allowed.has(contractId),
+  );
+
+  if (invalidCitations.length > 0) {
+    throw new Error(
+      `O Gemini citou contratos inexistentes: ${invalidCitations.join(", ")}`,
+    );
+  }
+
+  return answer;
+}
+
 export async function answerFinancialQuestion(
   input: unknown,
 ): Promise<RespostaFinanceira> {
@@ -28,16 +46,8 @@ export async function answerFinancialQuestion(
   }
 
   const answer = respostaFinanceiraSchema.parse(JSON.parse(interaction.output_text));
-  const validContractIds = new Set(context.dados.contratos.map((item) => item.id));
-  const invalidCitations = answer.contratosCitados.filter(
-    (contractId) => !validContractIds.has(contractId),
+  return validateAnswerContractCitations(
+    answer,
+    context.dados.contratos.map((item) => item.id),
   );
-
-  if (invalidCitations.length > 0) {
-    throw new Error(
-      `O Gemini citou contratos inexistentes: ${invalidCitations.join(", ")}`,
-    );
-  }
-
-  return answer;
 }

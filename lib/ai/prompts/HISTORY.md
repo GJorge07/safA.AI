@@ -1,4 +1,11 @@
-# Histórico de prompts e regras — Fluxo B
+# Histórico de prompts e regras — Fluxos A e B
+
+## contract-extraction-v1 — 12/09/2026
+
+- Primeira versão de extração estruturada de contratos.
+- Trata fixo, êxito e misto.
+- Exige evidências literais, datas ISO, `null` e avisos para ambiguidades.
+- Proíbe criação silenciosa de valores, parcelas ou vencimentos.
 
 ## financial-chat-v1.1 — 12/09/2026
 

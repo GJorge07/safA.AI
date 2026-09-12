@@ -46,6 +46,24 @@ o controle sobre o parser e evita enviar um formato não visual como se fosse PD
 `extractContractFile` já faz essa seleção e aceita PDF, DOCX e TXT, com limite
 de 20 MB.
 
+### Rota integrada da Parte A
+
+`POST /api/contratos/extrair` aceita duas formas de entrada:
+
+- `multipart/form-data`, com o arquivo no campo `file`;
+- JSON `{ "driveFileId": "..." }`, para baixar o contrato pela API do Drive.
+
+A resposta devolve `extracao` (resultado rico), `payloadBackend` e `status`.
+Quando o schema compartilhado não comporta um dado — por exemplo, êxito sem
+valor total — retorna HTTP 202, `status: "revisao_necessaria"` e os motivos,
+sem gravar zero ou inventar informação.
+
+O fluxo combinado é:
+
+```text
+upload/Drive → PDF/DOCX/TXT → Gemini → Zod → revisão → backend → chat/insights
+```
+
 ## Avaliação
 
 `eval-cases.ts` contém seis cenários fictícios: fixo à vista, fixo parcelado,
@@ -68,6 +86,30 @@ Os insights de `insights.ts` são determinísticos:
 - parcela atrasada;
 - concentração de valores em aberto por cliente;
 - dependência de contratos de êxito ou mistos.
+
+### Integração pronta
+
+`runFlowB` reúne o chat, os insights e as referências do Google Drive. A rota
+`POST /api/chat` recebe o mesmo objeto do mock e, opcionalmente, `driveFileIds`:
+
+```json
+{
+  "pergunta": "Quanto está atrasado?",
+  "dados": { "dataReferencia": "2026-09-12", "resumo": {}, "contratos": [] },
+  "driveFileIds": ["ID_DO_ARQUIVO_NO_DRIVE"]
+}
+```
+
+O Drive é usado apenas para localizar a fonte original (`name`, `mimeType` e
+`webViewLink`). O chat recebe os dados financeiros já estruturados pelo backend;
+assim, a Parte B não reinterpreta o contrato nem duplica o trabalho da Parte A.
+
+Para habilitar o Drive, ative a Google Drive API no projeto Cloud, crie um
+cliente OAuth 2.0 e configure `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` e
+`GOOGLE_REFRESH_TOKEN` somente no backend. A chave do Gemini não autentica o
+Drive: são credenciais e APIs independentes.
+
+Sem `driveFileIds`, o chat funciona normalmente e devolve `fontes: []`.
 
 As regras e o histórico exigidos pelo edital estão em `prompts/`.
 
