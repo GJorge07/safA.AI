@@ -24,10 +24,28 @@ Projeto do Hackathon da Cidadania — OAB-PR, categoria Inovação Aberta e Cida
 
 ## Setup
 
-1. `cp .env.example .env` e preencher com a URL do banco compartilhado (Neon/Supabase) e a chave de LLM
+1. `cp .env.example .env.local` e preencher a chave do Gemini e, para arquivos do Drive, as credenciais OAuth
 2. `npm install`
 3. `npx prisma migrate dev`
 4. `npm run dev`
+
+## Rotas disponíveis
+
+- `POST /api/contratos/extrair`: recebe `multipart/form-data` com `file`, ou
+  JSON com `{ "driveFileId": "..." }`.
+- `POST /api/chat`: recebe `{ "pergunta": "...", "dados": { ... },
+  "driveFileIds": [] }`.
+- `GET /api/drive/status`: informa se as três credenciais OAuth foram configuradas.
+- `GET /api/drive/arquivos`: lista PDFs, DOCX, TXT e Google Docs disponíveis.
+
+Para limitar a listagem a uma pasta, preencha `GOOGLE_DRIVE_FOLDER_ID`. O
+backend usa OAuth 2.0 com acesso somente de leitura: troca o refresh token por
+um access token temporário, lista os arquivos e baixa apenas o contrato
+selecionado. Google Docs são exportados automaticamente para DOCX.
+
+As rotas ficam no App Router do Next.js, sempre em arquivos chamados
+`route.ts`. Requisições `GET` retornam `405`, pois os dois endpoints aceitam
+somente `POST`.
 
 ## Fluxo de branch
 
