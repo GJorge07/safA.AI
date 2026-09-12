@@ -1,41 +1,42 @@
-# Safa.IA
+SAFA — backend de contratos de honorários, parcelas e pagamentos, construído com Next.js e Prisma/PostgreSQL.
 
-Agente de IA que monitora contratos de honorários de advogados iniciantes:
-lê os contratos, extrai as cláusulas de pagamento e consolida tudo em um
-dashboard de fluxo de caixa com insights.
+Consulte [a documentação da API](docs/api.md) para rotas, exemplos, regras financeiras, configuração do Gemini e testes. O dashboard está em `/`, com telas em `/contratos` e `/agente`. As telas ainda usam dados de demonstração; upload e sincronização visual do Drive ainda são simulados.
 
-Projeto do Hackathon da Cidadania — OAB-PR, categoria Inovação Aberta e Cidadania.
+Os módulos de IA e chat estão documentados em [lib/ai/README.md](lib/ai/README.md). `POST /api/contratos/extrair` mantém a extração simples de PDF/TXT/texto; `POST /api/contratos/importar` preserva o pipeline com evidências, DOCX e referências do Drive. Nenhuma dessas rotas grava contratos automaticamente. O chat recebe o contexto financeiro exibido pela interface.
 
-## Stack
-- Frontend: Next.js 16, React 19, TypeScript
-- Dados: Prisma + PostgreSQL
-- IA: SDK de LLM com tool-calling (extração + insights)
-- UI: Tailwind CSS, shadcn/ui, Recharts
+`npm test` executa as suítes de API e IA; `npm run typecheck` verifica TypeScript.
 
-## Estrutura e donos de pasta
+Para um ambiente novo, copie `.env.example` para `.env`, configure `DATABASE_URL`, instale as dependências e rode `npx prisma generate`. Prepare o banco conforme `prisma/schema.prisma`; este repositório ainda não possui migrations versionadas. Gemini é opcional para as rotas financeiras e obrigatório apenas para extração.
 
-| Pasta | Dono | Responsabilidade |
-|---|---|---|
-| `prisma/` | Banco de dados | schema, migrations, seed |
-| `app/api/` | Backend | endpoints (contratos, fluxo-caixa, pagamentos, chat) |
-| `lib/ai/` | IA | extração de contrato, prompts, insights |
-| `app/(dashboard)/` | Frontend | telas: upload, tabela, gráfico, chat |
-| `lib/types.ts` | Compartilhado | contrato de tipos entre as camadas — avisar o grupo antes de editar |
+## Getting Started
 
-## Setup
+First, run the development server:
 
-1. `cp .env.example .env` e preencher com a URL do banco compartilhado (Neon/Supabase) e a chave de LLM
-2. `npm install`
-3. `npx prisma migrate dev`
-4. `npm run dev`
+```bash
+npm run dev
+# or
+yarn dev
+# or
+pnpm dev
+# or
+bun dev
+```
 
-O módulo da Parte B expõe `POST /api/chat`. A API do Gemini responde ao chat;
-a API do Google Drive resolve os links dos contratos de origem. Consulte
-`lib/ai/README.md` para as variáveis e o formato da requisição.
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-## Fluxo de branch
+You can start editing the dashboard by modifying `app/(dashboard)/page.tsx`. The page auto-updates as you edit the file.
 
-- `main` sempre funcional, protegida — sem push direto
-- 1 branch por tarefa: `feat/schema-contratos`, `feat/api-fluxo-caixa`, `feat/extracao-pdf`, `feat/dashboard-tabela`
-- Commits pequenos, PR assim que uma parte fecha
-- Rodar `npx prisma generate` sempre que `prisma/schema.prisma` mudar
+## Learn More
+
+To learn more about Next.js, take a look at the following resources:
+
+- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
+- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+
+You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+
+## Deploy on Vercel
+
+The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+
+Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.

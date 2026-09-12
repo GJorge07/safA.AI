@@ -1,9 +1,6 @@
-// Dono: time de Banco de Dados.
-// Time de IA e Backend leem este arquivo para saber o shape dos dados
-// (mantém consistência com lib/types.ts). Avisar o grupo antes de alterar.
-
 generator client {
-  provider = "prisma-client-js"
+  provider = "prisma-client"
+  output   = "../app/generated/prisma"
 }
 
 datasource db {
@@ -20,28 +17,53 @@ model Cliente {
 
 model Contrato {
   id               String    @id @default(cuid())
-  cliente          Cliente   @relation(fields: [clienteId], references: [id])
+  cliente          Cliente   @relation(fields: [clienteId], references: [id], onDelete: Cascade)
   clienteId        String
-  tipoPagamento    String    // "fixo" | "exito" | "misto"
-  valorTotal       Float
+
+  tipoPagamento    TipoPagamento
+  valorTotal       Decimal   @db.Decimal(14, 2)
+
   clausulaOriginal String
+
   parcelas         Parcela[]
+
   createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  @@index([clienteId])
 }
 
 model Parcela {
-  id         String    @id @default(cuid())
-  contrato   Contrato  @relation(fields: [contratoId], references: [id])
+  id         String     @id @default(cuid())
+
+  contrato   Contrato   @relation(fields: [contratoId], references: [id], onDelete: Cascade)
   contratoId String
-  valor      Float
+
+  valor      Decimal    @db.Decimal(14, 2)
   vencimento DateTime
+
   pagamento  Pagamento?
+
+  createdAt  DateTime   @default(now())
+
+  @@index([contratoId])
+  @@index([vencimento])
 }
 
 model Pagamento {
   id         String   @id @default(cuid())
-  parcela    Parcela  @relation(fields: [parcelaId], references: [id])
+
+  parcela    Parcela  @relation(fields: [parcelaId], references: [id], onDelete: Cascade)
   parcelaId  String   @unique
-  valorPago  Float
+
+  valorPago  Decimal  @db.Decimal(14, 2)
   dataPago   DateTime @default(now())
+
+  createdAt  DateTime @default(now())
+}
+
+enum TipoPagamento {
+  FIXO
+  EXITO
+  MISTO
 }

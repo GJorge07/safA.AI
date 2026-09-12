@@ -2,11 +2,17 @@
 // dados. Nada aqui é um schema novo: são apenas as relações que o dashboard
 // precisa incluídas (cliente, parcelas, pagamento), como uma query real do
 // Prisma devolveria.
-import type { Cliente, Contrato, Parcela, Pagamento } from "@prisma/client";
+import type { Cliente, Contrato, Parcela, Pagamento } from "@/app/generated/prisma/client";
+import type { TipoPagamento } from "@/lib/types";
 
-export type ParcelaComPagamento = Parcela & { pagamento: Pagamento | null };
+// Modelo de apresentação: valores numéricos e enum compartilhado em minúsculas.
+// Os campos de auditoria não usados na UI podem ser omitidos nos dados de demonstração.
+type PagamentoUI = Omit<Pagamento, 'valorPago' | 'createdAt'> & { valorPago: number };
+export type ParcelaComPagamento = Omit<Parcela, 'valor' | 'createdAt'> & { valor: number; pagamento: PagamentoUI | null };
 
-export type ContratoComRelacoes = Contrato & {
+export type ContratoComRelacoes = Omit<Contrato, 'valorTotal' | 'tipoPagamento' | 'updatedAt'> & {
+  valorTotal: number;
+  tipoPagamento: TipoPagamento;
   cliente: Cliente;
   parcelas: ParcelaComPagamento[];
 };

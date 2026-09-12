@@ -57,7 +57,7 @@ possuir texto pesquisável; arquivos somente com imagem devem passar por OCR.
 
 ### Rota integrada da Parte A
 
-`POST /api/contratos/extrair` aceita duas formas de entrada:
+`POST /api/contratos/importar` aceita duas formas de entrada:
 
 - `multipart/form-data`, com o arquivo no campo `file`;
 - JSON `{ "driveFileId": "..." }`, para baixar o contrato pela API do Drive.

@@ -18,8 +18,7 @@ const EXEMPLOS = [
   "Compare o contrato da Construtora Alvorada com o do João Pereira",
 ];
 
-// TODO(ia): trocar a resposta mock por POST real para app/api/chat, que deve
-// responder com insights sobre os contratos já extraídos (ver lib/types.ts).
+// Envia ao chat o mesmo conjunto de contratos apresentado no dashboard.
 export function ChatPanel({ contratos, perguntaInicial, conversaId }: ChatPanelProps) {
   const idRef = useRef(conversaId ?? crypto.randomUUID());
   const [mensagens, setMensagens] = useState<MensagemConversa[]>(() => {
@@ -83,12 +82,36 @@ export function ChatPanel({ contratos, perguntaInicial, conversaId }: ChatPanelP
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ pergunta: texto }),
+        body: JSON.stringify({
+          pergunta: texto,
+          dados: {
+            dataReferencia: new Date().toISOString().slice(0, 10),
+            resumo: contratos.flatMap(c => c.parcelas).reduce((total, p) => {
+              const recebido = p.pagamento?.valorPago ?? 0;
+              const saldo = Math.max(0, p.valor - recebido);
+              return {
+                previsto: total.previsto + p.valor,
+                recebido: total.recebido + recebido,
+                pendente: total.pendente + saldo,
+                atrasado: total.atrasado + (p.vencimento.toISOString().slice(0, 10) < new Date().toISOString().slice(0, 10) ? saldo : 0),
+              };
+            }, { previsto: 0, recebido: 0, pendente: 0, atrasado: 0 }),
+            contratos: contratos.map(c => ({
+              id: c.id, clienteId: c.clienteId, cliente: c.cliente.nome,
+              tipoPagamento: c.tipoPagamento, valorTotal: c.valorTotal,
+              parcelas: c.parcelas.map(p => ({
+                id: p.id, valor: p.valor, vencimento: p.vencimento.toISOString().slice(0, 10),
+                status: (p.pagamento?.valorPago ?? 0) >= p.valor ? 'paga'
+                  : p.vencimento.toISOString().slice(0, 10) < new Date().toISOString().slice(0, 10) ? 'atrasada' : 'prevista',
+              })),
+            })),
+          },
+        }),
       });
       if (!res.ok) throw new Error("Falha na resposta");
       const data = await res.json();
       setMensagens((atuais) => {
-        const comResposta = [...atuais, { autor: "assistente", texto: data.resposta } as MensagemConversa];
+        const comResposta = [...atuais, { autor: "assistente", texto: data.resposta.resposta } as MensagemConversa];
         persistir(comResposta);
         return comResposta;
       });

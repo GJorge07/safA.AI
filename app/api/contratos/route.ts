@@ -1,14 +1,29 @@
-import { NextResponse } from "next/server";
+import { prisma } from '@/lib/prisma';
+import { ApiError, body, contrato, handle, pagination, parcela, text } from '@/lib/api/http';
 
-// TODO(backend/ia): substituir por: salvar arquivo, chamar extração
-// (lib/ai/) validando contra ContratoExtraido, e persistir via Prisma.
-// Placeholder criado pelo frontend só para o upload funcionar ponta a
-// ponta antes da API de verdade existir.
-export async function POST(req: Request) {
-  const form = await req.formData();
-  const arquivo = form.get("arquivo");
-  if (!arquivo) {
-    return NextResponse.json({ erro: "Nenhum arquivo enviado" }, { status: 400 });
-  }
-  return NextResponse.json({ status: "recebido" });
+export async function GET(request: Request) {
+  return handle(async () => {
+    const url = new URL(request.url);
+    const clienteId = url.searchParams.get('clienteId');
+    return Response.json(await prisma.contrato.findMany({
+      where: clienteId === null ? {} : { clienteId: text(clienteId, 'clienteId') },
+      ...pagination(url),
+      orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+      include: { cliente: true, _count: { select: { parcelas: true } } },
+    }));
+  });
+}
+
+export async function POST(request: Request) {
+  return handle(async () => {
+    const data = await body(request);
+    const fields = contrato(data);
+    if (!Array.isArray(data.parcelas) || data.parcelas.length > 600) throw new ApiError(400, 'parcelas deve ser uma lista com até 600 itens');
+    // A escrita aninhada cria contrato e parcelas atomicamente.
+    const result = await prisma.contrato.create({
+      data: { ...fields, parcelas: { create: data.parcelas.map(parcela) } },
+      include: { parcelas: { orderBy: { vencimento: 'asc' } } },
+    });
+    return Response.json(result, { status: 201 });
+  });
 }
