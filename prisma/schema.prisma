@@ -1,0 +1,47 @@
+// Dono: time de Banco de Dados.
+// Time de IA e Backend leem este arquivo para saber o shape dos dados
+// (mantém consistência com lib/types.ts). Avisar o grupo antes de alterar.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Cliente {
+  id        String     @id @default(cuid())
+  nome      String
+  contratos Contrato[]
+  createdAt DateTime   @default(now())
+}
+
+model Contrato {
+  id               String    @id @default(cuid())
+  cliente          Cliente   @relation(fields: [clienteId], references: [id])
+  clienteId        String
+  tipoPagamento    String    // "fixo" | "exito" | "misto"
+  valorTotal       Float
+  clausulaOriginal String
+  parcelas         Parcela[]
+  createdAt        DateTime  @default(now())
+}
+
+model Parcela {
+  id         String    @id @default(cuid())
+  contrato   Contrato  @relation(fields: [contratoId], references: [id])
+  contratoId String
+  valor      Float
+  vencimento DateTime
+  pagamento  Pagamento?
+}
+
+model Pagamento {
+  id         String   @id @default(cuid())
+  parcela    Parcela  @relation(fields: [parcelaId], references: [id])
+  parcelaId  String   @unique
+  valorPago  Float
+  dataPago   DateTime @default(now())
+}
