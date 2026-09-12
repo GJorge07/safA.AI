@@ -30,6 +30,8 @@ As rotas ainda não têm autenticação nem isolamento por escritório.
 | `/api/fluxo-caixa` | GET | Previsto por vencimento e recebido pela data do pagamento |
 | `/api/insights` | GET | Alertas calculados de atraso e concentração de receita prevista |
 | `/api/contratos/extrair` | POST | Extrai PDF/TXT/texto usando Gemini para revisão |
+| `/api/contratos/importar` | POST | Pipeline de IA com evidências: PDF/DOCX/TXT no campo `file` ou JSON `driveFileId`; veja `lib/ai/README.md` |
+| `/api/chat` | POST | Recebe `pergunta` e `dados` financeiros e retorna resposta com citações; veja `lib/ai/README.md` |
 | `/api/health` | GET | Health check existente da aplicação, sem consulta ao banco |
 
 ## Criar e editar contrato

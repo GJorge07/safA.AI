@@ -1,6 +1,10 @@
 SAFA — backend de contratos de honorários, parcelas e pagamentos, construído com Next.js e Prisma/PostgreSQL.
 
-Consulte [a documentação da API](docs/api.md) para rotas, exemplos, regras financeiras, configuração do Gemini e testes. A interface ainda utiliza o template inicial do Next.js.
+Consulte [a documentação da API](docs/api.md) para rotas, exemplos, regras financeiras, configuração do Gemini e testes. O dashboard está em `/`, com telas em `/contratos` e `/agente`. As telas ainda usam dados de demonstração; upload e sincronização visual do Drive ainda são simulados.
+
+Os módulos de IA e chat estão documentados em [lib/ai/README.md](lib/ai/README.md). `POST /api/contratos/extrair` mantém a extração simples de PDF/TXT/texto; `POST /api/contratos/importar` preserva o pipeline com evidências, DOCX e referências do Drive. Nenhuma dessas rotas grava contratos automaticamente. O chat recebe o contexto financeiro exibido pela interface.
+
+`npm test` executa as suítes de API e IA; `npm run typecheck` verifica TypeScript.
 
 Para um ambiente novo, copie `.env.example` para `.env`, configure `DATABASE_URL`, instale as dependências e rode `npx prisma generate`. Prepare o banco conforme `prisma/schema.prisma`; este repositório ainda não possui migrations versionadas. Gemini é opcional para as rotas financeiras e obrigatório apenas para extração.
 
@@ -20,9 +24,7 @@ bun dev
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+You can start editing the dashboard by modifying `app/(dashboard)/page.tsx`. The page auto-updates as you edit the file.
 
 ## Learn More
 
