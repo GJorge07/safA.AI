@@ -29,6 +29,10 @@ Projeto do Hackathon da Cidadania — OAB-PR, categoria Inovação Aberta e Cida
 3. `npx prisma migrate dev`
 4. `npm run dev`
 
+O módulo da Parte B expõe `POST /api/chat`. A API do Gemini responde ao chat;
+a API do Google Drive resolve os links dos contratos de origem. Consulte
+`lib/ai/README.md` para as variáveis e o formato da requisição.
+
 ## Fluxo de branch
 
 - `main` sempre funcional, protegida — sem push direto

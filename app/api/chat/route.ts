@@ -1,11 +1,20 @@
-import { NextResponse } from "next/server";
+import { ZodError } from "zod";
+import { runFlowB } from "@/lib/ai/flow-b";
 
-// TODO(ia): substituir por chamada real ao LLM com tool-calling sobre os
-// contratos extraídos (ver lib/ai/). Placeholder criado pelo frontend só
-// para o chat funcionar ponta a ponta antes da API de verdade existir.
-export async function POST(req: Request) {
-  const { pergunta } = await req.json();
-  return NextResponse.json({
-    resposta: `Ainda não tenho a extração real conectada, mas recebi sua pergunta: "${pergunta}".`,
-  });
+export const runtime = "nodejs";
+
+export async function POST(request: Request): Promise<Response> {
+  try {
+    const body = await request.json();
+    return Response.json(await runFlowB(body));
+  } catch (error) {
+    if (error instanceof ZodError) {
+      return Response.json(
+        { erro: "Dados inválidos.", detalhes: error.issues },
+        { status: 400 },
+      );
+    }
+    const message = error instanceof Error ? error.message : "Erro inesperado.";
+    return Response.json({ erro: message }, { status: 502 });
+  }
 }

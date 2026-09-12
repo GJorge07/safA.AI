@@ -1,0 +1,56 @@
+{
+  "pergunta": "Quanto ainda tenho para receber e quais clientes exigem atenção?",
+  "dados": {
+    "dataReferencia": "2026-09-12",
+    "resumo": {
+      "previsto": 10000,
+      "recebido": 3000,
+      "pendente": 7000,
+      "atrasado": 2000
+    },
+    "contratos": [
+      {
+        "id": "contrato-ana",
+        "clienteId": "cliente-ana",
+        "cliente": "Ana Lima",
+        "tipoPagamento": "fixo",
+        "valorTotal": 6000,
+        "parcelas": [
+          {
+            "id": "parcela-ana-1",
+            "valor": 2000,
+            "vencimento": "2026-09-05",
+            "status": "atrasada"
+          },
+          {
+            "id": "parcela-ana-2",
+            "valor": 2000,
+            "vencimento": "2026-10-05",
+            "status": "prevista"
+          }
+        ]
+      },
+      {
+        "id": "contrato-bruno",
+        "clienteId": "cliente-bruno",
+        "cliente": "Bruno Alves",
+        "tipoPagamento": "misto",
+        "valorTotal": 4000,
+        "parcelas": [
+          {
+            "id": "parcela-bruno-1",
+            "valor": 3000,
+            "vencimento": "2026-09-10",
+            "status": "paga"
+          },
+          {
+            "id": "parcela-bruno-2",
+            "valor": 3000,
+            "vencimento": "2026-11-10",
+            "status": "prevista"
+          }
+        ]
+      }
+    ]
+  }
+}
