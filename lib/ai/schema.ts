@@ -1,6 +1,8 @@
 // Espelha o contrato definido em schema-contrato.md.
 // Qualquer mudança aqui deve ser refletida lá (e vice-versa).
-import { z } from "zod";
+// A SDK da Anthropic (zodOutputFormat) espera schemas do zod v4 —
+// zod 3.25+ já embute esse namespace em "zod/v4".
+import { z } from "zod/v4";
 
 export const TipoPagamentoSchema = z.enum(["fixo", "exito", "misto"]);
 
