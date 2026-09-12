@@ -2,6 +2,13 @@ import { z } from "zod";
 
 const isoDate = /^\d{4}-\d{2}-\d{2}$/;
 
+export const evidenciaDocumentoSchema = z.object({
+  campo: z.string().min(1),
+  trecho: z.string().min(1),
+  pagina: z.number().int().positive().nullable(),
+  clausula: z.string().min(1).nullable(),
+});
+
 export const parcelaExtraidaSchema = z.object({
   valor: z.number().nonnegative().nullable(),
   vencimento: z.string().regex(isoDate).nullable(),
@@ -18,6 +25,7 @@ export const extracaoContratoSchema = z.object({
   }).nullable(),
   parcelas: z.array(parcelaExtraidaSchema),
   clausulaOriginal: z.string().min(1).nullable(),
+  evidencias: z.array(evidenciaDocumentoSchema),
   confianca: z.number().min(0).max(1),
   avisos: z.array(z.string().min(1)),
 });
@@ -75,6 +83,20 @@ export const extracaoContratoJsonSchema = {
       type: ["string", "null"],
       description: "Trecho literal completo das condições financeiras.",
     },
+    evidencias: {
+      type: "array",
+      items: {
+        type: "object",
+        additionalProperties: false,
+        properties: {
+          campo: { type: "string" },
+          trecho: { type: "string", description: "Trecho literal do documento que sustenta o campo." },
+          pagina: { type: ["integer", "null"], minimum: 1 },
+          clausula: { type: ["string", "null"] },
+        },
+        required: ["campo", "trecho", "pagina", "clausula"],
+      },
+    },
     confianca: { type: "number", minimum: 0, maximum: 1 },
     avisos: { type: "array", items: { type: "string" } },
   },
@@ -85,6 +107,7 @@ export const extracaoContratoJsonSchema = {
     "honorariosExito",
     "parcelas",
     "clausulaOriginal",
+    "evidencias",
     "confianca",
     "avisos",
   ],
@@ -127,6 +150,10 @@ export type DadosFinanceiros = z.infer<typeof dadosFinanceirosSchema>;
 export const respostaFinanceiraSchema = z.object({
   resposta: z.string().min(1),
   contratosCitados: z.array(z.string()),
+  citacoes: z.array(z.object({
+    contratoId: z.string().min(1).nullable(),
+    campos: z.array(z.string().min(1)).min(1),
+  })),
   aviso: z.string().nullable(),
 });
 
@@ -138,7 +165,19 @@ export const respostaFinanceiraJsonSchema = {
   properties: {
     resposta: { type: "string" },
     contratosCitados: { type: "array", items: { type: "string" } },
+    citacoes: {
+      type: "array",
+      items: {
+        type: "object",
+        additionalProperties: false,
+        properties: {
+          contratoId: { type: ["string", "null"] },
+          campos: { type: "array", minItems: 1, items: { type: "string" } },
+        },
+        required: ["contratoId", "campos"],
+      },
+    },
     aviso: { type: ["string", "null"] },
   },
-  required: ["resposta", "contratosCitados", "aviso"],
+  required: ["resposta", "contratosCitados", "citacoes", "aviso"],
 } as const;

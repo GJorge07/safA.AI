@@ -6,7 +6,7 @@ Zod. O modelo padrão é `gemini-3.5-flash-lite`.
 ## Dependências
 
 ```bash
-npm install @google/genai@^2.3.0 zod mammoth
+npm install @google/genai@^2.3.0 zod mammoth pdf-parse
 ```
 
 ## Ambiente
@@ -31,20 +31,29 @@ const extraction = await extractContract({ kind: "text", text: contrato });
 const payload = adaptToBackend(extraction);
 ```
 
-Para PDF, envie os bytes em Base64:
-
-```ts
-const extraction = await extractContract({
-  kind: "pdf",
-  base64: buffer.toString("base64"),
-});
-```
-
-DOCX deve ser convertido para texto no servidor antes da chamada. Isso preserva
-o controle sobre o parser e evita enviar um formato não visual como se fosse PDF.
-
 `extractContractFile` já faz essa seleção e aceita PDF, DOCX e TXT, com limite
 de 20 MB.
+
+## Rastreabilidade obrigatória
+
+Todo campo não nulo da extração deve trazer `campo`, `trecho`, `pagina` e
+`clausula`. Antes de liberar o payload, `validateExtractionEvidence` confirma
+que o trecho existe literalmente na página indicada. Campo sem evidência ou
+trecho não localizado interrompe a ingestão.
+
+No chat, cada resposta factual inclui `citacoes`, apontando para caminhos que
+existem no JSON do backend, por exemplo:
+
+```json
+{
+  "contratoId": "contrato-1",
+  "campos": ["parcelas.0.valor", "parcelas.0.vencimento"]
+}
+```
+
+Totais consolidados usam `contratoId: null` e caminhos como
+`resumo.pendente`. IDs ou campos inexistentes são rejeitados. PDFs precisam
+possuir texto pesquisável; arquivos somente com imagem devem passar por OCR.
 
 ### Rota integrada da Parte A
 

@@ -1,5 +1,7 @@
 import mammoth from "mammoth";
+import { PDFParse } from "pdf-parse";
 import { extractContract } from "./extract-contract";
+import { validateExtractionEvidence, type SourcePage } from "./evidence";
 import type { ExtracaoContrato } from "./schemas";
 
 const MAX_FILE_SIZE = 20 * 1024 * 1024;
@@ -19,14 +21,28 @@ export async function extractContractFile(
   }
 
   if (mimeType === "application/pdf") {
-    return extractContract({ kind: "pdf", base64: buffer.toString("base64") });
+    const parser = new PDFParse({ data: buffer });
+    try {
+      const result = await parser.getText();
+      const pages = result.pages.map(({ num, text }) => ({ page: num, text }));
+      if (!result.text.trim()) throw new Error("O PDF não possui texto pesquisável; execute OCR antes da extração rigorosa.");
+      return extractAndValidate(pages);
+    } finally {
+      await parser.destroy();
+    }
   }
 
   if (mimeType === "text/plain") {
-    return extractContract({ kind: "text", text: buffer.toString("utf8") });
+    return extractAndValidate([{ page: 1, text: buffer.toString("utf8") }]);
   }
 
   const { value } = await mammoth.extractRawText({ buffer });
   if (!value.trim()) throw new Error("Não foi possível extrair texto do DOCX.");
-  return extractContract({ kind: "text", text: value });
+  return extractAndValidate([{ page: 1, text: value }]);
+}
+
+async function extractAndValidate(pages: SourcePage[]): Promise<ExtracaoContrato> {
+  const markedText = pages.map(({ page, text }) => `[PÁGINA ${page}]\n${text}`).join("\n\n");
+  const extraction = await extractContract({ kind: "text", text: markedText });
+  return validateExtractionEvidence(extraction, pages);
 }

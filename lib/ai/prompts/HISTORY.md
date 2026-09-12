@@ -1,5 +1,17 @@
 # Histórico de prompts e regras — Fluxos A e B
 
+## contract-extraction-v1.1 — 12/09/2026
+
+- Exige evidência individual para todo campo preenchido.
+- Padroniza caminhos dos campos para validação automática.
+- Inclui página e cláusula e rejeita referência não localizada no documento.
+
+## financial-chat-v1.2 — 12/09/2026
+
+- Exige os caminhos exatos do JSON usados nas afirmações factuais.
+- Separa fontes de contratos dos totais consolidados.
+- Permite ao backend rejeitar IDs e campos inventados.
+
 ## contract-extraction-v1 — 12/09/2026
 
 - Primeira versão de extração estruturada de contratos.

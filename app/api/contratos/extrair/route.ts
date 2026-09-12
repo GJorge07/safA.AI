@@ -1,5 +1,6 @@
 import { ZodError, z } from "zod";
 import { ingestDriveContract, ingestUploadedContract, type SupportedContractMimeType } from "@/lib/ai";
+import { UnsupportedEvidenceError } from "@/lib/ai/evidence";
 
 export const runtime = "nodejs";
 
@@ -19,6 +20,9 @@ export async function POST(request: Request): Promise<Response> {
     return Response.json(result, { status: result.status === "pronto_para_salvar" ? 200 : 202 });
   } catch (error) {
     if (error instanceof ZodError) return Response.json({ erro: "Dados inválidos.", detalhes: error.issues }, { status: 400 });
+    if (error instanceof UnsupportedEvidenceError) {
+      return Response.json({ erro: "Extração rejeitada por falta de evidência verificável.", detalhes: error.reasons }, { status: 422 });
+    }
     const message = error instanceof Error ? error.message : "Erro inesperado.";
     return Response.json({ erro: message }, { status: 502 });
   }

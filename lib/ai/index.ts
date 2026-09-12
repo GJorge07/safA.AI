@@ -2,6 +2,7 @@ export * from "./adapt-to-backend";
 export * from "./answer-financial-question";
 export * from "./extract-contract";
 export * from "./extract-file";
+export * from "./evidence";
 export * from "./drive";
 export * from "./flow-b";
 export * from "./insights";
