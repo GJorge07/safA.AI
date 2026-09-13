@@ -39,6 +39,9 @@ export type ParcelaMinAggregateOutputType = {
   contratoId: string | null
   valor: runtime.Decimal | null
   vencimento: Date | null
+  baixadaEm: Date | null
+  motivoBaixa: $Enums.MotivoBaixa | null
+  notaBaixa: string | null
   createdAt: Date | null
 }
 
@@ -47,6 +50,9 @@ export type ParcelaMaxAggregateOutputType = {
   contratoId: string | null
   valor: runtime.Decimal | null
   vencimento: Date | null
+  baixadaEm: Date | null
+  motivoBaixa: $Enums.MotivoBaixa | null
+  notaBaixa: string | null
   createdAt: Date | null
 }
 
@@ -55,6 +61,9 @@ export type ParcelaCountAggregateOutputType = {
   contratoId: number
   valor: number
   vencimento: number
+  baixadaEm: number
+  motivoBaixa: number
+  notaBaixa: number
   createdAt: number
   _all: number
 }
@@ -73,6 +82,9 @@ export type ParcelaMinAggregateInputType = {
   contratoId?: true
   valor?: true
   vencimento?: true
+  baixadaEm?: true
+  motivoBaixa?: true
+  notaBaixa?: true
   createdAt?: true
 }
 
@@ -81,6 +93,9 @@ export type ParcelaMaxAggregateInputType = {
   contratoId?: true
   valor?: true
   vencimento?: true
+  baixadaEm?: true
+  motivoBaixa?: true
+  notaBaixa?: true
   createdAt?: true
 }
 
@@ -89,6 +104,9 @@ export type ParcelaCountAggregateInputType = {
   contratoId?: true
   valor?: true
   vencimento?: true
+  baixadaEm?: true
+  motivoBaixa?: true
+  notaBaixa?: true
   createdAt?: true
   _all?: true
 }
@@ -184,6 +202,9 @@ export type ParcelaGroupByOutputType = {
   contratoId: string
   valor: runtime.Decimal
   vencimento: Date
+  baixadaEm: Date | null
+  motivoBaixa: $Enums.MotivoBaixa | null
+  notaBaixa: string | null
   createdAt: Date
   _count: ParcelaCountAggregateOutputType | null
   _avg: ParcelaAvgAggregateOutputType | null
@@ -215,6 +236,9 @@ export type ParcelaWhereInput = {
   contratoId?: Prisma.StringFilter<"Parcela"> | string
   valor?: Prisma.DecimalFilter<"Parcela"> | runtime.Decimal | runtime.DecimalJsLike | number | string
   vencimento?: Prisma.DateTimeFilter<"Parcela"> | Date | string
+  baixadaEm?: Prisma.DateTimeNullableFilter<"Parcela"> | Date | string | null
+  motivoBaixa?: Prisma.EnumMotivoBaixaNullableFilter<"Parcela"> | $Enums.MotivoBaixa | null
+  notaBaixa?: Prisma.StringNullableFilter<"Parcela"> | string | null
   createdAt?: Prisma.DateTimeFilter<"Parcela"> | Date | string
   contrato?: Prisma.XOR<Prisma.ContratoScalarRelationFilter, Prisma.ContratoWhereInput>
   pagamento?: Prisma.XOR<Prisma.PagamentoNullableScalarRelationFilter, Prisma.PagamentoWhereInput> | null
@@ -225,6 +249,9 @@ export type ParcelaOrderByWithRelationInput = {
   contratoId?: Prisma.SortOrder
   valor?: Prisma.SortOrder
   vencimento?: Prisma.SortOrder
+  baixadaEm?: Prisma.SortOrderInput | Prisma.SortOrder
+  motivoBaixa?: Prisma.SortOrderInput | Prisma.SortOrder
+  notaBaixa?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   contrato?: Prisma.ContratoOrderByWithRelationInput
   pagamento?: Prisma.PagamentoOrderByWithRelationInput
@@ -238,6 +265,9 @@ export type ParcelaWhereUniqueInput = Prisma.AtLeast<{
   contratoId?: Prisma.StringFilter<"Parcela"> | string
   valor?: Prisma.DecimalFilter<"Parcela"> | runtime.Decimal | runtime.DecimalJsLike | number | string
   vencimento?: Prisma.DateTimeFilter<"Parcela"> | Date | string
+  baixadaEm?: Prisma.DateTimeNullableFilter<"Parcela"> | Date | string | null
+  motivoBaixa?: Prisma.EnumMotivoBaixaNullableFilter<"Parcela"> | $Enums.MotivoBaixa | null
+  notaBaixa?: Prisma.StringNullableFilter<"Parcela"> | string | null
   createdAt?: Prisma.DateTimeFilter<"Parcela"> | Date | string
   contrato?: Prisma.XOR<Prisma.ContratoScalarRelationFilter, Prisma.ContratoWhereInput>
   pagamento?: Prisma.XOR<Prisma.PagamentoNullableScalarRelationFilter, Prisma.PagamentoWhereInput> | null
@@ -248,6 +278,9 @@ export type ParcelaOrderByWithAggregationInput = {
   contratoId?: Prisma.SortOrder
   valor?: Prisma.SortOrder
   vencimento?: Prisma.SortOrder
+  baixadaEm?: Prisma.SortOrderInput | Prisma.SortOrder
+  motivoBaixa?: Prisma.SortOrderInput | Prisma.SortOrder
+  notaBaixa?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   _count?: Prisma.ParcelaCountOrderByAggregateInput
   _avg?: Prisma.ParcelaAvgOrderByAggregateInput
@@ -264,6 +297,9 @@ export type ParcelaScalarWhereWithAggregatesInput = {
   contratoId?: Prisma.StringWithAggregatesFilter<"Parcela"> | string
   valor?: Prisma.DecimalWithAggregatesFilter<"Parcela"> | runtime.Decimal | runtime.DecimalJsLike | number | string
   vencimento?: Prisma.DateTimeWithAggregatesFilter<"Parcela"> | Date | string
+  baixadaEm?: Prisma.DateTimeNullableWithAggregatesFilter<"Parcela"> | Date | string | null
+  motivoBaixa?: Prisma.EnumMotivoBaixaNullableWithAggregatesFilter<"Parcela"> | $Enums.MotivoBaixa | null
+  notaBaixa?: Prisma.StringNullableWithAggregatesFilter<"Parcela"> | string | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"Parcela"> | Date | string
 }
 
@@ -271,6 +307,9 @@ export type ParcelaCreateInput = {
   id?: string
   valor: runtime.Decimal | runtime.DecimalJsLike | number | string
   vencimento: Date | string
+  baixadaEm?: Date | string | null
+  motivoBaixa?: $Enums.MotivoBaixa | null
+  notaBaixa?: string | null
   createdAt?: Date | string
   contrato: Prisma.ContratoCreateNestedOneWithoutParcelasInput
   pagamento?: Prisma.PagamentoCreateNestedOneWithoutParcelaInput
@@ -281,6 +320,9 @@ export type ParcelaUncheckedCreateInput = {
   contratoId: string
   valor: runtime.Decimal | runtime.DecimalJsLike | number | string
   vencimento: Date | string
+  baixadaEm?: Date | string | null
+  motivoBaixa?: $Enums.MotivoBaixa | null
+  notaBaixa?: string | null
   createdAt?: Date | string
   pagamento?: Prisma.PagamentoUncheckedCreateNestedOneWithoutParcelaInput
 }
@@ -289,6 +331,9 @@ export type ParcelaUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   valor?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   vencimento?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  baixadaEm?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  motivoBaixa?: Prisma.NullableEnumMotivoBaixaFieldUpdateOperationsInput | $Enums.MotivoBaixa | null
+  notaBaixa?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   contrato?: Prisma.ContratoUpdateOneRequiredWithoutParcelasNestedInput
   pagamento?: Prisma.PagamentoUpdateOneWithoutParcelaNestedInput
@@ -299,6 +344,9 @@ export type ParcelaUncheckedUpdateInput = {
   contratoId?: Prisma.StringFieldUpdateOperationsInput | string
   valor?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   vencimento?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  baixadaEm?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  motivoBaixa?: Prisma.NullableEnumMotivoBaixaFieldUpdateOperationsInput | $Enums.MotivoBaixa | null
+  notaBaixa?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   pagamento?: Prisma.PagamentoUncheckedUpdateOneWithoutParcelaNestedInput
 }
@@ -308,6 +356,9 @@ export type ParcelaCreateManyInput = {
   contratoId: string
   valor: runtime.Decimal | runtime.DecimalJsLike | number | string
   vencimento: Date | string
+  baixadaEm?: Date | string | null
+  motivoBaixa?: $Enums.MotivoBaixa | null
+  notaBaixa?: string | null
   createdAt?: Date | string
 }
 
@@ -315,6 +366,9 @@ export type ParcelaUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   valor?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   vencimento?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  baixadaEm?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  motivoBaixa?: Prisma.NullableEnumMotivoBaixaFieldUpdateOperationsInput | $Enums.MotivoBaixa | null
+  notaBaixa?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -323,6 +377,9 @@ export type ParcelaUncheckedUpdateManyInput = {
   contratoId?: Prisma.StringFieldUpdateOperationsInput | string
   valor?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   vencimento?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  baixadaEm?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  motivoBaixa?: Prisma.NullableEnumMotivoBaixaFieldUpdateOperationsInput | $Enums.MotivoBaixa | null
+  notaBaixa?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -341,6 +398,9 @@ export type ParcelaCountOrderByAggregateInput = {
   contratoId?: Prisma.SortOrder
   valor?: Prisma.SortOrder
   vencimento?: Prisma.SortOrder
+  baixadaEm?: Prisma.SortOrder
+  motivoBaixa?: Prisma.SortOrder
+  notaBaixa?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
 }
 
@@ -353,6 +413,9 @@ export type ParcelaMaxOrderByAggregateInput = {
   contratoId?: Prisma.SortOrder
   valor?: Prisma.SortOrder
   vencimento?: Prisma.SortOrder
+  baixadaEm?: Prisma.SortOrder
+  motivoBaixa?: Prisma.SortOrder
+  notaBaixa?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
 }
 
@@ -361,6 +424,9 @@ export type ParcelaMinOrderByAggregateInput = {
   contratoId?: Prisma.SortOrder
   valor?: Prisma.SortOrder
   vencimento?: Prisma.SortOrder
+  baixadaEm?: Prisma.SortOrder
+  motivoBaixa?: Prisma.SortOrder
+  notaBaixa?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
 }
 
@@ -415,6 +481,14 @@ export type ParcelaUncheckedUpdateManyWithoutContratoNestedInput = {
   deleteMany?: Prisma.ParcelaScalarWhereInput | Prisma.ParcelaScalarWhereInput[]
 }
 
+export type NullableDateTimeFieldUpdateOperationsInput = {
+  set?: Date | string | null
+}
+
+export type NullableEnumMotivoBaixaFieldUpdateOperationsInput = {
+  set?: $Enums.MotivoBaixa | null
+}
+
 export type ParcelaCreateNestedOneWithoutPagamentoInput = {
   create?: Prisma.XOR<Prisma.ParcelaCreateWithoutPagamentoInput, Prisma.ParcelaUncheckedCreateWithoutPagamentoInput>
   connectOrCreate?: Prisma.ParcelaCreateOrConnectWithoutPagamentoInput
@@ -433,6 +507,9 @@ export type ParcelaCreateWithoutContratoInput = {
   id?: string
   valor: runtime.Decimal | runtime.DecimalJsLike | number | string
   vencimento: Date | string
+  baixadaEm?: Date | string | null
+  motivoBaixa?: $Enums.MotivoBaixa | null
+  notaBaixa?: string | null
   createdAt?: Date | string
   pagamento?: Prisma.PagamentoCreateNestedOneWithoutParcelaInput
 }
@@ -441,6 +518,9 @@ export type ParcelaUncheckedCreateWithoutContratoInput = {
   id?: string
   valor: runtime.Decimal | runtime.DecimalJsLike | number | string
   vencimento: Date | string
+  baixadaEm?: Date | string | null
+  motivoBaixa?: $Enums.MotivoBaixa | null
+  notaBaixa?: string | null
   createdAt?: Date | string
   pagamento?: Prisma.PagamentoUncheckedCreateNestedOneWithoutParcelaInput
 }
@@ -479,6 +559,9 @@ export type ParcelaScalarWhereInput = {
   contratoId?: Prisma.StringFilter<"Parcela"> | string
   valor?: Prisma.DecimalFilter<"Parcela"> | runtime.Decimal | runtime.DecimalJsLike | number | string
   vencimento?: Prisma.DateTimeFilter<"Parcela"> | Date | string
+  baixadaEm?: Prisma.DateTimeNullableFilter<"Parcela"> | Date | string | null
+  motivoBaixa?: Prisma.EnumMotivoBaixaNullableFilter<"Parcela"> | $Enums.MotivoBaixa | null
+  notaBaixa?: Prisma.StringNullableFilter<"Parcela"> | string | null
   createdAt?: Prisma.DateTimeFilter<"Parcela"> | Date | string
 }
 
@@ -486,6 +569,9 @@ export type ParcelaCreateWithoutPagamentoInput = {
   id?: string
   valor: runtime.Decimal | runtime.DecimalJsLike | number | string
   vencimento: Date | string
+  baixadaEm?: Date | string | null
+  motivoBaixa?: $Enums.MotivoBaixa | null
+  notaBaixa?: string | null
   createdAt?: Date | string
   contrato: Prisma.ContratoCreateNestedOneWithoutParcelasInput
 }
@@ -495,6 +581,9 @@ export type ParcelaUncheckedCreateWithoutPagamentoInput = {
   contratoId: string
   valor: runtime.Decimal | runtime.DecimalJsLike | number | string
   vencimento: Date | string
+  baixadaEm?: Date | string | null
+  motivoBaixa?: $Enums.MotivoBaixa | null
+  notaBaixa?: string | null
   createdAt?: Date | string
 }
 
@@ -518,6 +607,9 @@ export type ParcelaUpdateWithoutPagamentoInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   valor?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   vencimento?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  baixadaEm?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  motivoBaixa?: Prisma.NullableEnumMotivoBaixaFieldUpdateOperationsInput | $Enums.MotivoBaixa | null
+  notaBaixa?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   contrato?: Prisma.ContratoUpdateOneRequiredWithoutParcelasNestedInput
 }
@@ -527,6 +619,9 @@ export type ParcelaUncheckedUpdateWithoutPagamentoInput = {
   contratoId?: Prisma.StringFieldUpdateOperationsInput | string
   valor?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   vencimento?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  baixadaEm?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  motivoBaixa?: Prisma.NullableEnumMotivoBaixaFieldUpdateOperationsInput | $Enums.MotivoBaixa | null
+  notaBaixa?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -534,6 +629,9 @@ export type ParcelaCreateManyContratoInput = {
   id?: string
   valor: runtime.Decimal | runtime.DecimalJsLike | number | string
   vencimento: Date | string
+  baixadaEm?: Date | string | null
+  motivoBaixa?: $Enums.MotivoBaixa | null
+  notaBaixa?: string | null
   createdAt?: Date | string
 }
 
@@ -541,6 +639,9 @@ export type ParcelaUpdateWithoutContratoInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   valor?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   vencimento?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  baixadaEm?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  motivoBaixa?: Prisma.NullableEnumMotivoBaixaFieldUpdateOperationsInput | $Enums.MotivoBaixa | null
+  notaBaixa?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   pagamento?: Prisma.PagamentoUpdateOneWithoutParcelaNestedInput
 }
@@ -549,6 +650,9 @@ export type ParcelaUncheckedUpdateWithoutContratoInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   valor?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   vencimento?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  baixadaEm?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  motivoBaixa?: Prisma.NullableEnumMotivoBaixaFieldUpdateOperationsInput | $Enums.MotivoBaixa | null
+  notaBaixa?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   pagamento?: Prisma.PagamentoUncheckedUpdateOneWithoutParcelaNestedInput
 }
@@ -557,6 +661,9 @@ export type ParcelaUncheckedUpdateManyWithoutContratoInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   valor?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   vencimento?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  baixadaEm?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  motivoBaixa?: Prisma.NullableEnumMotivoBaixaFieldUpdateOperationsInput | $Enums.MotivoBaixa | null
+  notaBaixa?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -567,6 +674,9 @@ export type ParcelaSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs 
   contratoId?: boolean
   valor?: boolean
   vencimento?: boolean
+  baixadaEm?: boolean
+  motivoBaixa?: boolean
+  notaBaixa?: boolean
   createdAt?: boolean
   contrato?: boolean | Prisma.ContratoDefaultArgs<ExtArgs>
   pagamento?: boolean | Prisma.Parcela$pagamentoArgs<ExtArgs>
@@ -577,6 +687,9 @@ export type ParcelaSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Exten
   contratoId?: boolean
   valor?: boolean
   vencimento?: boolean
+  baixadaEm?: boolean
+  motivoBaixa?: boolean
+  notaBaixa?: boolean
   createdAt?: boolean
   contrato?: boolean | Prisma.ContratoDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["parcela"]>
@@ -586,6 +699,9 @@ export type ParcelaSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Exten
   contratoId?: boolean
   valor?: boolean
   vencimento?: boolean
+  baixadaEm?: boolean
+  motivoBaixa?: boolean
+  notaBaixa?: boolean
   createdAt?: boolean
   contrato?: boolean | Prisma.ContratoDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["parcela"]>
@@ -595,10 +711,13 @@ export type ParcelaSelectScalar = {
   contratoId?: boolean
   valor?: boolean
   vencimento?: boolean
+  baixadaEm?: boolean
+  motivoBaixa?: boolean
+  notaBaixa?: boolean
   createdAt?: boolean
 }
 
-export type ParcelaOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "contratoId" | "valor" | "vencimento" | "createdAt", ExtArgs["result"]["parcela"]>
+export type ParcelaOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "contratoId" | "valor" | "vencimento" | "baixadaEm" | "motivoBaixa" | "notaBaixa" | "createdAt", ExtArgs["result"]["parcela"]>
 export type ParcelaInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   contrato?: boolean | Prisma.ContratoDefaultArgs<ExtArgs>
   pagamento?: boolean | Prisma.Parcela$pagamentoArgs<ExtArgs>
@@ -621,6 +740,9 @@ export type $ParcelaPayload<ExtArgs extends runtime.Types.Extensions.InternalArg
     contratoId: string
     valor: runtime.Decimal
     vencimento: Date
+    baixadaEm: Date | null
+    motivoBaixa: $Enums.MotivoBaixa | null
+    notaBaixa: string | null
     createdAt: Date
   }, ExtArgs["result"]["parcela"]>
   composites: {}
@@ -1051,6 +1173,9 @@ export interface ParcelaFieldRefs {
   readonly contratoId: Prisma.FieldRef<"Parcela", 'String'>
   readonly valor: Prisma.FieldRef<"Parcela", 'Decimal'>
   readonly vencimento: Prisma.FieldRef<"Parcela", 'DateTime'>
+  readonly baixadaEm: Prisma.FieldRef<"Parcela", 'DateTime'>
+  readonly motivoBaixa: Prisma.FieldRef<"Parcela", 'MotivoBaixa'>
+  readonly notaBaixa: Prisma.FieldRef<"Parcela", 'String'>
   readonly createdAt: Prisma.FieldRef<"Parcela", 'DateTime'>
 }
     

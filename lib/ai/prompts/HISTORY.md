@@ -6,6 +6,31 @@
 - Padroniza caminhos dos campos para validação automática.
 - Inclui página e cláusula e rejeita referência não localizada no documento.
 
+## expense-extraction-v1.1 — 13/09/2026
+
+- Passa a classificar a despesa em tipo processo x escritório, e amarra a
+  categoria ao tipo — categoria de escritório num gasto de caso tornaria a
+  margem do processo mentirosa.
+- Categorias reescritas no vocabulário do dia a dia (deslocamento, custas,
+  cartório) no lugar das genéricas da v1.
+- Instrui a não descartar valores pequenos: corrida até o fórum,
+  estacionamento e cópias são os gastos que o advogado iniciante mais esquece
+  de lançar e que, somados, comem a margem do caso.
+
+## expense-extraction-v1 — 13/09/2026
+
+- Primeira versão da leitura de recibo/nota/guia para lançar despesa.
+- Todo campo ausente vem null com o motivo em avisos: comprovante é documento
+  bagunçado, e palpite em valor ou vencimento vira lançamento errado.
+- Exige textoOriginal literal, mesmo papel de clausulaOriginal no contrato — o
+  resultado é rascunho e só o advogado confirma a gravação.
+
+## financial-chat-v1.5 — 13/09/2026
+
+- Ensina o estado "baixada": honorário de êxito que não se confirmou e deixou
+  de ser devido. Sem isso a IA somava no "quanto vou receber" um valor que o
+  advogado já sabe que não vem, e o apontava como atraso.
+
 ## contract-opinion-v1 — 12/09/2026
 
 - Primeira versão da opinião automática do contrato para o advogado.

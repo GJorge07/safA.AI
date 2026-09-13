@@ -1,4 +1,8 @@
-import { ShieldAlert, ShieldCheck, ShieldQuestion } from "lucide-react";
+"use client";
+
+import { useState } from "react";
+import { AlertTriangle, Loader2, ShieldAlert, ShieldCheck, ShieldQuestion, Sparkles } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import type { OpiniaoContrato } from "@/lib/ai/schemas";
 import { rotulosDimensao, rotulosStatus, sintetizarOpiniao } from "@/lib/ai/opinion-summary";
 
@@ -40,5 +44,40 @@ export function OpiniaoDetalhada({ opiniao }: { opiniao: OpiniaoContrato }) {
         <p className="border-t border-border pt-2"><span className="font-medium">Recomendação completa: </span>{opiniao.recomendacao}</p>
       </div>
     </details>
+  </section>;
+}
+
+// O detalhe da main mantém a análise sob demanda, mas usa a avaliação local e
+// auditável da branch do agente. Assim, abrir a página não consome cota de IA.
+export function OpiniaoContrato({ contratoId }: { contratoId: string }) {
+  const [opiniao, setOpiniao] = useState<OpiniaoContrato | null>(null);
+  const [carregando, setCarregando] = useState(false);
+  const [erro, setErro] = useState<string | null>(null);
+
+  async function analisar() {
+    setCarregando(true);
+    setErro(null);
+    try {
+      const resposta = await fetch(`/api/contratos/${contratoId}/opiniao`, { cache: "no-store" });
+      const corpo = await resposta.json().catch(() => null);
+      if (!resposta.ok) throw new Error(corpo?.erro ?? "Não foi possível avaliar o contrato.");
+      setOpiniao(corpo.opiniao);
+    } catch (falha) {
+      setErro(falha instanceof Error ? falha.message : "Não foi possível avaliar o contrato.");
+    } finally {
+      setCarregando(false);
+    }
+  }
+
+  if (opiniao) return <OpiniaoDetalhada opiniao={opiniao} />;
+
+  return <section className="space-y-2 rounded-lg border border-border bg-card p-4" aria-label="Avaliação do caso">
+    <p className="text-sm font-medium">Este é um bom caso?</p>
+    <p className="text-xs text-muted-foreground">Compare valor, pagamentos, dificuldade e área de atuação com os dados cadastrados.</p>
+    <Button size="sm" variant="secondary" onClick={analisar} disabled={carregando}>
+      {carregando ? <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" /> : <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />}
+      Avaliar caso
+    </Button>
+    {erro && <p className="flex items-start gap-1.5 text-xs text-destructive"><AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />{erro}</p>}
   </section>;
 }

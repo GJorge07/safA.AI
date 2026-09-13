@@ -9,10 +9,9 @@ import { resumirPagamentos } from "../ai/payment-history";
 // enquanto UI e IA trabalham com minúsculas e number.
 import { Prisma } from "@/app/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
-import { cashflow } from "@/lib/api/finance";
 import type { ContratoComRelacoes } from "@/components/dashboard/types";
 import type { DadosFinanceiros } from "@/lib/ai/schemas";
-import type { ContratoExtraido, FluxoCaixaMes, TipoPagamento } from "@/lib/types";
+import type { ContratoExtraido, MotivoBaixa, OrigemRegistro, TipoPagamento } from "@/lib/types";
 
 const comRelacoes = {
   cliente: true,
@@ -24,6 +23,13 @@ type ContratoRow = Prisma.ContratoGetPayload<{ include: typeof comRelacoes }>;
 const ordem: Prisma.ContratoOrderByWithRelationInput[] = [{ createdAt: "desc" }, { id: "desc" }];
 
 const paraEnumDb = { fixo: "FIXO", exito: "EXITO", misto: "MISTO" } as const;
+const origemParaEnumDb = { manual: "MANUAL", upload: "UPLOAD", drive: "DRIVE" } as const;
+
+// "Ainda pode entrar dinheiro por esta parcela": sem pagamento e sem baixa.
+// Parcela baixada (êxito que não veio) não é dívida e não pode aparecer como
+// atraso, previsto ou cobrança.
+const EM_ABERTO: Prisma.ParcelaWhereInput = { pagamento: { is: null }, baixadaEm: null };
+const ENCERRADA: Prisma.ParcelaWhereInput = { OR: [{ pagamento: { isNot: null } }, { baixadaEm: { not: null } }] };
 
 function diaISO(data: Date): string {
   return data.toISOString().slice(0, 10);
@@ -36,17 +42,25 @@ function centavos(valor: number): number {
 function paraUI(contrato: ContratoRow): ContratoComRelacoes {
   return {
     id: contrato.id,
+    numero: contrato.numero,
+    titulo: contrato.titulo,
+    processo: contrato.processo,
     clienteId: contrato.clienteId,
     cliente: contrato.cliente,
     tipoPagamento: contrato.tipoPagamento.toLowerCase() as TipoPagamento,
     valorTotal: contrato.valorTotal.toNumber(),
     clausulaOriginal: contrato.clausulaOriginal,
+    origem: contrato.origem.toLowerCase() as OrigemRegistro,
+    arquivoNome: contrato.arquivoNome,
     createdAt: contrato.createdAt,
     parcelas: contrato.parcelas.map((parcela) => ({
       id: parcela.id,
       contratoId: parcela.contratoId,
       valor: parcela.valor.toNumber(),
       vencimento: parcela.vencimento,
+      baixadaEm: parcela.baixadaEm,
+      motivoBaixa: parcela.motivoBaixa && (parcela.motivoBaixa.toLowerCase() as MotivoBaixa),
+      notaBaixa: parcela.notaBaixa,
       pagamento: parcela.pagamento && {
         id: parcela.pagamento.id,
         parcelaId: parcela.pagamento.parcelaId,
@@ -57,31 +71,196 @@ function paraUI(contrato: ContratoRow): ContratoComRelacoes {
   };
 }
 
-export async function listarContratosComRelacoes(): Promise<ContratoComRelacoes[]> {
-  const contratos = await prisma.contrato.findMany({ include: comRelacoes, orderBy: ordem });
-  return contratos.map(paraUI);
-}
-
 export function contarContratos(): Promise<number> {
   return prisma.contrato.count();
 }
 
+// Só o suficiente para o <select> de cliente num serviço avulso.
+export function listarClientesParaSelecao(limite = 500) {
+  return prisma.cliente.findMany({
+    select: { id: true, nome: true },
+    orderBy: { nome: "asc" },
+    take: limite,
+  });
+}
+
+// Só o suficiente para o <select> de "despesa amarrada a um caso".
+export async function listarContratosParaSelecao(limite = 200) {
+  const contratos = await prisma.contrato.findMany({
+    select: { id: true, numero: true, cliente: { select: { nome: true } } },
+    orderBy: ordem,
+    take: limite,
+  });
+  return contratos.map((c) => ({
+    id: c.id,
+    rotulo: `CT-${String(c.numero).padStart(4, "0")} · ${c.cliente.nome}`,
+  }));
+}
+
+export async function obterContratoComRelacoes(id: string): Promise<ContratoComRelacoes | null> {
+  const contrato = await prisma.contrato.findUnique({ where: { id }, include: comRelacoes });
+  return contrato && paraUI(contrato);
+}
+
+// Outros contratos do mesmo cliente — a aba "Cliente" do detalhe.
+export async function listarContratosDoCliente(
+  clienteId: string,
+  exceto?: string,
+): Promise<ContratoComRelacoes[]> {
+  const contratos = await prisma.contrato.findMany({
+    where: { clienteId, ...(exceto ? { id: { not: exceto } } : {}) },
+    include: comRelacoes,
+    orderBy: ordem,
+  });
+  return contratos.map(paraUI);
+}
+
+export type StatusFiltro = "todos" | "atrasado" | "vence_7" | "em_dia" | "quitado";
+export type OrdenacaoContratos = "recentes" | "vencimento" | "maior_valor" | "cliente";
+
+export interface FiltroContratos {
+  pagina?: number;
+  tamanho?: number;
+  busca?: string;
+  tipo?: TipoPagamento | "todos";
+  status?: StatusFiltro;
+  ordenar?: OrdenacaoContratos;
+  hoje?: Date;
+}
+
+export interface PaginaContratos {
+  itens: ContratoComRelacoes[];
+  total: number;
+  paginas: number;
+  pagina: number;
+  tamanho: number;
+}
+
+// O status vira condição SQL de verdade: com centenas de contratos, trazer tudo
+// para filtrar em JS derrubaria a página.
+function where({ busca, tipo, status, hoje = new Date() }: FiltroContratos): Prisma.ContratoWhereInput {
+  const filtros: Prisma.ContratoWhereInput[] = [];
+
+  const termo = busca?.trim();
+  if (termo) {
+    const comoNumero = Number(termo.replace(/\D/g, ""));
+    filtros.push({
+      OR: [
+        { cliente: { nome: { contains: termo, mode: "insensitive" } } },
+        { cliente: { documento: { contains: termo, mode: "insensitive" } } },
+        { titulo: { contains: termo, mode: "insensitive" } },
+        { processo: { contains: termo, mode: "insensitive" } },
+        ...(Number.isFinite(comoNumero) && comoNumero > 0 ? [{ numero: comoNumero }] : []),
+      ],
+    });
+  }
+
+  if (tipo && tipo !== "todos") filtros.push({ tipoPagamento: paraEnumDb[tipo] });
+
+  const vencida: Prisma.ParcelaWhereInput = { ...EM_ABERTO, vencimento: { lt: hoje } };
+  if (status === "atrasado") filtros.push({ parcelas: { some: vencida } });
+  if (status === "quitado") {
+    filtros.push({ parcelas: { every: ENCERRADA, some: {} } });
+  }
+  if (status === "vence_7") {
+    filtros.push({
+      parcelas: {
+        some: { ...EM_ABERTO, vencimento: { gte: hoje, lt: new Date(hoje.getTime() + 7 * 86400000) } },
+      },
+    });
+  }
+  if (status === "em_dia") {
+    filtros.push({ parcelas: { none: vencida }, NOT: { parcelas: { every: ENCERRADA, some: {} } } });
+  }
+
+
+  return filtros.length === 0 ? {} : { AND: filtros };
+}
+
+const ordenacoes: Record<OrdenacaoContratos, Prisma.ContratoOrderByWithRelationInput[]> = {
+  recentes: ordem,
+  maior_valor: [{ valorTotal: "desc" }, { id: "desc" }],
+  cliente: [{ cliente: { nome: "asc" } }, { id: "desc" }],
+  // Sem campo de vencimento no contrato, o proxy é a parcela mais antiga.
+  vencimento: [{ parcelas: { _count: "desc" } }, { createdAt: "asc" }],
+};
+
+export async function listarContratosPaginado(filtro: FiltroContratos = {}): Promise<PaginaContratos> {
+  const tamanho = Math.min(Math.max(filtro.tamanho ?? 20, 1), 100);
+  const condicao = where(filtro);
+  const [total, contratos] = await prisma.$transaction([
+    prisma.contrato.count({ where: condicao }),
+    prisma.contrato.findMany({
+      where: condicao,
+      include: comRelacoes,
+      orderBy: ordenacoes[filtro.ordenar ?? "recentes"],
+      skip: (Math.max(filtro.pagina ?? 1, 1) - 1) * tamanho,
+      take: tamanho,
+    }),
+  ]);
+
+  const paginas = Math.max(1, Math.ceil(total / tamanho));
+  return {
+    itens: contratos.map(paraUI),
+    total,
+    paginas,
+    pagina: Math.min(Math.max(filtro.pagina ?? 1, 1), paginas),
+    tamanho,
+  };
+}
+
+export interface ContadoresContratos {
+  total: number;
+  atrasados: number;
+  vencendoEm7Dias: number;
+  quitados: number;
+}
+
+// Contados no banco, nunca no array da página atual.
+export async function contadoresContratos(hoje = new Date()): Promise<ContadoresContratos> {
+  const em7Dias = new Date(hoje.getTime() + 7 * 86400000);
+  const [total, atrasados, vencendoEm7Dias, quitados] = await prisma.$transaction([
+    prisma.contrato.count(),
+    prisma.contrato.count({ where: where({ status: "atrasado", hoje }) }),
+    prisma.contrato.count({
+      where: { parcelas: { some: { ...EM_ABERTO, vencimento: { gte: hoje, lt: em7Dias } } } },
+    }),
+    prisma.contrato.count({ where: where({ status: "quitado", hoje }) }),
+  ]);
+  return { total, atrasados, vencendoEm7Dias, quitados };
+}
+
 // Contexto que a IA recebe no Fluxo B. É montado aqui, no servidor, a partir
 // do banco — o cliente manda só a pergunta.
-export async function carregarDadosFinanceiros(hoje = new Date(), estimativa?: { contratoId: string; contexto: ContextoEsforco }): Promise<DadosFinanceiros> {
+export async function carregarDadosFinanceiros(
+  hoje = new Date(),
+  estimativa?: { contratoId: string; contexto: ContextoEsforco },
+): Promise<DadosFinanceiros> {
   const contratos = await prisma.contrato.findMany({ include: comRelacoes, orderBy: ordem });
   const perfilRow = await prisma.perfilAdvogado.findUnique({ where: { id: "principal" } });
-  const perfil = perfilRow ? perfilAdvogadoSchema.parse({ areas: perfilRow.areas, valorHoraMinimo: perfilRow.valorHoraMinimo?.toNumber() ?? null }) : null;
-  const documentos = contratos.map(c => {
-    const salvo = dadosAnaliseDocumentoSchema.safeParse(c.contextoAnalise);
-    return salvo.success ? salvo.data : extrairContextoDoContrato(c.clausulaOriginal);
+  const perfil = perfilRow
+    ? perfilAdvogadoSchema.parse({
+        areas: perfilRow.areas,
+        valorHoraMinimo: perfilRow.valorHoraMinimo?.toNumber() ?? null,
+      })
+    : null;
+  const documentos = contratos.map((contrato) => {
+    const salvo = dadosAnaliseDocumentoSchema.safeParse(contrato.contextoAnalise);
+    return salvo.success ? salvo.data : extrairContextoDoContrato(contrato.clausulaOriginal);
   });
-  const carteiraAvaliacao: ContratoParaAvaliacao[] = contratos.map(c => ({
-    id: c.id, clienteId: c.clienteId,
-    tipoPagamento: c.tipoPagamento.toLowerCase() as TipoPagamento,
-    valorTotal: c.valorTotal.toNumber(),
-    parcelas: c.parcelas.map(p => ({ valor: p.valor.toNumber(), vencimento: p.vencimento,
-      pagamento: p.pagamento && { valorPago: p.pagamento.valorPago.toNumber(), dataPago: p.pagamento.dataPago },
+  const carteiraAvaliacao: ContratoParaAvaliacao[] = contratos.map((contrato) => ({
+    id: contrato.id,
+    clienteId: contrato.clienteId,
+    tipoPagamento: contrato.tipoPagamento.toLowerCase() as TipoPagamento,
+    valorTotal: contrato.valorTotal.toNumber(),
+    parcelas: contrato.parcelas.map((parcela) => ({
+      valor: parcela.valor.toNumber(),
+      vencimento: parcela.vencimento,
+      baixada: parcela.baixadaEm != null,
+      pagamento: parcela.pagamento && {
+        valorPago: parcela.pagamento.valorPago.toNumber(),
+        dataPago: parcela.pagamento.dataPago,
+      },
     })),
   }));
   const dataReferencia = diaISO(hoje);
@@ -94,18 +273,32 @@ export async function carregarDadosFinanceiros(hoje = new Date(), estimativa?: {
     createdAt: contrato.createdAt?.toISOString(),
     opiniao: (() => {
       const documento = documentos[indice];
-      const contexto = { ...documento.contexto, ...(perfil?.valorHoraMinimo ? { valorHoraMinimo: perfil.valorHoraMinimo } : {}), ...(estimativa?.contratoId === contrato.id ? estimativa.contexto : {}) };
-      const opiniao = avaliarContratoCadastrado(carteiraAvaliacao[indice], carteiraAvaliacao, hoje, contexto);
+      const contexto = {
+        ...documento.contexto,
+        ...(perfil?.valorHoraMinimo ? { valorHoraMinimo: perfil.valorHoraMinimo } : {}),
+        ...(estimativa?.contratoId === contrato.id ? estimativa.contexto : {}),
+      };
+      const opiniao = avaliarContratoCadastrado(
+        carteiraAvaliacao[indice], carteiraAvaliacao, hoje, contexto,
+      );
       for (const categoria of ["financeiro", "complexidade"] as const) {
         opiniao.avaliacoes[categoria].evidencias = [
           ...opiniao.avaliacoes[categoria].evidencias,
-          ...documento.evidencias.filter(e => categoria === "financeiro" ? !e.campo.startsWith("areas") : e.campo === "dificuldade" || e.campo.startsWith("fatores") || e.campo.startsWith("horas")).map(e => `Contrato — ${e.campo}: “${e.trecho}”`),
-          ...(perfil?.valorHoraMinimo && categoria === "financeiro" ? ["Meta por hora declarada no perfil"] : []),
+          ...documento.evidencias
+            .filter((evidencia) => categoria === "financeiro"
+              ? !evidencia.campo.startsWith("areas")
+              : evidencia.campo === "dificuldade" || evidencia.campo.startsWith("fatores") || evidencia.campo.startsWith("horas"))
+            .map((evidencia) => `Contrato — ${evidencia.campo}: “${evidencia.trecho}”`),
+          ...(perfil?.valorHoraMinimo && categoria === "financeiro"
+            ? ["Meta por hora declarada no perfil"] : []),
         ];
       }
       return compararEscopo(opiniao, documento.areas, perfil);
     })(),
-    contextoSugerido: { ...documentos[indice].contexto, ...(perfil?.valorHoraMinimo ? { valorHoraMinimo: perfil.valorHoraMinimo } : {}) },
+    contextoSugerido: {
+      ...documentos[indice].contexto,
+      ...(perfil?.valorHoraMinimo ? { valorHoraMinimo: perfil.valorHoraMinimo } : {}),
+    },
     evidenciasContexto: documentos[indice].evidencias,
     id: contrato.id,
     clienteId: contrato.clienteId,
@@ -116,16 +309,19 @@ export async function carregarDadosFinanceiros(hoje = new Date(), estimativa?: {
     parcelas: contrato.parcelas.map((parcela) => {
       const valor = parcela.valor.toNumber();
       const pago = parcela.pagamento?.valorPago.toNumber() ?? 0;
-      const saldo = Math.max(0, valor - pago);
+      const baixada = parcela.baixadaEm != null;
+      // Baixada não entra em previsto nem em pendente: o valor deixou de ser
+      // devido, e somá-lo faria a IA responder com dinheiro que não existe.
+      const saldo = baixada ? 0 : Math.max(0, valor - pago);
       const vencimento = diaISO(parcela.vencimento);
       const atrasada = saldo > 0 && vencimento < dataReferencia;
 
-      previsto += valor;
+      if (!baixada) previsto += valor;
       recebido += pago;
       pendente += saldo;
       if (atrasada) atrasado += saldo;
 
-      const status = saldo === 0 ? "paga" : atrasada ? "atrasada" : "prevista";
+      const status = baixada ? "baixada" : saldo === 0 ? "paga" : atrasada ? "atrasada" : "prevista";
       return { id: parcela.id, valor, saldo: centavos(saldo), vencimento, status } as const;
     }),
   }));
@@ -140,17 +336,6 @@ export async function carregarDadosFinanceiros(hoje = new Date(), estimativa?: {
     },
     contratos: lista,
   };
-}
-
-// Janela centrada no mês corrente, para o gráfico não ficar preso ao ano civil.
-export async function carregarFluxoCaixa(hoje = new Date(), meses = 6): Promise<FluxoCaixaMes[]> {
-  const gte = new Date(Date.UTC(hoje.getUTCFullYear(), hoje.getUTCMonth() - Math.floor(meses / 2), 1));
-  const lt = new Date(Date.UTC(gte.getUTCFullYear(), gte.getUTCMonth() + meses, 1));
-  const [parcelas, pagamentos] = await prisma.$transaction([
-    prisma.parcela.findMany({ where: { vencimento: { gte, lt } }, select: { valor: true, vencimento: true } }),
-    prisma.pagamento.findMany({ where: { dataPago: { gte, lt } }, select: { valorPago: true, dataPago: true } }),
-  ]);
-  return cashflow({ gte, lt }, parcelas, pagamentos);
 }
 
 export interface EstatisticasCarteira {
@@ -187,7 +372,11 @@ export async function carregarEstatisticasCarteira(): Promise<EstatisticasCartei
 
 // Grava o que a extração aprovou. O cliente é reaproveitado por nome para o
 // mesmo escritório não virar dezenas de "João Pereira" a cada importação.
-export async function salvarContratoExtraido(extraido: ContratoExtraido, textoCompleto?: string) {
+export async function salvarContratoExtraido(
+  extraido: ContratoExtraido,
+  textoCompleto?: string,
+  metadados: { origem?: OrigemRegistro; arquivoNome?: string | null } = {},
+) {
   const nome = extraido.cliente.trim();
   return prisma.$transaction(async (tx) => {
     const existente = await tx.cliente.findFirst({ where: { nome: { equals: nome, mode: "insensitive" } } });
@@ -195,7 +384,11 @@ export async function salvarContratoExtraido(extraido: ContratoExtraido, textoCo
     return tx.contrato.create({
       data: {
         clienteId: cliente.id,
-        contextoAnalise: JSON.parse(JSON.stringify(extrairContextoDoContrato(textoCompleto ?? extraido.clausulaOriginal))),
+        origem: origemParaEnumDb[metadados.origem ?? "manual"],
+        arquivoNome: metadados.arquivoNome ?? null,
+        contextoAnalise: JSON.parse(JSON.stringify(
+          extrairContextoDoContrato(textoCompleto ?? extraido.clausulaOriginal),
+        )),
         tipoPagamento: paraEnumDb[extraido.tipoPagamento],
         valorTotal: new Prisma.Decimal(extraido.valorTotal),
         clausulaOriginal: extraido.clausulaOriginal,
@@ -211,7 +404,8 @@ export async function salvarContratoExtraido(extraido: ContratoExtraido, textoCo
   });
 }
 
-// O cadastro atual só identifica por nome: múltiplos candidatos não são atribuídos.
+// O cadastro atual identifica o cliente somente por nome. Se houver homônimos,
+// o agente não atribui histórico a nenhuma pessoa automaticamente.
 export async function carregarHistoricoCliente(nome: string | null) {
   if (!nome?.trim()) return { status: "cliente_nao_identificado" } as const;
   const clientes = await prisma.cliente.findMany({
@@ -222,12 +416,17 @@ export async function carregarHistoricoCliente(nome: string | null) {
   if (clientes.length > 1) return { status: "identidade_ambigua" } as const;
   const contratos = clientes[0].contratos;
   return {
-    status: contratos.some(c => c.parcelas.length > 0) ? "disponivel" : "sem_historico",
+    status: contratos.some((contrato) => contrato.parcelas.length > 0) ? "disponivel" : "sem_historico",
     identificacao: "Correspondência apenas pelo nome; confirme a identidade do cliente.",
-    contratoIds: contratos.map(c => c.id),
-    ...resumirPagamentos(contratos.flatMap(c => c.parcelas.map(p => ({
-      valor: p.valor.toNumber(), vencimento: p.vencimento,
-      pagamento: p.pagamento && { valorPago: p.pagamento.valorPago.toNumber(), dataPago: p.pagamento.dataPago },
+    contratoIds: contratos.map((contrato) => contrato.id),
+    ...resumirPagamentos(contratos.flatMap((contrato) => contrato.parcelas.map((parcela) => ({
+      valor: parcela.valor.toNumber(),
+      vencimento: parcela.vencimento,
+      baixada: parcela.baixadaEm != null,
+      pagamento: parcela.pagamento && {
+        valorPago: parcela.pagamento.valorPago.toNumber(),
+        dataPago: parcela.pagamento.dataPago,
+      },
     })))),
   };
 }

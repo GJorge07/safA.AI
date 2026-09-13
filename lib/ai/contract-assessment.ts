@@ -27,7 +27,9 @@ export function avaliarContratoCadastrado(
 ): OpiniaoContrato {
   const historico = resumirPagamentos(carteira.filter(c => c.clienteId === contrato.clienteId).flatMap(c => c.parcelas), hoje);
   const atual = resumirPagamentos(contrato.parcelas, hoje);
-  const somaParcelas = Math.round(contrato.parcelas.reduce((s, p) => s + p.valor, 0) * 100) / 100;
+  const somaParcelas = Math.round(
+    contrato.parcelas.reduce((soma, parcela) => soma + (parcela.baixada ? 0 : parcela.valor), 0) * 100,
+  ) / 100;
   const divergencia = Math.abs(somaParcelas - contrato.valorTotal) > 0.009;
   const dependeExito = contrato.tipoPagamento !== "fixo";
   const riscos: OpiniaoContrato["riscos"] = [];

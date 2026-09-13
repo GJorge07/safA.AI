@@ -53,3 +53,10 @@ test("disclaimer de exemplo não nega os campos explícitos seguintes", () => {
   assert.equal(dados.contexto.horasMinimas, 60);
   assert.equal(dados.contexto.custosEstimados, 2000);
 });
+
+test("aceita texto de PDF sem cedilha ao extrair intervalo de esforço", () => {
+  const dados = extrairContextoDoContrato("Dificuldade alta. Esforco total estimado entre 60 e 100 horas.");
+  assert.equal(dados.contexto.horasMinimas, 60);
+  assert.equal(dados.contexto.horasMaximas, 100);
+  assert.match(dados.evidencias.find((item) => item.campo.includes("horas"))?.trecho ?? "", /60 e 100 horas/);
+});

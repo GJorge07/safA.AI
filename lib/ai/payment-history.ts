@@ -1,6 +1,7 @@
 export interface ParcelaHistorico {
   valor: number;
   vencimento: Date;
+  baixada?: boolean;
   pagamento: { valorPago: number; dataPago: Date } | null;
 }
 
@@ -14,6 +15,7 @@ export function resumirPagamentos(parcelas: ParcelaHistorico[], hoje = new Date(
   for (const parcela of parcelas) {
     const pago = parcela.pagamento?.valorPago ?? 0;
     recebido += pago;
+    if (parcela.baixada) continue;
     const saldo = Math.max(0, parcela.valor - pago);
     if (saldo > 0 && dia(parcela.vencimento) < dia(hoje)) {
       saldoVencido += saldo;

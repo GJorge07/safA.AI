@@ -3,13 +3,13 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Bot, FileText, Home, UserRound, PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import { Bot, Home, PanelLeftClose, PanelLeftOpen, UserRound, Wallet } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "./theme-toggle";
 
 const nav = [
   { href: "/", label: "Início", icon: Home },
-  { href: "/contratos", label: "Contratos", icon: FileText },
+  { href: "/pagamentos", label: "Pagamentos", icon: Wallet },
   { href: "/agente", label: "Safa AI", icon: Bot },
   { href: "/perfil", label: "Meu perfil", icon: UserRound },
 ];
@@ -37,7 +37,7 @@ export function Sidebar() {
           onClick={() => setAberta((v) => !v)}
           aria-label={aberta ? "Ocultar barra lateral" : "Mostrar barra lateral"}
           aria-pressed={!aberta}
-          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-card hover:text-foreground"
+          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-hover-strong hover:text-foreground"
         >
           {aberta ? (
             <PanelLeftClose className="h-4 w-4" aria-hidden="true" />
@@ -52,7 +52,10 @@ export function Sidebar() {
         aria-label="Navegação principal"
       >
         {nav.map((item) => {
-          const active = pathname === item.href;
+          // O detalhe de um contrato mora sob /pagamentos — o item precisa
+          // continuar marcado como atual lá dentro.
+          const active =
+            item.href === "/" ? pathname === "/" : pathname === item.href || pathname.startsWith(`${item.href}/`);
           const Icon = item.icon;
           return (
             <Link
@@ -65,7 +68,7 @@ export function Sidebar() {
                 aberta ? "px-3 py-2" : "h-9 w-9 justify-center",
                 active
                   ? "bg-accent text-accent-foreground"
-                  : "text-muted-foreground hover:bg-card hover:text-foreground",
+                  : "text-muted-foreground hover:bg-hover-strong hover:text-foreground",
               )}
             >
               <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />

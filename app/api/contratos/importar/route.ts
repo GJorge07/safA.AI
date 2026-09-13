@@ -3,6 +3,7 @@ import { ZodError, z } from "zod";
 import { ingestDriveContract, ingestUploadedContract, type SupportedContractMimeType } from "@/lib/ai";
 import { UnsupportedEvidenceError } from "@/lib/ai/evidence";
 import { carregarDadosFinanceiros, salvarContratoExtraido } from "@/lib/db/contratos";
+import type { OrigemRegistro } from "@/lib/types";
 
 export const runtime = "nodejs";
 export const maxDuration = 120;
@@ -18,23 +19,33 @@ export async function POST(request: Request): Promise<Response> {
   try {
     const contentType = request.headers.get("content-type") ?? "";
     let result;
+    let origem: OrigemRegistro;
+    let arquivoNome: string | null;
     if (contentType.includes("application/json")) {
       const body = driveRequestSchema.parse(await request.json());
       result = await ingestDriveContract(body.driveFileId);
+      origem = "drive";
+      arquivoNome = result.fonte?.name ?? null;
     } else {
       const form = await request.formData();
-      result = await ingestUpload(form);
+      const upload = await ingestUpload(form);
+      result = upload.result;
+      origem = "upload";
+      arquivoNome = upload.arquivoNome;
     }
 
     // Só grava o que a validação de evidência aprovou; o que precisa de
     // revisão volta para o advogado sem sujar o banco.
     if (!result.payloadBackend) return Response.json({ ...result, contratoId: null, opiniao: null }, { status: 202 });
 
-    const contrato = await salvarContratoExtraido(result.payloadBackend, result.textoCompleto);
+    const contrato = await salvarContratoExtraido(result.payloadBackend, result.textoCompleto, {
+      origem,
+      arquivoNome,
+    });
     const dados = await carregarDadosFinanceiros();
     const opiniao = dados.contratos.find(item => item.id === contrato.id)?.opiniao ?? null;
     revalidatePath("/");
-    revalidatePath("/contratos");
+    revalidatePath("/pagamentos");
     return Response.json({ ...result, contratoId: contrato.id, opiniao }, { status: 201 });
   } catch (error) {
     if (error instanceof ZodError) return Response.json({ erro: "Dados inválidos.", detalhes: error.issues }, { status: 400 });
@@ -64,7 +75,10 @@ async function ingestUpload(form: FormData) {
       buffer.subarray(0, 2).toString() !== "PK") {
     throw new Error("O arquivo selecionado não é um DOCX válido.");
   }
-  return ingestUploadedContract(buffer, mimeType);
+  return {
+    result: await ingestUploadedContract(buffer, mimeType),
+    arquivoNome: file.name,
+  };
 }
 
 function detectarTipo(file: File): SupportedContractMimeType | null {

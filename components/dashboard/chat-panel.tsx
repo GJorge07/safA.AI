@@ -152,7 +152,7 @@ export function ChatPanel({ temContratos, perguntaInicial, conversaId }: ChatPan
       const texto = data.payloadBackend
         ? `Li o contrato e extraí: cliente ${data.payloadBackend.cliente}, pagamento ${data.payloadBackend.tipoPagamento}, ` +
           `${data.payloadBackend.valorTotal.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })} em ` +
-          `${data.payloadBackend.parcelas.length} parcela(s). Quer conferir a cláusula original na aba Contratos?${opiniaoTexto}`
+          `${data.payloadBackend.parcelas.length} parcela(s). Quer conferir a cláusula original na aba Pagamentos?${opiniaoTexto}`
         : `Consegui ler o arquivo, mas a extração precisa de revisão manual: ${
             (data.motivosRevisao ?? []).join("; ") || "dados insuficientes para confirmar automaticamente."
           }${opiniaoTexto}`;

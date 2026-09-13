@@ -30,7 +30,7 @@ export function extrairContextoDoContrato(texto: string): DadosAnaliseDocumento 
     return valores[0];
   }
   contexto.dificuldade = unico("dificuldade", /(?:dificuldade|complexidade)\s*(?:estimada\s*)?(?::|de)?\s*(baixa|m[eé]dia|alta)\b/gi, m => m[1].toLowerCase().replace("é", "e")) as ContextoEsforco["dificuldade"];
-  const intervalos = [...texto.matchAll(/(?:esforço total|esforço|horas totais|trabalho total|dedica[çc][ãa]o total)\s*(?:estimad[oa]s?\s*)?(?::|de|entre)?\s*(\d+(?:,\d+)?)\s*(?:a|e|–|-)\s*(\d+(?:,\d+)?)\s*(?:horas|h)\b/gi)].filter(afirmado);
+  const intervalos = [...texto.matchAll(/(?:esfor[çc]o total|esfor[çc]o|horas totais|trabalho total|dedica[çc][ãa]o total)\s*(?:estimad[oa]s?\s*)?(?::|de|entre)?\s*(\d+(?:,\d+)?)\s*(?:a|e|–|-)\s*(\d+(?:,\d+)?)\s*(?:horas|h)\b/gi)].filter(afirmado);
   if (new Set(intervalos.map(m => `${m[1]}:${m[2]}`)).size === 1) {
     contexto.horasMinimas = numeroBR(intervalos[0][1]); contexto.horasMaximas = numeroBR(intervalos[0][2]);
     evidencias.push({ campo: "horasMinimas/horasMaximas", trecho: intervalos[0][0] });

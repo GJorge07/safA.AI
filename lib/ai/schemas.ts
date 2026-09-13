@@ -114,8 +114,8 @@ export const extracaoContratoJsonSchema = {
   ],
 } as const;
 
-// Avaliação qualitativa de um contrato para o advogado (risco financeiro,
-// completude jurídica da cláusula e comparação com a carteira dele).
+// A opinião do agente é estruturada por dimensão para que toda conclusão
+// exponha as evidências e as informações que ainda faltam.
 export const contextoAdvogadoSchema = z.string().trim().max(6000).default("");
 const avaliacaoDimensaoSchema = z.object({
   status: z.enum(["favoravel", "atencao", "desfavoravel", "dados_insuficientes"]),
@@ -125,7 +125,12 @@ const avaliacaoDimensaoSchema = z.object({
 });
 
 export const opiniaoContratoSchema = z.object({
-  avaliacoes: z.object({ financeiro: avaliacaoDimensaoSchema, pagamentos: avaliacaoDimensaoSchema, complexidade: avaliacaoDimensaoSchema, escopo: avaliacaoDimensaoSchema }),
+  avaliacoes: z.object({
+    financeiro: avaliacaoDimensaoSchema,
+    pagamentos: avaliacaoDimensaoSchema,
+    complexidade: avaliacaoDimensaoSchema,
+    escopo: avaliacaoDimensaoSchema,
+  }),
   classificacao: z.enum(["favoravel", "atencao", "desfavoravel"]),
   resumo: z.string().min(1),
   pontosFortes: z.array(z.string().min(1)),
@@ -138,52 +143,14 @@ export const opiniaoContratoSchema = z.object({
 
 export type OpiniaoContrato = z.infer<typeof opiniaoContratoSchema>;
 
-const avaliacaoDimensaoJsonSchema = {
-  type: "object", additionalProperties: false,
-  properties: {
-    status: { type: "string", enum: ["favoravel", "atencao", "desfavoravel", "dados_insuficientes"] },
-    justificativa: { type: "string" },
-    evidencias: { type: "array", items: { type: "string" } },
-    dadosFaltantes: { type: "array", items: { type: "string" } },
-  },
-  required: ["status", "justificativa", "evidencias", "dadosFaltantes"],
-} as const;
-
-export const opiniaoContratoJsonSchema = {
-  type: "object",
-  additionalProperties: false,
-  properties: {
-    avaliacoes: {
-      type: "object", additionalProperties: false,
-      properties: { financeiro: avaliacaoDimensaoJsonSchema, pagamentos: avaliacaoDimensaoJsonSchema, complexidade: avaliacaoDimensaoJsonSchema, escopo: avaliacaoDimensaoJsonSchema },
-      required: ["financeiro", "pagamentos", "complexidade", "escopo"],
-    },
-    classificacao: { type: "string", enum: ["favoravel", "atencao", "desfavoravel"] },
-    resumo: { type: "string" },
-    pontosFortes: { type: "array", items: { type: "string" } },
-    riscos: {
-      type: "array",
-      items: {
-        type: "object",
-        additionalProperties: false,
-        properties: {
-          categoria: { type: "string", enum: ["financeiro", "juridico", "carteira", "pagamentos", "complexidade", "escopo"] },
-          descricao: { type: "string" },
-        },
-        required: ["categoria", "descricao"],
-      },
-    },
-    recomendacao: { type: "string" },
-  },
-  required: ["avaliacoes", "classificacao", "resumo", "pontosFortes", "riscos", "recomendacao"],
-} as const;
-
-
 export const parcelaFinanceiraSchema = z.object({
   id: z.string().min(1),
   valor: z.number().nonnegative(),
   vencimento: z.string().regex(isoDate),
-  status: z.enum(["prevista", "paga", "atrasada"]),
+  // "baixada" = honorário de êxito que não vai ser recebido. Sem esse estado,
+  // a IA leria a parcela como dívida em aberto e responderia com dinheiro que
+  // não existe mais.
+  status: z.enum(["prevista", "paga", "atrasada", "baixada"]),
   saldo: z.number().nonnegative().optional(),
 });
 
@@ -231,6 +198,131 @@ export const respostaFinanceiraSchema = z.object({
 });
 
 export type RespostaFinanceira = z.infer<typeof respostaFinanceiraSchema>;
+
+// Leitura de recibo/nota para virar um RASCUNHO de despesa. Tudo é anulável
+// porque comprovante é um documento bagunçado — o advogado completa o que
+// faltar antes de confirmar o lançamento.
+export const extracaoDespesaSchema = z.object({
+  descricao: z.string().min(1).nullable(),
+  tipo: z.enum(["processo", "escritorio"]).nullable(),
+  categoria: z
+    .enum([
+      "deslocamento",
+      "custas",
+      "diligencia",
+      "cartorio",
+      "pericia",
+      "correspondente",
+      "outros_processo",
+      "estrutura",
+      "software",
+      "tributos",
+      "pessoal",
+      "outros_escritorio",
+    ])
+    .nullable(),
+  valor: z.number().nonnegative().nullable(),
+  vencimento: z.string().regex(isoDate).nullable(),
+  fornecedor: z.string().min(1).nullable(),
+  textoOriginal: z.string().min(1).nullable(),
+  confianca: z.number().min(0).max(1),
+  avisos: z.array(z.string().min(1)),
+});
+
+export type ExtracaoDespesa = z.infer<typeof extracaoDespesaSchema>;
+
+const CATEGORIAS_DESPESA = [
+  "deslocamento",
+  "custas",
+  "diligencia",
+  "cartorio",
+  "pericia",
+  "correspondente",
+  "outros_processo",
+  "estrutura",
+  "software",
+  "tributos",
+  "pessoal",
+  "outros_escritorio",
+] as const;
+
+export const extracaoDespesaJsonSchema = {
+  type: "object",
+  additionalProperties: false,
+  properties: {
+    descricao: { type: ["string", "null"] },
+    tipo: {
+      anyOf: [{ type: "string", enum: ["processo", "escritorio"] }, { type: "null" }],
+    },
+    categoria: {
+      anyOf: [{ type: "string", enum: CATEGORIAS_DESPESA }, { type: "null" }],
+    },
+    valor: { type: ["number", "null"], minimum: 0 },
+    vencimento: { type: ["string", "null"] },
+    fornecedor: { type: ["string", "null"] },
+    textoOriginal: { type: ["string", "null"] },
+    confianca: { type: "number", minimum: 0, maximum: 1 },
+    avisos: { type: "array", items: { type: "string" } },
+  },
+  required: [
+    "descricao",
+    "tipo",
+    "categoria",
+    "valor",
+    "vencimento",
+    "fornecedor",
+    "textoOriginal",
+    "confianca",
+    "avisos",
+  ],
+} as const;
+
+const avaliacaoDimensaoJsonSchema = {
+  type: "object",
+  additionalProperties: false,
+  properties: {
+    status: { type: "string", enum: ["favoravel", "atencao", "desfavoravel", "dados_insuficientes"] },
+    justificativa: { type: "string" },
+    evidencias: { type: "array", items: { type: "string" } },
+    dadosFaltantes: { type: "array", items: { type: "string" } },
+  },
+  required: ["status", "justificativa", "evidencias", "dadosFaltantes"],
+} as const;
+
+export const opiniaoContratoJsonSchema = {
+  type: "object",
+  additionalProperties: false,
+  properties: {
+    avaliacoes: {
+      type: "object",
+      additionalProperties: false,
+      properties: {
+        financeiro: avaliacaoDimensaoJsonSchema,
+        pagamentos: avaliacaoDimensaoJsonSchema,
+        complexidade: avaliacaoDimensaoJsonSchema,
+        escopo: avaliacaoDimensaoJsonSchema,
+      },
+      required: ["financeiro", "pagamentos", "complexidade", "escopo"],
+    },
+    classificacao: { type: "string", enum: ["favoravel", "atencao", "desfavoravel"] },
+    resumo: { type: "string" },
+    pontosFortes: { type: "array", items: { type: "string" } },
+    riscos: {
+      type: "array",
+      items: {
+        type: "object",
+        additionalProperties: false,
+        properties: {
+          categoria: { type: "string", enum: ["financeiro", "juridico", "carteira", "pagamentos", "complexidade", "escopo"] },
+          descricao: { type: "string" },
+        },
+        required: ["categoria", "descricao"],
+      },
+    },
+    recomendacao: { type: "string" },
+  },
+  required: ["avaliacoes", "classificacao", "resumo", "pontosFortes", "riscos", "recomendacao"],
+} as const;
 
 export const respostaFinanceiraJsonSchema = {
   type: "object",

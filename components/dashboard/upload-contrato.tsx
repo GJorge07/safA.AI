@@ -9,7 +9,7 @@ import { Progress } from "@/components/ui/progress";
 import type { ContratoExtraido } from "@/lib/types";
 import type { OpiniaoContrato } from "@/lib/ai/schemas";
 
-type ItemStatus = "na_fila" | "enviando" | "lendo" | "extraido" | "erro";
+type ItemStatus = "na_fila" | "enviando" | "lendo" | "extraido" | "revisao" | "erro";
 
 interface ItemFila {
   id: string;
@@ -49,11 +49,14 @@ export function UploadContrato() {
       setFila((f) => f.map((it) => it.id === id ? { ...it, opiniao: data.opiniao ?? null } : it));
       if (!data.payloadBackend) {
         const motivos: string[] = data.motivosRevisao ?? [];
-        throw new Error(
-          motivos.length > 0
-            ? `Revisão manual necessária: ${motivos.join("; ")}`
+        setFila((f) => f.map((it) => it.id === id ? {
+          ...it,
+          status: "revisao",
+          mensagemErro: motivos.length > 0
+            ? motivos.join("; ")
             : "A extração precisa de revisão manual antes de salvar.",
-        );
+        } : it));
+        return;
       }
 
       setFila((f) =>
@@ -134,8 +137,8 @@ export function UploadContrato() {
                 {item.status === "extraido" && (
                   <CheckCircle2 className="h-4 w-4 shrink-0 text-success" aria-hidden="true" />
                 )}
-                {item.status === "erro" && (
-                  <AlertTriangle className="h-4 w-4 shrink-0 text-destructive" aria-hidden="true" />
+                {(item.status === "erro" || item.status === "revisao") && (
+                  <AlertTriangle className={`h-4 w-4 shrink-0 ${item.status === "erro" ? "text-destructive" : "text-warning"}`} aria-hidden="true" />
                 )}
                 {(item.status === "enviando" || item.status === "lendo") && (
                   <Loader2 className="h-4 w-4 shrink-0 animate-spin text-primary" aria-hidden="true" />
@@ -151,6 +154,7 @@ export function UploadContrato() {
                   {item.status === "enviando" && `Enviando… ${item.progresso}%`}
                   {item.status === "lendo" && "Lendo cláusulas com IA…"}
                   {item.status === "extraido" && `Extraído — ${item.extraido?.parcelas.length} parcela(s)`}
+                  {item.status === "revisao" && "Revisão necessária"}
                   {item.status === "erro" && "Falha na extração"}
                 </span>
 
@@ -165,9 +169,9 @@ export function UploadContrato() {
                     {abertoId === item.id ? "Ocultar" : "Ver avaliação"}
                   </Button>
                 )}
-                {item.status === "erro" && (
+                {(item.status === "erro" || item.status === "revisao") && (
                   <Button size="sm" variant="secondary" onClick={() => remover(item.id)}>
-                    Tentar de novo
+                    {item.status === "erro" ? "Tentar de novo" : "Remover"}
                   </Button>
                 )}
               </div>
@@ -178,8 +182,10 @@ export function UploadContrato() {
 
               {item.status === "erro" && item.opiniao && <OpiniaoDetalhada opiniao={item.opiniao} />}
 
-              {item.status === "erro" && item.mensagemErro && (
-                <p className="mt-2 text-xs text-destructive">{item.mensagemErro}</p>
+              {(item.status === "erro" || item.status === "revisao") && item.mensagemErro && (
+                <p className={`mt-2 text-xs ${item.status === "erro" ? "text-destructive" : "text-warning"}`}>
+                  {item.mensagemErro}
+                </p>
               )}
 
               {item.status === "extraido" && abertoId === item.id && item.extraido && (

@@ -3,7 +3,7 @@ import { cn } from "@/lib/utils";
 export function Progress({ value, className }: { value: number; className?: string }) {
   return (
     <div
-      className={cn("h-1.5 w-full overflow-hidden rounded-full bg-muted", className)}
+      className={cn("h-1.5 w-full overflow-hidden rounded-full bg-border", className)}
       role="progressbar"
       aria-valuenow={Math.round(value)}
       aria-valuemin={0}
