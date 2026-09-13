@@ -1,14 +1,14 @@
 import Link from "next/link";
 import { Plus } from "lucide-react";
 import { ChatPanel } from "@/components/dashboard/chat-panel";
-import { contratosMock } from "@/lib/mock-data";
+import { contarContratos } from "@/lib/db/contratos";
 
 interface AgentePageProps {
   searchParams: Promise<{ q?: string; conversaId?: string }>;
 }
 
 export default async function AgentePage({ searchParams }: AgentePageProps) {
-  const { q, conversaId } = await searchParams;
+  const [{ q, conversaId }, totalContratos] = await Promise.all([searchParams, contarContratos()]);
 
   return (
     <div className="mx-auto flex h-[85vh] w-full max-w-3xl flex-col gap-3">
@@ -27,7 +27,12 @@ export default async function AgentePage({ searchParams }: AgentePageProps) {
       </div>
 
       <div className="min-h-0 flex-1">
-        <ChatPanel key={conversaId ?? q ?? "novo"} contratos={contratosMock} perguntaInicial={q} conversaId={conversaId} />
+        <ChatPanel
+          key={conversaId ?? q ?? "novo"}
+          temContratos={totalContratos > 0}
+          perguntaInicial={q}
+          conversaId={conversaId}
+        />
       </div>
     </div>
   );

@@ -15,6 +15,7 @@
         "cliente": "Ana Lima",
         "tipoPagamento": "fixo",
         "valorTotal": 6000,
+        "clausulaOriginal": "Cláusula 2ª — Honorários fixos de R$ 6.000,00, pagos em parcelas mensais, vencíveis todo dia 5.",
         "parcelas": [
           {
             "id": "parcela-ana-1",
@@ -36,6 +37,7 @@
         "cliente": "Bruno Alves",
         "tipoPagamento": "misto",
         "valorTotal": 4000,
+        "clausulaOriginal": "Cláusula 3ª — Honorários mistos: parte fixa de R$ 3.000,00 e êxito de 10% sobre eventual proveito econômico, com parcela final de R$ 3.000,00 vencendo em 10/11.",
         "parcelas": [
           {
             "id": "parcela-bruno-1",

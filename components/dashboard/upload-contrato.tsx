@@ -1,10 +1,11 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { AlertTriangle, CheckCircle2, FileText, FolderOpen, Loader2, Sparkles, Upload } from "lucide-react";
+import { AlertTriangle, CheckCircle2, FileText, FolderOpen, Loader2, ShieldAlert, ShieldCheck, ShieldQuestion, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import type { ContratoExtraido } from "@/lib/types";
+import type { OpiniaoContrato } from "@/lib/ai/schemas";
 
 type ItemStatus = "na_fila" | "enviando" | "lendo" | "extraido" | "erro";
 
@@ -14,86 +15,69 @@ interface ItemFila {
   status: ItemStatus;
   progresso: number;
   extraido?: ContratoExtraido;
+  opiniao?: OpiniaoContrato | null;
   mensagemErro?: string;
 }
 
-const filaInicial: ItemFila[] = [
-  {
-    id: "seed-1",
-    nome: "contrato-mercado-bompreco.pdf",
-    status: "extraido",
-    progresso: 100,
-    extraido: {
-      cliente: "Mercado Bom Preço S.A.",
-      tipoPagamento: "fixo",
-      valorTotal: 12000,
-      parcelas: [{ valor: 3000, vencimento: "2026-10-15" }],
-      clausulaOriginal:
-        "Cláusula 2ª — Dos Honorários Fixos: o valor total de R$ 12.000,00 será pago em 4 parcelas iguais de R$ 3.000,00, com vencimento todo dia 15.",
-    },
-  },
-  { id: "seed-2", nome: "contrato-joao-pereira.pdf", status: "na_fila", progresso: 0 },
-];
+const CLASSIFICACAO_ESTILO: Record<OpiniaoContrato["classificacao"], { rotulo: string; classe: string; Icone: typeof ShieldCheck }> = {
+  favoravel: { rotulo: "Favorável", classe: "text-success", Icone: ShieldCheck },
+  atencao: { rotulo: "Atenção", classe: "text-warning", Icone: ShieldQuestion },
+  desfavoravel: { rotulo: "Desfavorável", classe: "text-destructive", Icone: ShieldAlert },
+};
 
-// TODO(ia): trocar a simulação abaixo por POST real para app/api/contratos,
-// que dispara a extração em lib/ai/ e valida o retorno contra ContratoExtraido
-// (ver lib/types.ts) antes de gravar no banco.
 export function UploadContrato() {
-  const [fila, setFila] = useState<ItemFila[]>(filaInicial);
+  const [fila, setFila] = useState<ItemFila[]>([]);
   const [arrastando, setArrastando] = useState(false);
   const [abertoId, setAbertoId] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  function simularEnvio(nome: string) {
+  async function enviarArquivo(file: File) {
     const id = crypto.randomUUID();
-    setFila((f) => [...f, { id, nome, status: "enviando", progresso: 0 }]);
-    let progresso = 0;
-    const timer = setInterval(() => {
-      progresso += 20;
-      setFila((f) => f.map((it) => (it.id === id ? { ...it, progresso } : it)));
-      if (progresso >= 100) {
-        clearInterval(timer);
-        setFila((f) => f.map((it) => (it.id === id ? { ...it, status: "lendo" } : it)));
-        setTimeout(() => {
-          setFila((f) =>
-            f.map((it) =>
-              it.id === id
-                ? {
-                    ...it,
-                    status: "extraido",
-                    extraido: {
-                      cliente: "Construtora Alvorada Ltda.",
-                      tipoPagamento: "misto",
-                      valorTotal: 45000,
-                      parcelas: [
-                        { valor: 15000, vencimento: "2026-10-05" },
-                        { valor: 15000, vencimento: "2026-11-05" },
-                        { valor: 15000, vencimento: "2026-12-05" },
-                      ],
-                      clausulaOriginal:
-                        "Cláusula 4ª — Dos Honorários: as partes ajustam o pagamento em 3 parcelas mensais de R$ 15.000,00, vencíveis todo dia 5.",
-                    },
-                  }
-                : it,
-            ),
-          );
-        }, 1100);
-      }
-    }, 260);
-  }
+    setFila((f) => [...f, { id, nome: file.name, status: "enviando", progresso: 0 }]);
 
-  function simularErro() {
-    const id = crypto.randomUUID();
-    setFila((f) => [
-      ...f,
-      {
-        id,
-        nome: "contrato-ilegivel-scan.pdf",
-        status: "erro",
-        progresso: 0,
-        mensagemErro: "Não conseguimos ler este PDF (parece ser uma imagem escaneada).",
-      },
-    ]);
+    const progressTimer = setInterval(() => {
+      setFila((f) =>
+        f.map((it) => (it.id === id && it.progresso < 90 ? { ...it, progresso: it.progresso + 10 } : it)),
+      );
+    }, 200);
+
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await fetch("/api/contratos/importar", { method: "POST", body: formData });
+      clearInterval(progressTimer);
+      setFila((f) => f.map((it) => (it.id === id ? { ...it, progresso: 100, status: "lendo" } : it)));
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.erro ?? "Não foi possível processar o arquivo.");
+      if (!data.payloadBackend) {
+        const motivos: string[] = data.motivosRevisao ?? [];
+        throw new Error(
+          motivos.length > 0
+            ? `Revisão manual necessária: ${motivos.join("; ")}`
+            : "A extração precisa de revisão manual antes de salvar.",
+        );
+      }
+
+      setFila((f) =>
+        f.map((it) =>
+          it.id === id ? { ...it, status: "extraido", extraido: data.payloadBackend, opiniao: data.opiniao ?? null } : it,
+        ),
+      );
+    } catch (error) {
+      clearInterval(progressTimer);
+      setFila((f) =>
+        f.map((it) =>
+          it.id === id
+            ? {
+                ...it,
+                status: "erro",
+                mensagemErro: error instanceof Error ? error.message : "Erro ao enviar o arquivo.",
+              }
+            : it,
+        ),
+      );
+    }
   }
 
   function remover(id: string) {
@@ -101,7 +85,7 @@ export function UploadContrato() {
   }
 
   function handleFile(file: File | undefined) {
-    if (file) simularEnvio(file.name);
+    if (file) enviarArquivo(file);
   }
 
   return (
@@ -135,13 +119,6 @@ export function UploadContrato() {
         <div className="mt-2 flex flex-wrap justify-center gap-2">
           <Button size="sm" variant="secondary" onClick={() => inputRef.current?.click()}>
             Escolher arquivo
-          </Button>
-          <Button size="sm" variant="ia" onClick={() => simularEnvio("contrato-alvorada-2026.docx")}>
-            <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
-            Simular envio
-          </Button>
-          <Button size="sm" variant="destructive" onClick={simularErro}>
-            Simular erro
           </Button>
         </div>
       </div>
@@ -180,6 +157,8 @@ export function UploadContrato() {
                   {item.status === "erro" && "Falha na extração"}
                 </span>
 
+                {item.status === "extraido" && item.opiniao && <SeloClassificacao classificacao={item.opiniao.classificacao} />}
+
                 {item.status === "extraido" && (
                   <Button
                     size="sm"
@@ -205,18 +184,73 @@ export function UploadContrato() {
               )}
 
               {item.status === "extraido" && abertoId === item.id && item.extraido && (
-                <div className="mt-3 rounded-md bg-muted p-3 text-xs">
-                  <p className="mb-2 font-medium text-foreground">
-                    {item.extraido.cliente} · {item.extraido.tipoPagamento} ·{" "}
-                    {item.extraido.valorTotal.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
-                  </p>
-                  <p className="italic text-muted-foreground">&ldquo;{item.extraido.clausulaOriginal}&rdquo;</p>
+                <div className="mt-3 flex flex-col gap-3">
+                  <div className="rounded-md bg-muted p-3 text-xs">
+                    <p className="mb-2 font-medium text-foreground">
+                      {item.extraido.cliente} · {item.extraido.tipoPagamento} ·{" "}
+                      {item.extraido.valorTotal.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+                    </p>
+                    <p className="italic text-muted-foreground">&ldquo;{item.extraido.clausulaOriginal}&rdquo;</p>
+                  </div>
+                  {item.opiniao && <OpiniaoDetalhada opiniao={item.opiniao} />}
                 </div>
               )}
             </li>
           ))}
         </ul>
       )}
+    </div>
+  );
+}
+
+function SeloClassificacao({ classificacao }: { classificacao: OpiniaoContrato["classificacao"] }) {
+  const { Icone, rotulo, classe } = CLASSIFICACAO_ESTILO[classificacao];
+  return (
+    <span className={`flex shrink-0 items-center gap-1 text-xs font-medium ${classe}`}>
+      <Icone className="h-3.5 w-3.5" aria-hidden="true" />
+      {rotulo}
+    </span>
+  );
+}
+
+const CATEGORIA_ROTULO: Record<OpiniaoContrato["riscos"][number]["categoria"], string> = {
+  financeiro: "Financeiro",
+  juridico: "Jurídico",
+  carteira: "Carteira",
+};
+
+function OpiniaoDetalhada({ opiniao }: { opiniao: OpiniaoContrato }) {
+  return (
+    <div className="rounded-md border border-border p-3 text-xs">
+      <div className="mb-2 flex items-center gap-2">
+        <SeloClassificacao classificacao={opiniao.classificacao} />
+        <span className="text-muted-foreground">Opinião da IA para o advogado</span>
+      </div>
+      <p className="mb-2 text-foreground">{opiniao.resumo}</p>
+
+      {opiniao.pontosFortes.length > 0 && (
+        <ul className="mb-2 flex flex-col gap-1">
+          {opiniao.pontosFortes.map((ponto, i) => (
+            <li key={i} className="flex gap-1.5 text-success">
+              <span aria-hidden="true">+</span>
+              <span className="text-foreground">{ponto}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      {opiniao.riscos.length > 0 && (
+        <ul className="mb-2 flex flex-col gap-1">
+          {opiniao.riscos.map((risco, i) => (
+            <li key={i} className="flex gap-1.5">
+              <span className="shrink-0 font-medium text-warning">[{CATEGORIA_ROTULO[risco.categoria]}]</span>
+              <span className="text-foreground">{risco.descricao}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      <p className="border-t border-border pt-2 font-medium text-foreground">{opiniao.recomendacao}</p>
     </div>
   );
 }
