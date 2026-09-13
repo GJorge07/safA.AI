@@ -117,7 +117,10 @@ export const parcelaFinanceiraSchema = z.object({
   id: z.string().min(1),
   valor: z.number().nonnegative(),
   vencimento: z.string().regex(isoDate),
-  status: z.enum(["prevista", "paga", "atrasada"]),
+  // "baixada" = honorário de êxito que não vai ser recebido. Sem esse estado,
+  // a IA leria a parcela como dívida em aberto e responderia com dinheiro que
+  // não existe mais.
+  status: z.enum(["prevista", "paga", "atrasada", "baixada"]),
 });
 
 export const contratoFinanceiroSchema = z.object({

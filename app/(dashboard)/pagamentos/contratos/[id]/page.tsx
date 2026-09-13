@@ -13,6 +13,7 @@ import { ParcelasContrato, type ParcelaLinha } from "@/components/dashboard/parc
 import {
   aguardandoReembolso,
   diasDeAtraso,
+  estaBaixada,
   numeroContrato,
   numeroDespesa,
   numeroServico,
@@ -169,17 +170,20 @@ export default async function ContratoDetalhePage({ params, searchParams }: Deta
 
 function paraLinhas(contrato: ContratoComRelacoes): ParcelaLinha[] {
   return contrato.parcelas.map((parcela, i) => {
-    const dias = parcela.pagamento ? 0 : diasDeAtraso(parcela.vencimento);
+    const baixada = estaBaixada(parcela);
+    const dias = parcela.pagamento || baixada ? 0 : diasDeAtraso(parcela.vencimento);
     return {
       id: parcela.id,
       indice: i + 1,
       valor: parcela.valor,
       vencimento: parcela.vencimento.toISOString().slice(0, 10),
       vencimentoTexto: data(parcela.vencimento),
-      status: parcela.pagamento ? "paga" : dias > 0 ? "atrasada" : "prevista",
+      status: baixada ? "baixada" : parcela.pagamento ? "paga" : dias > 0 ? "atrasada" : "prevista",
       diasAtraso: dias,
       valorPago: parcela.pagamento?.valorPago ?? null,
       dataPagoTexto: parcela.pagamento ? data(parcela.pagamento.dataPago) : null,
+      motivoBaixa: parcela.motivoBaixa,
+      notaBaixa: parcela.notaBaixa,
     };
   });
 }

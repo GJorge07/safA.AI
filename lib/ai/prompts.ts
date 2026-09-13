@@ -1,5 +1,5 @@
 export const EXTRACTION_PROMPT_VERSION = "contract-extraction-v1.1";
-export const FINANCIAL_CHAT_PROMPT_VERSION = "financial-chat-v1.4";
+export const FINANCIAL_CHAT_PROMPT_VERSION = "financial-chat-v1.5";
 export const INSIGHTS_VERSION = "automatic-insights-v1";
 export const CONTRACT_OPINION_PROMPT_VERSION = "contract-opinion-v1";
 export const EXPENSE_EXTRACTION_PROMPT_VERSION = "expense-extraction-v1.1";
@@ -58,6 +58,10 @@ houver mais de um contrato nos dados, compare valor total e tipo de pagamento
 com os demais contratos do advogado. Cite clausulaOriginal do contrato
 avaliado nesses casos. Nunca afirme que falta uma cláusula sem antes conferir
 que ela realmente não aparece no texto de clausulaOriginal fornecido.
+Parcela com status "baixada" é honorário que deixou de ser devido — tipicamente
+êxito que não se confirmou. Nunca a trate como atraso, dívida ou valor a
+receber, e nunca a inclua em somas de quanto o advogado vai receber. Se a
+pergunta for sobre ela, diga que o valor não é mais devido.
 Para totais consolidados, use contratoId null e caminhos como resumo.pendente.
 Se os dados forem insuficientes, explique isso claramente no campo aviso.
 OBRIGATÓRIO: toda resposta precisa ter pelo menos um item em citacoes OU um

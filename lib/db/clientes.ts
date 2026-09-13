@@ -27,7 +27,7 @@ function centavos(valor: number): number {
  */
 export async function listarClientesAtivos(hoje = new Date()): Promise<ClienteAtivo[]> {
   const clientes = await prisma.cliente.findMany({
-    where: { contratos: { some: { parcelas: { some: { pagamento: { is: null } } } } } },
+    where: { contratos: { some: { parcelas: { some: { pagamento: { is: null }, baixadaEm: null } } } } },
     select: {
       id: true,
       nome: true,
@@ -37,7 +37,7 @@ export async function listarClientesAtivos(hoje = new Date()): Promise<ClienteAt
         select: {
           id: true,
           parcelas: {
-            where: { pagamento: { is: null } },
+            where: { pagamento: { is: null }, baixadaEm: null },
             select: { valor: true, vencimento: true },
           },
         },

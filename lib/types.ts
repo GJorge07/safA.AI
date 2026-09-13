@@ -3,6 +3,10 @@
 
 export type TipoPagamento = "fixo" | "exito" | "misto";
 
+// Por que uma parcela deixou de ser devida. Só entram desfechos que extinguem
+// a dívida — inadimplência não é baixa, é atraso, e continua em cobrança.
+export type MotivoBaixa = "sem_exito" | "acordo_menor" | "desistencia" | "outro";
+
 export interface ContratoExtraido {
   cliente: string;
   tipoPagamento: TipoPagamento;

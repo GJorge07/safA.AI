@@ -153,7 +153,7 @@ async function semearBase() {
 
       if (!parcela.pagamento) continue;
       await prisma.pagamento.upsert({
-        where: { id: parcela.pagamento.id },
+        where: { parcelaId: parcela.id },
         update: { valorPago: parcela.pagamento.valorPago, dataPago: parcela.pagamento.dataPago },
         create: {
           id: parcela.pagamento.id,
@@ -248,24 +248,42 @@ async function semearContratos(clienteIds: string[], hoje: Date): Promise<string
       const vencimento = dia(hoje.getUTCFullYear(), hoje.getUTCMonth() + mesInicial + p, escolher([5, 10, 15, 20]));
       await prisma.parcela.upsert({
         where: { id: parcelaId },
-        update: { valor: valorParcela, vencimento },
+        update: { valor: valorParcela, vencimento, baixadaEm: null, motivoBaixa: null, notaBaixa: null },
         create: { id: parcelaId, contratoId, valor: valorParcela, vencimento },
       });
 
       const jaVenceu = vencimento < hoje;
+
+      // Honorário de êxito nem sempre se confirma: parte dos contratos de
+      // êxito vencidos vira baixa, e não atraso. Sem isso a demonstração
+      // mostraria como dívida um dinheiro que nunca vai existir.
+      const semExito = tipo === "exito" && perfil === "atrasado" && jaVenceu && aleatorio() < 0.5;
+      if (semExito) {
+        await prisma.pagamento.deleteMany({ where: { parcelaId } });
+        await prisma.parcela.update({
+          where: { id: parcelaId },
+          data: {
+            baixadaEm: new Date(vencimento.getTime() + inteiro(5, 40) * 86400000),
+            motivoBaixa: "SEM_EXITO",
+            notaBaixa: "Ação julgada improcedente; honorário de êxito não é devido.",
+          },
+        });
+        continue;
+      }
+
       // Quitado paga tudo; atrasado deixa pelo menos a primeira vencida em
       // aberto; em dia paga só o que já venceu.
       const pago = perfil === "quitado" ? true : perfil === "atrasado" ? jaVenceu && p > 0 : jaVenceu;
       const pagamentoId = `${parcelaId}-pg`;
 
       if (!pago) {
-        await prisma.pagamento.deleteMany({ where: { id: pagamentoId } });
+        await prisma.pagamento.deleteMany({ where: { parcelaId } });
         continue;
       }
 
       const dataPago = new Date(vencimento.getTime() + inteiro(-3, 4) * 86400000);
       await prisma.pagamento.upsert({
-        where: { id: pagamentoId },
+        where: { parcelaId },
         update: { valorPago: valorParcela, dataPago },
         create: { id: pagamentoId, parcelaId, valorPago: valorParcela, dataPago },
       });
@@ -571,6 +589,19 @@ async function main() {
     hoje,
   );
   await semearServicosDemo(hoje);
+
+  // c2 é o contrato de êxito da demonstração. Deixá-lo eternamente "atrasado"
+  // ensinava o conceito errado no pitch: êxito que não vem não é inadimplência.
+  {
+    await prisma.parcela.update({
+      where: { id: "p4" },
+      data: {
+        baixadaEm: dia(2026, 8, 20),
+        motivoBaixa: "SEM_EXITO",
+        notaBaixa: "Sentença de improcedência, sem recurso.",
+      },
+    });
+  }
 
   const [totalClientes, totalContratos, totalParcelas, totalPagamentos, totalDespesas, totalServicos] =
     await Promise.all([

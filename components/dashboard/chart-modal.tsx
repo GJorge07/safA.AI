@@ -92,6 +92,37 @@ function fatiasDaPizza(clientes: FatiaCliente[]): FatiaCliente[] {
   return [...clientes.slice(0, LIMITE_FATIAS), { nome: "Outros clientes", recebido: resto }];
 }
 
+// Índice por letra inicial de cada palavra do nome: digitar "l" devolve na
+// hora todo mundo que tem uma palavra começando com L, sem varrer a lista
+// inteira a cada tecla. Quem não casa por início de palavra ainda é achado
+// pela varredura de reserva em `sugerir`.
+function indexarPorLetra(clientes: FatiaCliente[]): Map<string, FatiaCliente[]> {
+  const indice = new Map<string, FatiaCliente[]>();
+  for (const cliente of clientes) {
+    for (const palavra of cliente.nome.toLowerCase().split(/\s+/)) {
+      const letra = palavra[0];
+      if (!letra) continue;
+      const balde = indice.get(letra);
+      if (balde) {
+        if (!balde.includes(cliente)) balde.push(cliente);
+      } else {
+        indice.set(letra, [cliente]);
+      }
+    }
+  }
+  return indice;
+}
+
+function sugerir(termo: string, indice: Map<string, FatiaCliente[]>, todos: FatiaCliente[]): FatiaCliente[] {
+  if (!termo) return [];
+  const balde = indice.get(termo[0]) ?? [];
+  const porInicio = termo.length === 1 ? balde : balde.filter((c) => c.nome.toLowerCase().includes(termo));
+  // Busca no meio do nome ("silva" em "João da Silva" já casa pelo índice,
+  // mas "ilva" não): varre tudo só quando o índice não devolveu nada.
+  if (porInicio.length > 0) return porInicio;
+  return todos.filter((c) => c.nome.toLowerCase().includes(termo));
+}
+
 // A mesma janela do gráfico da tela, em três leituras e cinco períodos. Sem
 // filtro de contrato: o que se filtra são contratos, e isso é trabalho da tela
 // de Pagamentos.
@@ -99,18 +130,31 @@ export function ChartModal({ aberto, onFechar, fluxoCaixa, porCliente, mesAtual 
   const [tipoGrafico, setTipoGrafico] = useState<TipoGrafico>("barra");
   const [meses, setMeses] = useState<number>(6);
   const [busca, setBusca] = useState("");
+  // Cliente escolhido na lista de sugestões; null = só o que foi digitado.
+  const [selecionado, setSelecionado] = useState<string | null>(null);
+  const [sugestoesAbertas, setSugestoesAbertas] = useState(false);
+  const [destaque, setDestaque] = useState(0);
 
   // Reabrir não deve herdar a busca da consulta anterior, então toda saída
   // passa por aqui — inclusive o Esc.
   function fechar() {
-    setBusca("");
+    limparBusca();
     onFechar();
+  }
+
+  function limparBusca() {
+    setBusca("");
+    setSelecionado(null);
+    setSugestoesAbertas(false);
+    setDestaque(0);
   }
 
   useEffect(() => {
     function onEsc(e: KeyboardEvent) {
       if (e.key === "Escape") {
         setBusca("");
+        setSelecionado(null);
+        setSugestoesAbertas(false);
         onFechar();
       }
     }
@@ -137,11 +181,51 @@ export function ChartModal({ aberto, onFechar, fluxoCaixa, porCliente, mesAtual 
 
   const totalRecebido = clientesPeriodo.reduce((total, c) => total + c.recebido, 0);
 
+  const indice = useMemo(() => indexarPorLetra(clientesPeriodo), [clientesPeriodo]);
+
   const termo = busca.trim().toLowerCase();
-  const clientesVisiveis = termo
-    ? clientesPeriodo.filter((c) => c.nome.toLowerCase().includes(termo))
+  const sugestoes = useMemo(
+    () => (selecionado ? [] : sugerir(termo, indice, clientesPeriodo)),
+    [termo, indice, clientesPeriodo, selecionado],
+  );
+
+  // O que o gráfico acende: o cliente escolhido, ou tudo que casa com o texto.
+  const alvo = selecionado?.toLowerCase() ?? termo;
+  const clientesVisiveis = alvo
+    ? clientesPeriodo.filter((c) => c.nome.toLowerCase().includes(alvo))
     : clientesPeriodo;
   const recebidoVisivel = clientesVisiveis.reduce((total, c) => total + c.recebido, 0);
+
+  function escolher(nome: string) {
+    setSelecionado(nome);
+    setBusca(nome);
+    setSugestoesAbertas(false);
+    setDestaque(0);
+  }
+
+  function navegarSugestoes(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (e.key === "Escape") {
+      // Esc fecha a lista antes de fechar o modal inteiro.
+      if (sugestoesAbertas || selecionado) {
+        e.stopPropagation();
+        e.preventDefault();
+        limparBusca();
+      }
+      return;
+    }
+    if (sugestoes.length === 0) return;
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setSugestoesAbertas(true);
+      setDestaque((atual) => (atual + 1) % sugestoes.length);
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setDestaque((atual) => (atual - 1 + sugestoes.length) % sugestoes.length);
+    } else if (e.key === "Enter") {
+      e.preventDefault();
+      escolher(sugestoes[Math.min(destaque, sugestoes.length - 1)].nome);
+    }
+  }
 
   if (!aberto) return null;
 
@@ -305,7 +389,7 @@ export function ChartModal({ aberto, onFechar, fluxoCaixa, porCliente, mesAtual 
                           key={fatia.nome}
                           fill={i < LIMITE_FATIAS ? CORES_CLIENTE[i] : "var(--muted-foreground)"}
                           // Com busca ativa, só quem casa fica aceso.
-                          fillOpacity={!termo || fatia.nome.toLowerCase().includes(termo) ? 1 : 0.15}
+                          fillOpacity={!alvo || fatia.nome.toLowerCase().includes(alvo) ? 1 : 0.15}
                         />
                       ))}
                     </Pie>
@@ -360,22 +444,91 @@ export function ChartModal({ aberto, onFechar, fluxoCaixa, porCliente, mesAtual 
               aria-hidden="true"
             />
             <input
-              type="search"
+              type="text"
               value={busca}
-              onChange={(e) => setBusca(e.target.value)}
+              onChange={(e) => {
+                setBusca(e.target.value);
+                setSelecionado(null);
+                setSugestoesAbertas(true);
+                setDestaque(0);
+              }}
+              onFocus={() => setSugestoesAbertas(true)}
+              // Sem o atraso, o clique numa sugestão perde para o blur.
+              onBlur={() => setTimeout(() => setSugestoesAbertas(false), 120)}
+              onKeyDown={navegarSugestoes}
               placeholder="Buscar cliente..."
               aria-label="Buscar cliente"
-              className="w-full rounded-md border border-input bg-background py-1.5 pl-8 pr-2 text-xs outline-none placeholder:text-muted-foreground focus:border-primary"
+              role="combobox"
+              aria-expanded={sugestoesAbertas && sugestoes.length > 0}
+              aria-controls="sugestoes-clientes"
+              aria-autocomplete="list"
+              aria-activedescendant={
+                sugestoesAbertas && sugestoes.length > 0 ? `sugestao-${destaque}` : undefined
+              }
+              autoComplete="off"
+              className="w-full rounded-md border border-input bg-background py-1.5 pl-8 pr-7 text-xs outline-none placeholder:text-muted-foreground focus:border-primary"
             />
+            {busca && (
+              <button
+                type="button"
+                onClick={limparBusca}
+                aria-label="Limpar busca"
+                className="absolute right-1.5 top-1/2 flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded text-muted-foreground transition-colors hover:bg-hover hover:text-foreground"
+              >
+                <X className="h-3 w-3" aria-hidden="true" />
+              </button>
+            )}
+
+            {/* Digitou uma letra, já aparece quem casa — com o valor do
+                período ao lado, para escolher pelo que importa. */}
+            {sugestoesAbertas && sugestoes.length > 0 && (
+              <ul
+                id="sugestoes-clientes"
+                role="listbox"
+                aria-label="Clientes encontrados"
+                className="absolute left-0 right-0 top-full z-10 mt-1 max-h-60 overflow-y-auto rounded-md border border-border bg-popover py-1 shadow-[var(--shadow-lg)]"
+              >
+                {sugestoes.map((cliente, i) => {
+                  const posicao = clientesPeriodo.indexOf(cliente);
+                  const cor = posicao < LIMITE_FATIAS ? CORES_CLIENTE[posicao] : "var(--muted-foreground)";
+                  return (
+                    <li key={cliente.nome} id={`sugestao-${i}`} role="option" aria-selected={i === destaque}>
+                      <button
+                        type="button"
+                        // onMouseDown, não onClick: o blur do campo chega antes.
+                        onMouseDown={(e) => {
+                          e.preventDefault();
+                          escolher(cliente.nome);
+                        }}
+                        onMouseEnter={() => setDestaque(i)}
+                        className={`flex w-full items-center gap-2 px-2.5 py-1.5 text-left text-xs transition-colors ${
+                          i === destaque ? "bg-hover text-foreground" : "text-muted-foreground"
+                        }`}
+                      >
+                        <span
+                          className="h-2 w-2 shrink-0 rounded-full"
+                          style={{ background: cor }}
+                          aria-hidden="true"
+                        />
+                        <span className="min-w-0 flex-1 truncate text-foreground" title={cliente.nome}>
+                          {cliente.nome}
+                        </span>
+                        <span className="shrink-0 font-mono tabular-nums">{formatMoeda(cliente.recebido)}</span>
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
           </div>
 
           {semDados ? (
             <p className="text-xs text-muted-foreground">Nada recebido no período.</p>
-          ) : termo && clientesVisiveis.length === 0 ? (
+          ) : termo && sugestoes.length === 0 && !selecionado ? (
             <p className="text-xs text-muted-foreground">Nenhum cliente com “{busca.trim()}”.</p>
-          ) : termo ? (
-            // Uma linha de resultado, não uma lista: a busca acende a fatia
-            // no gráfico e diz quanto ela representa.
+          ) : alvo ? (
+            // Uma linha de resultado: a busca acende a fatia no gráfico e diz
+            // quanto ela representa.
             <p className="text-xs text-muted-foreground">
               <span className="font-mono tabular-nums text-foreground">{formatMoeda(recebidoVisivel)}</span>{" "}
               em {clientesVisiveis.length === 1 ? "1 cliente" : `${clientesVisiveis.length} clientes`}

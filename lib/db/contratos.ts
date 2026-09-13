@@ -6,7 +6,7 @@ import { Prisma } from "@/app/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import type { ContratoComRelacoes } from "@/components/dashboard/types";
 import type { DadosFinanceiros } from "@/lib/ai/schemas";
-import type { ContratoExtraido, OrigemRegistro, TipoPagamento } from "@/lib/types";
+import type { ContratoExtraido, MotivoBaixa, OrigemRegistro, TipoPagamento } from "@/lib/types";
 
 const comRelacoes = {
   cliente: true,
@@ -18,6 +18,12 @@ type ContratoRow = Prisma.ContratoGetPayload<{ include: typeof comRelacoes }>;
 const ordem: Prisma.ContratoOrderByWithRelationInput[] = [{ createdAt: "desc" }, { id: "desc" }];
 
 const paraEnumDb = { fixo: "FIXO", exito: "EXITO", misto: "MISTO" } as const;
+
+// "Ainda pode entrar dinheiro por esta parcela": sem pagamento e sem baixa.
+// Parcela baixada (êxito que não veio) não é dívida e não pode aparecer como
+// atraso, previsto ou cobrança.
+const EM_ABERTO: Prisma.ParcelaWhereInput = { pagamento: { is: null }, baixadaEm: null };
+const ENCERRADA: Prisma.ParcelaWhereInput = { OR: [{ pagamento: { isNot: null } }, { baixadaEm: { not: null } }] };
 
 function diaISO(data: Date): string {
   return data.toISOString().slice(0, 10);
@@ -46,6 +52,9 @@ function paraUI(contrato: ContratoRow): ContratoComRelacoes {
       contratoId: parcela.contratoId,
       valor: parcela.valor.toNumber(),
       vencimento: parcela.vencimento,
+      baixadaEm: parcela.baixadaEm,
+      motivoBaixa: parcela.motivoBaixa && (parcela.motivoBaixa.toLowerCase() as MotivoBaixa),
+      notaBaixa: parcela.notaBaixa,
       pagamento: parcela.pagamento && {
         id: parcela.pagamento.id,
         parcelaId: parcela.pagamento.parcelaId,
@@ -142,20 +151,20 @@ function where({ busca, tipo, status, hoje = new Date() }: FiltroContratos): Pri
 
   if (tipo && tipo !== "todos") filtros.push({ tipoPagamento: paraEnumDb[tipo] });
 
-  const vencida: Prisma.ParcelaWhereInput = { pagamento: { is: null }, vencimento: { lt: hoje } };
+  const vencida: Prisma.ParcelaWhereInput = { ...EM_ABERTO, vencimento: { lt: hoje } };
   if (status === "atrasado") filtros.push({ parcelas: { some: vencida } });
   if (status === "quitado") {
-    filtros.push({ parcelas: { every: { pagamento: { isNot: null } }, some: {} } });
+    filtros.push({ parcelas: { every: ENCERRADA, some: {} } });
   }
   if (status === "vence_7") {
     filtros.push({
       parcelas: {
-        some: { pagamento: { is: null }, vencimento: { gte: hoje, lt: new Date(hoje.getTime() + 7 * 86400000) } },
+        some: { ...EM_ABERTO, vencimento: { gte: hoje, lt: new Date(hoje.getTime() + 7 * 86400000) } },
       },
     });
   }
   if (status === "em_dia") {
-    filtros.push({ parcelas: { none: vencida }, NOT: { parcelas: { every: { pagamento: { isNot: null } }, some: {} } } });
+    filtros.push({ parcelas: { none: vencida }, NOT: { parcelas: { every: ENCERRADA, some: {} } } });
   }
 
 
@@ -208,7 +217,7 @@ export async function contadoresContratos(hoje = new Date()): Promise<Contadores
     prisma.contrato.count(),
     prisma.contrato.count({ where: where({ status: "atrasado", hoje }) }),
     prisma.contrato.count({
-      where: { parcelas: { some: { pagamento: { is: null }, vencimento: { gte: hoje, lt: em7Dias } } } },
+      where: { parcelas: { some: { ...EM_ABERTO, vencimento: { gte: hoje, lt: em7Dias } } } },
     }),
     prisma.contrato.count({ where: where({ status: "quitado", hoje }) }),
   ]);
@@ -235,16 +244,19 @@ export async function carregarDadosFinanceiros(hoje = new Date()): Promise<Dados
     parcelas: contrato.parcelas.map((parcela) => {
       const valor = parcela.valor.toNumber();
       const pago = parcela.pagamento?.valorPago.toNumber() ?? 0;
-      const saldo = Math.max(0, valor - pago);
+      const baixada = parcela.baixadaEm !== null;
+      // Baixada não entra em previsto nem em pendente: o valor deixou de ser
+      // devido, e somá-lo faria a IA responder com dinheiro que não existe.
+      const saldo = baixada ? 0 : Math.max(0, valor - pago);
       const vencimento = diaISO(parcela.vencimento);
       const atrasada = saldo > 0 && vencimento < dataReferencia;
 
-      previsto += valor;
+      if (!baixada) previsto += valor;
       recebido += pago;
       pendente += saldo;
       if (atrasada) atrasado += saldo;
 
-      const status = saldo === 0 ? "paga" : atrasada ? "atrasada" : "prevista";
+      const status = baixada ? "baixada" : saldo === 0 ? "paga" : atrasada ? "atrasada" : "prevista";
       return { id: parcela.id, valor, vencimento, status } as const;
     }),
   }));

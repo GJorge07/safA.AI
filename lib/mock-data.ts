@@ -48,9 +48,9 @@ export const contratosMock: ContratoComRelacoes[] = [
       "Cláusula 4ª — Dos Honorários: as partes ajustam o pagamento em 3 parcelas mensais de R$ 15.000,00, vencíveis todo dia 5, referentes aos honorários fixos, sem prejuízo do êxito de 10% sobre eventual proveito econômico.",
     createdAt: new Date("2026-07-01"),
     parcelas: [
-      { id: "p1", contratoId: "c1", valor: 15000, vencimento: new Date("2026-09-05"), pagamento: { id: "pg1", parcelaId: "p1", valorPago: 15000, dataPago: new Date("2026-09-04") } },
-      { id: "p2", contratoId: "c1", valor: 15000, vencimento: new Date("2026-10-05"), pagamento: null },
-      { id: "p3", contratoId: "c1", valor: 15000, vencimento: new Date("2026-11-05"), pagamento: null },
+      { id: "p1", contratoId: "c1", valor: 15000, vencimento: new Date("2026-09-05"), baixadaEm: null, motivoBaixa: null, notaBaixa: null, pagamento: { id: "pg1", parcelaId: "p1", valorPago: 15000, dataPago: new Date("2026-09-04") } },
+      { id: "p2", contratoId: "c1", valor: 15000, vencimento: new Date("2026-10-05"), baixadaEm: null, motivoBaixa: null, notaBaixa: null, pagamento: null },
+      { id: "p3", contratoId: "c1", valor: 15000, vencimento: new Date("2026-11-05"), baixadaEm: null, motivoBaixa: null, notaBaixa: null, pagamento: null },
     ],
   },
   {
@@ -66,7 +66,7 @@ export const contratosMock: ContratoComRelacoes[] = [
       "Cláusula 3ª — Do Êxito: o CONTRATANTE pagará à CONTRATADA 18.000,00 (dezoito mil reais) em parcela única, no prazo de 5 dias úteis contados do trânsito em julgado, sob pena de multa de 2% ao mês.",
     createdAt: new Date("2026-06-20"),
     parcelas: [
-      { id: "p4", contratoId: "c2", valor: 18000, vencimento: new Date("2026-09-01"), pagamento: null },
+      { id: "p4", contratoId: "c2", valor: 18000, vencimento: new Date("2026-09-01"), baixadaEm: null, motivoBaixa: null, notaBaixa: null, pagamento: null },
     ],
   },
   {
@@ -82,7 +82,7 @@ export const contratosMock: ContratoComRelacoes[] = [
       "Cláusula 2ª — Dos Honorários Fixos: o valor total de R$ 12.000,00 será pago em 4 parcelas iguais de R$ 3.000,00, com vencimento todo dia 15.",
     createdAt: new Date("2026-08-05"),
     parcelas: [
-      { id: "p5", contratoId: "c3", valor: 3000, vencimento: new Date("2026-10-15"), pagamento: null },
+      { id: "p5", contratoId: "c3", valor: 3000, vencimento: new Date("2026-10-15"), baixadaEm: null, motivoBaixa: null, notaBaixa: null, pagamento: null },
     ],
   },
   {
@@ -97,7 +97,7 @@ export const contratosMock: ContratoComRelacoes[] = [
     clausulaOriginal: "Cláusula 2ª — Honorários fixos de R$ 9.000,00, pagos em parcela única na assinatura.",
     createdAt: new Date("2026-05-12"),
     parcelas: [
-      { id: "p6", contratoId: "c4", valor: 9000, vencimento: new Date("2026-05-20"), pagamento: { id: "pg2", parcelaId: "p6", valorPago: 9000, dataPago: new Date("2026-05-19") } },
+      { id: "p6", contratoId: "c4", valor: 9000, vencimento: new Date("2026-05-20"), baixadaEm: null, motivoBaixa: null, notaBaixa: null, pagamento: { id: "pg2", parcelaId: "p6", valorPago: 9000, dataPago: new Date("2026-05-19") } },
     ],
   },
 ];

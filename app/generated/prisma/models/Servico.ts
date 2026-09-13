@@ -609,10 +609,6 @@ export type EnumCategoriaServicoFieldUpdateOperationsInput = {
   set?: $Enums.CategoriaServico
 }
 
-export type NullableDateTimeFieldUpdateOperationsInput = {
-  set?: Date | string | null
-}
-
 export type ServicoCreateWithoutClienteInput = {
   id?: string
   numero?: number

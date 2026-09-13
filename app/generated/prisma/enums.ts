@@ -21,6 +21,16 @@ export const CategoriaServico = {
 export type CategoriaServico = (typeof CategoriaServico)[keyof typeof CategoriaServico]
 
 
+export const MotivoBaixa = {
+  SEM_EXITO: 'SEM_EXITO',
+  ACORDO_MENOR: 'ACORDO_MENOR',
+  DESISTENCIA: 'DESISTENCIA',
+  OUTRO: 'OUTRO'
+} as const
+
+export type MotivoBaixa = (typeof MotivoBaixa)[keyof typeof MotivoBaixa]
+
+
 export const TipoPagamento = {
   FIXO: 'FIXO',
   EXITO: 'EXITO',
