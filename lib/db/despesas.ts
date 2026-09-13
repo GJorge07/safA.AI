@@ -111,7 +111,17 @@ function paraUI(despesa: DespesaRow): DespesaUI {
   };
 }
 
-export type StatusDespesaFiltro = "todos" | "paga" | "atrasada" | "prevista" | "a_reembolsar";
+// "em_aberto" é tudo que não foi pago, vencido ou não — é a pergunta que o
+// advogado faz ("o que eu ainda devo?"), e que "prevista" sozinha não responde.
+export type StatusDespesaFiltro =
+  | "todos"
+  | "paga"
+  | "em_aberto"
+  | "atrasada"
+  | "prevista"
+  | "a_reembolsar";
+
+export type OrdenacaoDespesas = "recentes" | "maior_valor" | "vencimento";
 
 export interface FiltroDespesas {
   pagina?: number;
@@ -120,6 +130,7 @@ export interface FiltroDespesas {
   tipo?: TipoDespesa | "todos";
   categoria?: CategoriaDespesa | "todos";
   status?: StatusDespesaFiltro;
+  ordenar?: OrdenacaoDespesas;
   recorrencia?: Recorrencia | "todos";
   contratoId?: string;
   /** Só o que vence nos próximos 7 dias e ainda não foi pago. */
@@ -174,6 +185,7 @@ function where({
   if (contratoId) filtros.push({ contratoId });
 
   if (status === "paga") filtros.push({ pagoEm: { not: null } });
+  if (status === "em_aberto") filtros.push({ pagoEm: null });
   if (status === "atrasada") filtros.push({ pagoEm: null, vencimento: { lt: hoje } });
   if (status === "prevista") filtros.push({ pagoEm: null, vencimento: { gte: hoje } });
   if (status === "a_reembolsar") filtros.push(A_REEMBOLSAR);
@@ -185,6 +197,12 @@ function where({
   return filtros.length === 0 ? {} : { AND: filtros };
 }
 
+const ordenacoes: Record<OrdenacaoDespesas, Prisma.DespesaOrderByWithRelationInput[]> = {
+  recentes: [{ vencimento: "desc" }, { id: "desc" }],
+  maior_valor: [{ valor: "desc" }, { id: "desc" }],
+  vencimento: [{ vencimento: "asc" }, { id: "desc" }],
+};
+
 export async function listarDespesasPaginado(filtro: FiltroDespesas = {}): Promise<PaginaDespesas> {
   const tamanho = Math.min(Math.max(filtro.tamanho ?? 20, 1), 100);
   const condicao = where(filtro);
@@ -193,7 +211,7 @@ export async function listarDespesasPaginado(filtro: FiltroDespesas = {}): Promi
     prisma.despesa.findMany({
       where: condicao,
       include: comContrato,
-      orderBy: [{ vencimento: "desc" }, { id: "desc" }],
+      orderBy: ordenacoes[filtro.ordenar ?? "recentes"],
       skip: (Math.max(filtro.pagina ?? 1, 1) - 1) * tamanho,
       take: tamanho,
     }),
@@ -283,14 +301,6 @@ export async function atualizarDespesa(id: string, dados: Partial<NovaDespesa>):
   return paraUI(despesa);
 }
 
-export function marcarComoPaga(id: string, pagoEm: Date | null): Promise<DespesaUI> {
-  return atualizarDespesa(id, { pagoEm });
-}
-
-export function marcarComoCobrada(id: string, cobradoEm: Date | null): Promise<DespesaUI> {
-  return atualizarDespesa(id, { cobradoEm });
-}
-
 export function excluirDespesa(id: string): Promise<unknown> {
   return prisma.despesa.delete({ where: { id } });
 }
@@ -350,6 +360,8 @@ export interface ContadoresDespesas {
   total: number;
   doProcesso: number;
   doEscritorio: number;
+  pagas: number;
+  emAberto: number;
   atrasadas: number;
   vencendoEm7Dias: number;
   aReembolsar: number;
@@ -362,16 +374,19 @@ export async function contadoresDespesas(
   const em7Dias = new Date(hoje.getTime() + 7 * 86400000);
   const doTipo: Prisma.DespesaWhereInput = tipo && tipo !== "todos" ? { tipo: tipoParaDb[tipo] } : {};
 
-  const [total, doProcesso, doEscritorio, atrasadas, vencendoEm7Dias, aReembolsar] = await prisma.$transaction([
-    prisma.despesa.count({ where: doTipo }),
-    prisma.despesa.count({ where: { tipo: "PROCESSO" } }),
-    prisma.despesa.count({ where: { tipo: "ESCRITORIO" } }),
-    prisma.despesa.count({ where: { ...doTipo, pagoEm: null, vencimento: { lt: hoje } } }),
-    prisma.despesa.count({ where: { ...doTipo, pagoEm: null, vencimento: { gte: hoje, lt: em7Dias } } }),
-    prisma.despesa.count({ where: { ...doTipo, ...A_REEMBOLSAR } }),
-  ]);
+  const [total, doProcesso, doEscritorio, pagas, emAberto, atrasadas, vencendoEm7Dias, aReembolsar] =
+    await prisma.$transaction([
+      prisma.despesa.count({ where: doTipo }),
+      prisma.despesa.count({ where: { tipo: "PROCESSO" } }),
+      prisma.despesa.count({ where: { tipo: "ESCRITORIO" } }),
+      prisma.despesa.count({ where: { ...doTipo, pagoEm: { not: null } } }),
+      prisma.despesa.count({ where: { ...doTipo, pagoEm: null } }),
+      prisma.despesa.count({ where: { ...doTipo, pagoEm: null, vencimento: { lt: hoje } } }),
+      prisma.despesa.count({ where: { ...doTipo, pagoEm: null, vencimento: { gte: hoje, lt: em7Dias } } }),
+      prisma.despesa.count({ where: { ...doTipo, ...A_REEMBOLSAR } }),
+    ]);
 
-  return { total, doProcesso, doEscritorio, atrasadas, vencendoEm7Dias, aReembolsar };
+  return { total, doProcesso, doEscritorio, pagas, emAberto, atrasadas, vencendoEm7Dias, aReembolsar };
 }
 
 export interface MargemDoCaso {
