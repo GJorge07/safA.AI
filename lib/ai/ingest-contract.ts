@@ -7,18 +7,19 @@ import type { ContratoExtraido } from "../types";
 export interface IngestionResult {
   status: "pronto_para_salvar" | "revisao_necessaria";
   extracao: ExtracaoContrato;
+  textoCompleto: string;
   payloadBackend: ContratoExtraido | null;
   motivosRevisao: string[];
   fonte: DriveFileReference | null;
 }
 
 async function finalize(buffer: Buffer, mimeType: SupportedContractMimeType, fonte: DriveFileReference | null): Promise<IngestionResult> {
-  const extracao = await extractContractFile(buffer, mimeType);
+  const { extracao, textoCompleto } = await extractContractFile(buffer, mimeType);
   try {
-    return { status: "pronto_para_salvar", extracao, payloadBackend: adaptToBackend(extracao), motivosRevisao: [], fonte };
+    return { status: "pronto_para_salvar", extracao, textoCompleto, payloadBackend: adaptToBackend(extracao), motivosRevisao: [], fonte };
   } catch (error) {
     if (!(error instanceof ExtractionNeedsReviewError)) throw error;
-    return { status: "revisao_necessaria", extracao, payloadBackend: null, motivosRevisao: error.reasons, fonte };
+    return { status: "revisao_necessaria", extracao, textoCompleto, payloadBackend: null, motivosRevisao: error.reasons, fonte };
   }
 }
 

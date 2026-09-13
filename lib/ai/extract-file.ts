@@ -11,10 +11,18 @@ export type SupportedContractMimeType =
   | "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
   | "text/plain";
 
+export interface ExtracaoDeArquivo {
+  extracao: ExtracaoContrato;
+  // Texto integral do documento (todas as páginas/parágrafos), para análises
+  // que precisam de mais contexto do que o recorte em clausulaOriginal —
+  // como avaliar se falta cláusula de mora/reajuste em outro trecho.
+  textoCompleto: string;
+}
+
 export async function extractContractFile(
   buffer: Buffer,
   mimeType: SupportedContractMimeType,
-): Promise<ExtracaoContrato> {
+): Promise<ExtracaoDeArquivo> {
   if (buffer.byteLength === 0) throw new Error("O arquivo está vazio.");
   if (buffer.byteLength > MAX_FILE_SIZE) {
     throw new Error("O arquivo excede o limite de 20 MB.");
@@ -41,8 +49,9 @@ export async function extractContractFile(
   return extractAndValidate([{ page: 1, text: value }]);
 }
 
-async function extractAndValidate(pages: SourcePage[]): Promise<ExtracaoContrato> {
+async function extractAndValidate(pages: SourcePage[]): Promise<ExtracaoDeArquivo> {
   const markedText = pages.map(({ page, text }) => `[PÁGINA ${page}]\n${text}`).join("\n\n");
   const extraction = await extractContract({ kind: "text", text: markedText });
-  return validateExtractionEvidence(extraction, pages);
+  const extracao = validateExtractionEvidence(extraction, pages);
+  return { extracao, textoCompleto: pages.map(({ text }) => text).join("\n\n") };
 }
