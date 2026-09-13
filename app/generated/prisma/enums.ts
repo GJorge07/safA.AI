@@ -9,6 +9,28 @@
 * 🟢 You can import this file directly.
 */
 
+export const CategoriaServico = {
+  CONSULTA: 'CONSULTA',
+  PARECER: 'PARECER',
+  PETICAO: 'PETICAO',
+  AUDIENCIA: 'AUDIENCIA',
+  ELABORACAO_CONTRATO: 'ELABORACAO_CONTRATO',
+  OUTROS_SERVICO: 'OUTROS_SERVICO'
+} as const
+
+export type CategoriaServico = (typeof CategoriaServico)[keyof typeof CategoriaServico]
+
+
+export const MotivoBaixa = {
+  SEM_EXITO: 'SEM_EXITO',
+  ACORDO_MENOR: 'ACORDO_MENOR',
+  DESISTENCIA: 'DESISTENCIA',
+  OUTRO: 'OUTRO'
+} as const
+
+export type MotivoBaixa = (typeof MotivoBaixa)[keyof typeof MotivoBaixa]
+
+
 export const TipoPagamento = {
   FIXO: 'FIXO',
   EXITO: 'EXITO',
@@ -16,3 +38,46 @@ export const TipoPagamento = {
 } as const
 
 export type TipoPagamento = (typeof TipoPagamento)[keyof typeof TipoPagamento]
+
+
+export const TipoDespesa = {
+  PROCESSO: 'PROCESSO',
+  ESCRITORIO: 'ESCRITORIO'
+} as const
+
+export type TipoDespesa = (typeof TipoDespesa)[keyof typeof TipoDespesa]
+
+
+export const QuemPaga = {
+  CLIENTE: 'CLIENTE',
+  ADVOGADO: 'ADVOGADO'
+} as const
+
+export type QuemPaga = (typeof QuemPaga)[keyof typeof QuemPaga]
+
+
+export const CategoriaDespesa = {
+  DESLOCAMENTO: 'DESLOCAMENTO',
+  CUSTAS: 'CUSTAS',
+  DILIGENCIA: 'DILIGENCIA',
+  CARTORIO: 'CARTORIO',
+  PERICIA: 'PERICIA',
+  CORRESPONDENTE: 'CORRESPONDENTE',
+  OUTROS_PROCESSO: 'OUTROS_PROCESSO',
+  ESTRUTURA: 'ESTRUTURA',
+  SOFTWARE: 'SOFTWARE',
+  TRIBUTOS: 'TRIBUTOS',
+  PESSOAL: 'PESSOAL',
+  OUTROS_ESCRITORIO: 'OUTROS_ESCRITORIO'
+} as const
+
+export type CategoriaDespesa = (typeof CategoriaDespesa)[keyof typeof CategoriaDespesa]
+
+
+export const OrigemRegistro = {
+  MANUAL: 'MANUAL',
+  UPLOAD: 'UPLOAD',
+  DRIVE: 'DRIVE'
+} as const
+
+export type OrigemRegistro = (typeof OrigemRegistro)[keyof typeof OrigemRegistro]

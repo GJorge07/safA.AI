@@ -19,7 +19,7 @@ export default async function AgentePage({ searchParams }: AgentePageProps) {
         </div>
         <Link
           href="/agente"
-          className="flex items-center gap-1.5 rounded-md border border-input bg-card px-3 py-1.5 text-xs font-medium hover:bg-muted"
+          className="flex items-center gap-1.5 rounded-md border border-input bg-card px-3 py-1.5 text-xs font-medium hover:bg-hover"
         >
           <Plus className="h-3.5 w-3.5" aria-hidden="true" />
           Novo chat

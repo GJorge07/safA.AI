@@ -41,8 +41,8 @@ export { Prisma }
 
 
 // file annotations for bundling tools to include these files
-path.join(__dirname, "libquery_engine-debian-openssl-3.0.x.so.node")
-path.join(process.cwd(), "app/generated/prisma/libquery_engine-debian-openssl-3.0.x.so.node")
+path.join(__dirname, "query_engine-windows.dll.node")
+path.join(process.cwd(), "app/generated/prisma/query_engine-windows.dll.node")
 
 /**
  * Model Cliente
@@ -64,3 +64,13 @@ export type Parcela = Prisma.ParcelaModel
  * 
  */
 export type Pagamento = Prisma.PagamentoModel
+/**
+ * Model Servico
+ * 
+ */
+export type Servico = Prisma.ServicoModel
+/**
+ * Model Despesa
+ * 
+ */
+export type Despesa = Prisma.DespesaModel

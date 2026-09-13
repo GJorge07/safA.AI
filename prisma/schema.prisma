@@ -11,7 +11,14 @@ datasource db {
 model Cliente {
   id        String     @id @default(cuid())
   nome      String
+
+  // Contato — o que a tela de cobrança precisa para responder "de quem é o atraso".
+  documento String?
+  email     String?
+  telefone  String?
+
   contratos Contrato[]
+  servicos  Servico[]
   createdAt DateTime   @default(now())
 }
 
@@ -20,12 +27,22 @@ model Contrato {
   cliente          Cliente   @relation(fields: [clienteId], references: [id], onDelete: Cascade)
   clienteId        String
 
+  // Número curto para o advogado citar numa cobrança — ninguém lê um cuid().
+  numero           Int       @default(autoincrement()) @unique
+  titulo           String?
+  processo         String?
+
   tipoPagamento    TipoPagamento
   valorTotal       Decimal   @db.Decimal(14, 2)
 
   clausulaOriginal String
 
+  origem           OrigemRegistro @default(MANUAL)
+  arquivoNome      String?
+
   parcelas         Parcela[]
+  despesas         Despesa[]
+  servicos         Servico[]
 
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
@@ -43,6 +60,14 @@ model Parcela {
   vencimento DateTime
 
   pagamento  Pagamento?
+
+  // Honorário de êxito só é devido se a causa der certo, e isso nenhum sistema
+  // adivinha: quem dá baixa é o advogado. Parcela baixada deixa de ser dívida —
+  // sai do previsto, do atraso e da cobrança. Diferente de "devido e não pago",
+  // que continua sendo atraso.
+  baixadaEm   DateTime?
+  motivoBaixa MotivoBaixa?
+  notaBaixa   String?
 
   createdAt  DateTime   @default(now())
 
@@ -62,8 +87,129 @@ model Pagamento {
   createdAt  DateTime @default(now())
 }
 
+// O outro lado do recebimento: o que o advogado cobra fora do contrato — a
+// consulta, o parecer, a audiência que não estava prevista. Não tem parcela
+// nem cláusula, então não cabe em Contrato; é cobrança única, e por isso o
+// recebimento mora na própria linha (recebidoEm) em vez de virar Pagamento.
+model Servico {
+  id          String   @id @default(cuid())
+  numero      Int      @default(autoincrement()) @unique
+
+  descricao   String
+  categoria   CategoriaServico
+  valor       Decimal  @db.Decimal(14, 2)
+
+  realizadoEm DateTime
+  vencimento  DateTime
+  recebidoEm  DateTime?
+
+  cliente     Cliente?  @relation(fields: [clienteId], references: [id], onDelete: SetNull)
+  clienteId   String?
+
+  // Serviço prestado dentro de um caso já contratado (a audiência extra) —
+  // entra na receita daquele processo.
+  contrato    Contrato? @relation(fields: [contratoId], references: [id], onDelete: SetNull)
+  contratoId  String?
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([vencimento])
+  @@index([clienteId])
+  @@index([contratoId])
+}
+
+enum CategoriaServico {
+  CONSULTA
+  PARECER
+  PETICAO
+  AUDIENCIA
+  ELABORACAO_CONTRATO
+  OUTROS_SERVICO
+}
+
+// O que sai. Tabela própria de propósito: Pagamento é 1-para-1 com Parcela e
+// significa "recebi" — sobrecarregá-lo com saídas quebraria o fluxo de caixa.
+model Despesa {
+  id            String   @id @default(cuid())
+  numero        Int      @default(autoincrement()) @unique
+
+  descricao     String
+  categoria     CategoriaDespesa
+  valor         Decimal  @db.Decimal(14, 2)
+  vencimento    DateTime
+  pagoEm        DateTime?
+
+  // A separação que importa: gasto do processo (ida ao juizado, custas,
+  // diligência) é o que come a margem do caso; gasto do escritório é custo
+  // fixo e não pertence a caso nenhum.
+  tipo          TipoDespesa @default(PROCESSO)
+
+  fornecedor    String?
+
+  contrato      Contrato? @relation(fields: [contratoId], references: [id], onDelete: SetNull)
+  contratoId    String?
+
+  // quemPaga é o que o contrato prevê; cobradoEm é o que de fato aconteceu.
+  // Despesa de CLIENTE sem cobradoEm é dinheiro que o advogado adiantou e
+  // ainda não repassou — a origem silenciosa do prejuízo.
+  quemPaga      QuemPaga @default(ADVOGADO)
+  cobradoEm     DateTime?
+
+  origem        OrigemRegistro @default(MANUAL)
+  textoOriginal String?
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([vencimento])
+  @@index([contratoId])
+}
+
+// Só motivos que tornam o valor NÃO DEVIDO. Inadimplência não entra aqui:
+// nesse caso o honorário continua devido e a parcela segue em cobrança.
+enum MotivoBaixa {
+  SEM_EXITO
+  ACORDO_MENOR
+  DESISTENCIA
+  OUTRO
+}
+
 enum TipoPagamento {
   FIXO
   EXITO
   MISTO
+}
+
+enum TipoDespesa {
+  PROCESSO
+  ESCRITORIO
+}
+
+enum QuemPaga {
+  CLIENTE
+  ADVOGADO
+}
+
+// Categorias concretas, no vocabulário do dia a dia — o advogado reconhece o
+// gasto sem precisar traduzir. As sete primeiras são de processo.
+enum CategoriaDespesa {
+  DESLOCAMENTO
+  CUSTAS
+  DILIGENCIA
+  CARTORIO
+  PERICIA
+  CORRESPONDENTE
+  OUTROS_PROCESSO
+  ESTRUTURA
+  SOFTWARE
+  TRIBUTOS
+  PESSOAL
+  OUTROS_ESCRITORIO
+}
+
+enum OrigemRegistro {
+  MANUAL
+  UPLOAD
+  DRIVE
 }

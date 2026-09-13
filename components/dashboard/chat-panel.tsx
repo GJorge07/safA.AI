@@ -33,8 +33,9 @@ export function ChatPanel({ temContratos, perguntaInicial, conversaId }: ChatPan
   });
   const [pergunta, setPergunta] = useState("");
   const [carregando, setCarregando] = useState(false);
-  const [erro, setErro] = useState(false);
+  const [erro, setErro] = useState<string | null>(null);
   const jaEnviouInicial = useRef(false);
+  const ultimaPergunta = useRef("");
   const inputArquivoRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -73,32 +74,38 @@ export function ChatPanel({ temContratos, perguntaInicial, conversaId }: ChatPan
     );
   }
 
-  async function enviar(textoParam?: string) {
+  async function enviar(textoParam?: string, reenvio = false) {
     const texto = (textoParam ?? pergunta).trim();
     if (!texto || carregando) return;
-    setErro(false);
+    setErro(null);
     setPergunta("");
     setCarregando(true);
-    setMensagens((atuais) => {
-      const comUsuario = [...atuais, { autor: "usuario", texto } as MensagemConversa];
-      persistir(comUsuario);
-      return comUsuario;
-    });
+    ultimaPergunta.current = texto;
+    if (!reenvio) {
+      setMensagens((atuais) => {
+        const comUsuario = [...atuais, { autor: "usuario", texto } as MensagemConversa];
+        persistir(comUsuario);
+        return comUsuario;
+      });
+    }
     try {
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ pergunta: texto }),
       });
-      if (!res.ok) throw new Error("Falha na resposta");
+      if (!res.ok) {
+        const corpo = await res.json().catch(() => null);
+        throw new Error(corpo?.erro ?? `Falha na resposta (HTTP ${res.status}).`);
+      }
       const data = await res.json();
       setMensagens((atuais) => {
         const comResposta = [...atuais, { autor: "assistente", texto: data.resposta.resposta } as MensagemConversa];
         persistir(comResposta);
         return comResposta;
       });
-    } catch {
-      setErro(true);
+    } catch (falha) {
+      setErro(falha instanceof Error ? falha.message : "Não consegui responder agora.");
     } finally {
       setCarregando(false);
     }
@@ -106,7 +113,7 @@ export function ChatPanel({ temContratos, perguntaInicial, conversaId }: ChatPan
 
   async function anexarArquivo(arquivo: File | undefined) {
     if (!arquivo) return;
-    setErro(false);
+    setErro(null);
     setMensagens((atuais) => {
       const comArquivo = [...atuais, { autor: "usuario", texto: `📎 ${arquivo.name}` } as MensagemConversa];
       persistir(comArquivo);
@@ -126,7 +133,7 @@ export function ChatPanel({ temContratos, perguntaInicial, conversaId }: ChatPan
       const texto = data.payloadBackend
         ? `Li o contrato e extraí: cliente ${data.payloadBackend.cliente}, pagamento ${data.payloadBackend.tipoPagamento}, ` +
           `${data.payloadBackend.valorTotal.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })} em ` +
-          `${data.payloadBackend.parcelas.length} parcela(s). Quer conferir a cláusula original na aba Contratos?${opiniaoTexto}`
+          `${data.payloadBackend.parcelas.length} parcela(s). Quer conferir a cláusula original na aba Pagamentos?${opiniaoTexto}`
         : `Consegui ler o arquivo, mas a extração precisa de revisão manual: ${
             (data.motivosRevisao ?? []).join("; ") || "dados insuficientes para confirmar automaticamente."
           }${opiniaoTexto}`;
@@ -136,8 +143,8 @@ export function ChatPanel({ temContratos, perguntaInicial, conversaId }: ChatPan
         persistir(comResposta);
         return comResposta;
       });
-    } catch {
-      setErro(true);
+    } catch (falha) {
+      setErro(falha instanceof Error ? falha.message : "Não consegui ler esse arquivo agora.");
     } finally {
       setCarregando(false);
     }
@@ -163,7 +170,7 @@ export function ChatPanel({ temContratos, perguntaInicial, conversaId }: ChatPan
               <button
                 key={exemplo}
                 onClick={() => enviar(exemplo)}
-                className="flex items-center gap-1.5 rounded-full border border-border bg-card px-3.5 py-2 text-sm text-muted-foreground transition-colors hover:border-primary/50 hover:text-foreground"
+                className="flex items-center gap-1.5 rounded-full border border-border bg-card px-3.5 py-2 text-sm text-muted-foreground transition-colors hover:border-primary/50 hover:bg-hover hover:text-foreground"
               >
                 <Sparkles className="h-3.5 w-3.5 shrink-0 text-primary" aria-hidden="true" />
                 {exemplo}
@@ -197,10 +204,17 @@ export function ChatPanel({ temContratos, perguntaInicial, conversaId }: ChatPan
             </div>
           )}
           {erro && (
-            <div className="mr-auto flex max-w-[80%] items-center gap-2 rounded-2xl bg-destructive-bg px-3.5 py-2 text-sm text-destructive">
-              <AlertTriangle className="h-4 w-4 shrink-0" aria-hidden="true" />
-              Não consegui responder agora.
-              <Button size="sm" variant="secondary" onClick={() => enviar()}>
+            <div className="mr-auto flex max-w-[80%] flex-col gap-2 rounded-2xl bg-destructive-bg px-3.5 py-2 text-sm text-destructive">
+              <div className="flex items-start gap-2">
+                <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+                <span className="break-words">{erro}</span>
+              </div>
+              <Button
+                size="sm"
+                variant="secondary"
+                className="self-start"
+                onClick={() => enviar(ultimaPergunta.current, true)}
+              >
                 Tentar de novo
               </Button>
             </div>

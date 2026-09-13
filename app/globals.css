@@ -20,6 +20,7 @@
   --secondary-foreground: #eef1f6;
   --accent: #16203d;
   --accent-foreground: #8fb0ff;
+  --accent-hover: #1d2a52;
   --destructive: #f87171;
   --destructive-foreground: #ffffff;
   --destructive-bg: #341616;
@@ -30,7 +31,29 @@
   --border: #212430;
   --input: #2c303d;
   --ring: #4c7cff;
+  /* Estado de passagem do mouse: no escuro, a superfície CLAREIA um degrau.
+     Nunca usar --muted/--card para hover — no claro eles quase não destacam. */
+  --hover: #1e2230;
+  --hover-strong: #2a3040;
+  --chart-cursor: rgb(255 255 255 / 0.07);
+  --overlay: rgb(0 0 0 / 0.7);
+  --shadow-lg: 0 10px 30px rgb(0 0 0 / 0.45);
   --radius: 0.75rem;
+
+  /* Paleta categórica das séries por cliente. Oito matizes em ordem FIXA —
+     cor segue o cliente, não a posição no ranking — degrauzadas para a
+     superfície escura (--card #12141b). Validada: banda de luminosidade,
+     piso de croma, separação para daltonismo (pior par ΔE 8.4) e contraste
+     >= 3:1. Não use --primary/--accent-foreground aqui: no tema claro os
+     dois são a MESMA cor e duas fatias ficavam idênticas. */
+  --chart-1: #3987e5;
+  --chart-2: #d95926;
+  --chart-3: #199e70;
+  --chart-4: #c98500;
+  --chart-5: #d55181;
+  --chart-6: #008300;
+  --chart-7: #9085e9;
+  --chart-8: #e66767;
 }
 
 :root[data-theme="light"] {
@@ -50,6 +73,7 @@
   --secondary-foreground: #12141c;
   --accent: #e9edf7;
   --accent-foreground: #2f4b8c;
+  --accent-hover: #dbe4f7;
   --destructive: #b91c1c;
   --destructive-foreground: #ffffff;
   --destructive-bg: #fbeaea;
@@ -60,6 +84,26 @@
   --border: #dee3ea;
   --input: #c7ceda;
   --ring: #2f4b8c;
+  /* No claro o hover ESCURECE um degrau — o contrário do tema escuro.
+     É por isso que os dois precisam de token próprio, e não de --muted. */
+  --hover: #e4e9f1;
+  --hover-strong: #d6dee9;
+  --chart-cursor: rgb(18 20 28 / 0.07);
+  --overlay: rgb(18 20 28 / 0.45);
+  --shadow-lg: 0 10px 30px rgb(18 20 28 / 0.16);
+
+  /* As mesmas oito matizes, degrauzadas para a superfície clara (--card
+     #ffffff). Três delas ficam abaixo de 3:1 de contraste aqui, o que é
+     aceitável porque a pizza traz rótulo de % e a lista ao lado repete
+     cada valor por escrito — a identidade nunca depende só da cor. */
+  --chart-1: #2a78d6;
+  --chart-2: #eb6834;
+  --chart-3: #1baf7a;
+  --chart-4: #eda100;
+  --chart-5: #e87ba4;
+  --chart-6: #008300;
+  --chart-7: #4a3aa7;
+  --chart-8: #e34948;
 }
 
 @theme inline {
@@ -79,6 +123,9 @@
   --color-muted-foreground: var(--muted-foreground);
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
+  --color-accent-hover: var(--accent-hover);
+  --color-hover: var(--hover);
+  --color-hover-strong: var(--hover-strong);
   --color-destructive: var(--destructive);
   --color-destructive-foreground: var(--destructive-foreground);
   --color-destructive-bg: var(--destructive-bg);

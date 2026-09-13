@@ -31,7 +31,7 @@ export async function POST(request: Request): Promise<Response> {
 
     const contrato = await salvarContratoExtraido(result.payloadBackend);
     revalidatePath("/");
-    revalidatePath("/contratos");
+    revalidatePath("/pagamentos");
     return Response.json({ ...result, contratoId: contrato.id, opiniao }, { status: 201 });
   } catch (error) {
     if (error instanceof ZodError) return Response.json({ erro: "Dados inválidos.", detalhes: error.issues }, { status: 400 });

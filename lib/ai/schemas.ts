@@ -117,7 +117,10 @@ export const parcelaFinanceiraSchema = z.object({
   id: z.string().min(1),
   valor: z.number().nonnegative(),
   vencimento: z.string().regex(isoDate),
-  status: z.enum(["prevista", "paga", "atrasada"]),
+  // "baixada" = honorário de êxito que não vai ser recebido. Sem esse estado,
+  // a IA leria a parcela como dívida em aberto e responderia com dinheiro que
+  // não existe mais.
+  status: z.enum(["prevista", "paga", "atrasada", "baixada"]),
 });
 
 export const contratoFinanceiroSchema = z.object({
@@ -174,6 +177,84 @@ export const opiniaoContratoSchema = z.object({
 });
 
 export type OpiniaoContrato = z.infer<typeof opiniaoContratoSchema>;
+
+// Leitura de recibo/nota para virar um RASCUNHO de despesa. Tudo é anulável
+// porque comprovante é um documento bagunçado — o advogado completa o que
+// faltar antes de confirmar o lançamento.
+export const extracaoDespesaSchema = z.object({
+  descricao: z.string().min(1).nullable(),
+  tipo: z.enum(["processo", "escritorio"]).nullable(),
+  categoria: z
+    .enum([
+      "deslocamento",
+      "custas",
+      "diligencia",
+      "cartorio",
+      "pericia",
+      "correspondente",
+      "outros_processo",
+      "estrutura",
+      "software",
+      "tributos",
+      "pessoal",
+      "outros_escritorio",
+    ])
+    .nullable(),
+  valor: z.number().nonnegative().nullable(),
+  vencimento: z.string().regex(isoDate).nullable(),
+  fornecedor: z.string().min(1).nullable(),
+  textoOriginal: z.string().min(1).nullable(),
+  confianca: z.number().min(0).max(1),
+  avisos: z.array(z.string().min(1)),
+});
+
+export type ExtracaoDespesa = z.infer<typeof extracaoDespesaSchema>;
+
+const CATEGORIAS_DESPESA = [
+  "deslocamento",
+  "custas",
+  "diligencia",
+  "cartorio",
+  "pericia",
+  "correspondente",
+  "outros_processo",
+  "estrutura",
+  "software",
+  "tributos",
+  "pessoal",
+  "outros_escritorio",
+] as const;
+
+export const extracaoDespesaJsonSchema = {
+  type: "object",
+  additionalProperties: false,
+  properties: {
+    descricao: { type: ["string", "null"] },
+    tipo: {
+      anyOf: [{ type: "string", enum: ["processo", "escritorio"] }, { type: "null" }],
+    },
+    categoria: {
+      anyOf: [{ type: "string", enum: CATEGORIAS_DESPESA }, { type: "null" }],
+    },
+    valor: { type: ["number", "null"], minimum: 0 },
+    vencimento: { type: ["string", "null"] },
+    fornecedor: { type: ["string", "null"] },
+    textoOriginal: { type: ["string", "null"] },
+    confianca: { type: "number", minimum: 0, maximum: 1 },
+    avisos: { type: "array", items: { type: "string" } },
+  },
+  required: [
+    "descricao",
+    "tipo",
+    "categoria",
+    "valor",
+    "vencimento",
+    "fornecedor",
+    "textoOriginal",
+    "confianca",
+    "avisos",
+  ],
+} as const;
 
 export const opiniaoContratoJsonSchema = {
   type: "object",

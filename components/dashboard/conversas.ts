@@ -31,16 +31,25 @@ export function obterConversa(id: string): Conversa | undefined {
   return listarConversas().find((c) => c.id === id);
 }
 
-export function salvarConversa(conversa: Conversa): void {
+function gravar(lista: Conversa[]): void {
   if (typeof window === "undefined") return;
   try {
-    const lista = listarConversas().filter((c) => c.id !== conversa.id);
-    lista.unshift(conversa);
     window.localStorage.setItem(CHAVE, JSON.stringify(lista.slice(0, MAX_CONVERSAS)));
     window.dispatchEvent(new Event("safa:conversas"));
   } catch {
     // localStorage indisponível (modo privado, quota etc.) — ignora.
   }
+}
+
+export function salvarConversa(conversa: Conversa): void {
+  const lista = listarConversas().filter((c) => c.id !== conversa.id);
+  lista.unshift(conversa);
+  gravar(lista);
+}
+
+// Exclusão é definitiva: quem confirma é o diálogo da interface.
+export function excluirConversa(id: string): void {
+  gravar(listarConversas().filter((c) => c.id !== id));
 }
 
 export function gerarTitulo(pergunta: string): string {

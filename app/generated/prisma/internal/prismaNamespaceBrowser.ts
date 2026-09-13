@@ -52,7 +52,9 @@ export const ModelName = {
   Cliente: 'Cliente',
   Contrato: 'Contrato',
   Parcela: 'Parcela',
-  Pagamento: 'Pagamento'
+  Pagamento: 'Pagamento',
+  Servico: 'Servico',
+  Despesa: 'Despesa'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -74,6 +76,9 @@ export type TransactionIsolationLevel = (typeof TransactionIsolationLevel)[keyof
 export const ClienteScalarFieldEnum = {
   id: 'id',
   nome: 'nome',
+  documento: 'documento',
+  email: 'email',
+  telefone: 'telefone',
   createdAt: 'createdAt'
 } as const
 
@@ -83,9 +88,14 @@ export type ClienteScalarFieldEnum = (typeof ClienteScalarFieldEnum)[keyof typeo
 export const ContratoScalarFieldEnum = {
   id: 'id',
   clienteId: 'clienteId',
+  numero: 'numero',
+  titulo: 'titulo',
+  processo: 'processo',
   tipoPagamento: 'tipoPagamento',
   valorTotal: 'valorTotal',
   clausulaOriginal: 'clausulaOriginal',
+  origem: 'origem',
+  arquivoNome: 'arquivoNome',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
@@ -98,6 +108,9 @@ export const ParcelaScalarFieldEnum = {
   contratoId: 'contratoId',
   valor: 'valor',
   vencimento: 'vencimento',
+  baixadaEm: 'baixadaEm',
+  motivoBaixa: 'motivoBaixa',
+  notaBaixa: 'notaBaixa',
   createdAt: 'createdAt'
 } as const
 
@@ -115,6 +128,46 @@ export const PagamentoScalarFieldEnum = {
 export type PagamentoScalarFieldEnum = (typeof PagamentoScalarFieldEnum)[keyof typeof PagamentoScalarFieldEnum]
 
 
+export const ServicoScalarFieldEnum = {
+  id: 'id',
+  numero: 'numero',
+  descricao: 'descricao',
+  categoria: 'categoria',
+  valor: 'valor',
+  realizadoEm: 'realizadoEm',
+  vencimento: 'vencimento',
+  recebidoEm: 'recebidoEm',
+  clienteId: 'clienteId',
+  contratoId: 'contratoId',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type ServicoScalarFieldEnum = (typeof ServicoScalarFieldEnum)[keyof typeof ServicoScalarFieldEnum]
+
+
+export const DespesaScalarFieldEnum = {
+  id: 'id',
+  numero: 'numero',
+  descricao: 'descricao',
+  categoria: 'categoria',
+  valor: 'valor',
+  vencimento: 'vencimento',
+  pagoEm: 'pagoEm',
+  tipo: 'tipo',
+  fornecedor: 'fornecedor',
+  contratoId: 'contratoId',
+  quemPaga: 'quemPaga',
+  cobradoEm: 'cobradoEm',
+  origem: 'origem',
+  textoOriginal: 'textoOriginal',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type DespesaScalarFieldEnum = (typeof DespesaScalarFieldEnum)[keyof typeof DespesaScalarFieldEnum]
+
+
 export const SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -129,4 +182,12 @@ export const QueryMode = {
 } as const
 
 export type QueryMode = (typeof QueryMode)[keyof typeof QueryMode]
+
+
+export const NullsOrder = {
+  first: 'first',
+  last: 'last'
+} as const
+
+export type NullsOrder = (typeof NullsOrder)[keyof typeof NullsOrder]
 

@@ -393,7 +393,9 @@ export const ModelName = {
   Cliente: 'Cliente',
   Contrato: 'Contrato',
   Parcela: 'Parcela',
-  Pagamento: 'Pagamento'
+  Pagamento: 'Pagamento',
+  Servico: 'Servico',
+  Despesa: 'Despesa'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -409,7 +411,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "cliente" | "contrato" | "parcela" | "pagamento"
+    modelProps: "cliente" | "contrato" | "parcela" | "pagamento" | "servico" | "despesa"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -709,6 +711,154 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    Servico: {
+      payload: Prisma.$ServicoPayload<ExtArgs>
+      fields: Prisma.ServicoFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.ServicoFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ServicoPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.ServicoFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ServicoPayload>
+        }
+        findFirst: {
+          args: Prisma.ServicoFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ServicoPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.ServicoFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ServicoPayload>
+        }
+        findMany: {
+          args: Prisma.ServicoFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ServicoPayload>[]
+        }
+        create: {
+          args: Prisma.ServicoCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ServicoPayload>
+        }
+        createMany: {
+          args: Prisma.ServicoCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.ServicoCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ServicoPayload>[]
+        }
+        delete: {
+          args: Prisma.ServicoDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ServicoPayload>
+        }
+        update: {
+          args: Prisma.ServicoUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ServicoPayload>
+        }
+        deleteMany: {
+          args: Prisma.ServicoDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.ServicoUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.ServicoUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ServicoPayload>[]
+        }
+        upsert: {
+          args: Prisma.ServicoUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ServicoPayload>
+        }
+        aggregate: {
+          args: Prisma.ServicoAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateServico>
+        }
+        groupBy: {
+          args: Prisma.ServicoGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.ServicoGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.ServicoCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.ServicoCountAggregateOutputType> | number
+        }
+      }
+    }
+    Despesa: {
+      payload: Prisma.$DespesaPayload<ExtArgs>
+      fields: Prisma.DespesaFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.DespesaFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DespesaPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.DespesaFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DespesaPayload>
+        }
+        findFirst: {
+          args: Prisma.DespesaFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DespesaPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.DespesaFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DespesaPayload>
+        }
+        findMany: {
+          args: Prisma.DespesaFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DespesaPayload>[]
+        }
+        create: {
+          args: Prisma.DespesaCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DespesaPayload>
+        }
+        createMany: {
+          args: Prisma.DespesaCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.DespesaCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DespesaPayload>[]
+        }
+        delete: {
+          args: Prisma.DespesaDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DespesaPayload>
+        }
+        update: {
+          args: Prisma.DespesaUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DespesaPayload>
+        }
+        deleteMany: {
+          args: Prisma.DespesaDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.DespesaUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.DespesaUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DespesaPayload>[]
+        }
+        upsert: {
+          args: Prisma.DespesaUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DespesaPayload>
+        }
+        aggregate: {
+          args: Prisma.DespesaAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateDespesa>
+        }
+        groupBy: {
+          args: Prisma.DespesaGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.DespesaGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.DespesaCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.DespesaCountAggregateOutputType> | number
+        }
+      }
+    }
   }
 } & {
   other: {
@@ -751,6 +901,9 @@ export type TransactionIsolationLevel = (typeof TransactionIsolationLevel)[keyof
 export const ClienteScalarFieldEnum = {
   id: 'id',
   nome: 'nome',
+  documento: 'documento',
+  email: 'email',
+  telefone: 'telefone',
   createdAt: 'createdAt'
 } as const
 
@@ -760,9 +913,14 @@ export type ClienteScalarFieldEnum = (typeof ClienteScalarFieldEnum)[keyof typeo
 export const ContratoScalarFieldEnum = {
   id: 'id',
   clienteId: 'clienteId',
+  numero: 'numero',
+  titulo: 'titulo',
+  processo: 'processo',
   tipoPagamento: 'tipoPagamento',
   valorTotal: 'valorTotal',
   clausulaOriginal: 'clausulaOriginal',
+  origem: 'origem',
+  arquivoNome: 'arquivoNome',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
@@ -775,6 +933,9 @@ export const ParcelaScalarFieldEnum = {
   contratoId: 'contratoId',
   valor: 'valor',
   vencimento: 'vencimento',
+  baixadaEm: 'baixadaEm',
+  motivoBaixa: 'motivoBaixa',
+  notaBaixa: 'notaBaixa',
   createdAt: 'createdAt'
 } as const
 
@@ -792,6 +953,46 @@ export const PagamentoScalarFieldEnum = {
 export type PagamentoScalarFieldEnum = (typeof PagamentoScalarFieldEnum)[keyof typeof PagamentoScalarFieldEnum]
 
 
+export const ServicoScalarFieldEnum = {
+  id: 'id',
+  numero: 'numero',
+  descricao: 'descricao',
+  categoria: 'categoria',
+  valor: 'valor',
+  realizadoEm: 'realizadoEm',
+  vencimento: 'vencimento',
+  recebidoEm: 'recebidoEm',
+  clienteId: 'clienteId',
+  contratoId: 'contratoId',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type ServicoScalarFieldEnum = (typeof ServicoScalarFieldEnum)[keyof typeof ServicoScalarFieldEnum]
+
+
+export const DespesaScalarFieldEnum = {
+  id: 'id',
+  numero: 'numero',
+  descricao: 'descricao',
+  categoria: 'categoria',
+  valor: 'valor',
+  vencimento: 'vencimento',
+  pagoEm: 'pagoEm',
+  tipo: 'tipo',
+  fornecedor: 'fornecedor',
+  contratoId: 'contratoId',
+  quemPaga: 'quemPaga',
+  cobradoEm: 'cobradoEm',
+  origem: 'origem',
+  textoOriginal: 'textoOriginal',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type DespesaScalarFieldEnum = (typeof DespesaScalarFieldEnum)[keyof typeof DespesaScalarFieldEnum]
+
+
 export const SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -806,6 +1007,14 @@ export const QueryMode = {
 } as const
 
 export type QueryMode = (typeof QueryMode)[keyof typeof QueryMode]
+
+
+export const NullsOrder = {
+  first: 'first',
+  last: 'last'
+} as const
+
+export type NullsOrder = (typeof NullsOrder)[keyof typeof NullsOrder]
 
 
 
@@ -843,6 +1052,20 @@ export type ListDateTimeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaM
 
 
 /**
+ * Reference to a field of type 'Int'
+ */
+export type IntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int'>
+    
+
+
+/**
+ * Reference to a field of type 'Int[]'
+ */
+export type ListIntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int[]'>
+    
+
+
+/**
  * Reference to a field of type 'TipoPagamento'
  */
 export type EnumTipoPagamentoFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'TipoPagamento'>
@@ -871,16 +1094,100 @@ export type ListDecimalFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaMo
 
 
 /**
- * Reference to a field of type 'Int'
+ * Reference to a field of type 'OrigemRegistro'
  */
-export type IntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int'>
+export type EnumOrigemRegistroFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'OrigemRegistro'>
     
 
 
 /**
- * Reference to a field of type 'Int[]'
+ * Reference to a field of type 'OrigemRegistro[]'
  */
-export type ListIntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int[]'>
+export type ListEnumOrigemRegistroFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'OrigemRegistro[]'>
+    
+
+
+/**
+ * Reference to a field of type 'MotivoBaixa'
+ */
+export type EnumMotivoBaixaFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'MotivoBaixa'>
+    
+
+
+/**
+ * Reference to a field of type 'MotivoBaixa[]'
+ */
+export type ListEnumMotivoBaixaFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'MotivoBaixa[]'>
+    
+
+
+/**
+ * Reference to a field of type 'CategoriaServico'
+ */
+export type EnumCategoriaServicoFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'CategoriaServico'>
+    
+
+
+/**
+ * Reference to a field of type 'CategoriaServico[]'
+ */
+export type ListEnumCategoriaServicoFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'CategoriaServico[]'>
+    
+
+
+/**
+ * Reference to a field of type 'CategoriaDespesa'
+ */
+export type EnumCategoriaDespesaFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'CategoriaDespesa'>
+    
+
+
+/**
+ * Reference to a field of type 'CategoriaDespesa[]'
+ */
+export type ListEnumCategoriaDespesaFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'CategoriaDespesa[]'>
+    
+
+
+/**
+ * Reference to a field of type 'TipoDespesa'
+ */
+export type EnumTipoDespesaFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'TipoDespesa'>
+    
+
+
+/**
+ * Reference to a field of type 'TipoDespesa[]'
+ */
+export type ListEnumTipoDespesaFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'TipoDespesa[]'>
+    
+
+
+/**
+ * Reference to a field of type 'QuemPaga'
+ */
+export type EnumQuemPagaFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'QuemPaga'>
+    
+
+
+/**
+ * Reference to a field of type 'QuemPaga[]'
+ */
+export type ListEnumQuemPagaFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'QuemPaga[]'>
+    
+
+
+/**
+ * Reference to a field of type 'Float'
+ */
+export type FloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float'>
+    
+
+
+/**
+ * Reference to a field of type 'Float[]'
+ */
+export type ListFloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float[]'>
     
 
 /**
@@ -974,6 +1281,8 @@ export type GlobalOmitConfig = {
   contrato?: Prisma.ContratoOmit
   parcela?: Prisma.ParcelaOmit
   pagamento?: Prisma.PagamentoOmit
+  servico?: Prisma.ServicoOmit
+  despesa?: Prisma.DespesaOmit
 }
 
 /* Types for Logging */
