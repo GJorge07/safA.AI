@@ -69,15 +69,23 @@ citando de qual contrato tirou a resposta.
 Depois que o sistema estiver aberto no navegador, existem três telas, e só. O menu fica na lateral esquerda.
 (A aba antiga `/contratos` continua funcionando: ela redireciona para `/pagamentos`.)
 
-### Tela **Início** — o retrato do seu dinheiro
+### Tela **Início** — como estou e o que faço agora
 
-É a primeira que abre. Nela você vê:
+É a primeira que abre, e responde duas perguntas nessa ordem. Navegar contratos é trabalho da tela de
+Pagamentos — por isso aqui não há lista de contratos.
 
-- **os números do topo:** total previsto, total já recebido e total em aberto;
-- **o gráfico de meses:** cada mês tem uma barra do previsto e uma do recebido.
-  **Clique em um mês** para ver quais contratos formam aquele valor;
-- **a lista de contratos**, com a situação de cada um;
-- **os filtros:** dá para olhar só um tipo de honorário, só um cliente, ou só o que está em aberto.
+**Como estou:**
+
+- **o gráfico Entra e sai:** por mês, o previsto, o que entrou e o que saiu em despesas. Clique no
+  card para abrir a visão expandida (barra, linha ou pizza, com o detalhe por cliente);
+- **quanto sobrou este mês:** o recebido menos as despesas pagas — o número que o honorário sozinho
+  não conta;
+- **quanto está em atraso** e **quantos clientes ativos** você tem;
+- **a carteira por tipo:** quanto do seu contratado depende de ganhar a causa (êxito) e quanto é fixo.
+
+**O que faço agora:** o painel **Precisa de você** junta as três formas de o seu dinheiro ficar
+parado — parcela vencida, serviço prestado e não recebido, e o que você adiantou pelo cliente e não
+cobrou. Sempre o mais antigo primeiro, com um clique que leva direto ao lugar de resolver.
 
 ### Tela **Pagamentos** — o que entra e o que sai
 

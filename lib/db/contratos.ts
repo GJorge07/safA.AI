@@ -4,10 +4,9 @@
 // enquanto UI e IA trabalham com minúsculas e number.
 import { Prisma } from "@/app/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
-import { cashflow } from "@/lib/api/finance";
 import type { ContratoComRelacoes } from "@/components/dashboard/types";
 import type { DadosFinanceiros } from "@/lib/ai/schemas";
-import type { ContratoExtraido, FluxoCaixaMes, OrigemRegistro, TipoPagamento } from "@/lib/types";
+import type { ContratoExtraido, OrigemRegistro, TipoPagamento } from "@/lib/types";
 
 const comRelacoes = {
   cliente: true,
@@ -55,11 +54,6 @@ function paraUI(contrato: ContratoRow): ContratoComRelacoes {
       },
     })),
   };
-}
-
-export async function listarContratosComRelacoes(): Promise<ContratoComRelacoes[]> {
-  const contratos = await prisma.contrato.findMany({ include: comRelacoes, orderBy: ordem });
-  return contratos.map(paraUI);
 }
 
 export function contarContratos(): Promise<number> {
@@ -265,17 +259,6 @@ export async function carregarDadosFinanceiros(hoje = new Date()): Promise<Dados
     },
     contratos: lista,
   };
-}
-
-// Janela centrada no mês corrente, para o gráfico não ficar preso ao ano civil.
-export async function carregarFluxoCaixa(hoje = new Date(), meses = 6): Promise<FluxoCaixaMes[]> {
-  const gte = new Date(Date.UTC(hoje.getUTCFullYear(), hoje.getUTCMonth() - Math.floor(meses / 2), 1));
-  const lt = new Date(Date.UTC(gte.getUTCFullYear(), gte.getUTCMonth() + meses, 1));
-  const [parcelas, pagamentos] = await prisma.$transaction([
-    prisma.parcela.findMany({ where: { vencimento: { gte, lt } }, select: { valor: true, vencimento: true } }),
-    prisma.pagamento.findMany({ where: { dataPago: { gte, lt } }, select: { valorPago: true, dataPago: true } }),
-  ]);
-  return cashflow({ gte, lt }, parcelas, pagamentos);
 }
 
 export interface EstatisticasCarteira {

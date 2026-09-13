@@ -4,22 +4,19 @@ import {
   Bar,
   BarChart,
   CartesianGrid,
-  Cell,
   ResponsiveContainer,
   Tooltip,
   XAxis,
   YAxis,
 } from "recharts";
-import type { FluxoCaixaMes } from "@/lib/types";
+import type { MesFluxo } from "@/lib/db/inicio";
 
 function formatMoedaCurta(valor: number) {
   return `R$ ${(valor / 1000).toFixed(1)}k`;
 }
 
 interface FluxoCaixaChartProps {
-  dados: FluxoCaixaMes[];
-  mesSelecionado?: string | null;
-  onSelecionarMes?: (mes: string) => void;
+  dados: MesFluxo[];
   /** Mês que ganha o "pill" de destaque no eixo (geralmente o mais recente). */
   mesEmDestaque?: string;
   altura?: number;
@@ -45,18 +42,7 @@ function TickMes({ x, y, payload, mesEmDestaque }: any) {
   );
 }
 
-export function FluxoCaixaChart({ dados, mesSelecionado, onSelecionarMes, mesEmDestaque, altura = 240 }: FluxoCaixaChartProps) {
-  function fator(mes: string) {
-    if (!mesSelecionado) return 1;
-    return mes === mesSelecionado ? 1 : 0.3;
-  }
-
-  function clicar(data: { payload?: FluxoCaixaMes }) {
-    const mes = data.payload?.mes;
-    if (!mes || !onSelecionarMes) return;
-    onSelecionarMes(mes === mesSelecionado ? "" : mes);
-  }
-
+export function FluxoCaixaChart({ dados, mesEmDestaque, altura = 240 }: FluxoCaixaChartProps) {
   return (
     <ResponsiveContainer width="100%" height={altura}>
       <BarChart data={dados} margin={{ top: 8, right: 8, left: 0, bottom: 4 }} barGap={4}>
@@ -74,32 +60,11 @@ export function FluxoCaixaChart({ dados, mesSelecionado, onSelecionarMes, mesEmD
           contentStyle={{ background: "var(--popover)", border: "1px solid var(--border)", borderRadius: 8, fontSize: 12 }}
           formatter={(value) => Number(value).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
         />
-        <Bar
-          dataKey="previsto"
-          name="Previsto"
-          fill="var(--muted-foreground)"
-          radius={[4, 4, 0, 0]}
-          cursor={onSelecionarMes ? "pointer" : undefined}
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          onClick={(data: any) => clicar(data)}
-        >
-          {dados.map((entry) => (
-            <Cell key={entry.mes} fillOpacity={0.3 * fator(entry.mes)} />
-          ))}
-        </Bar>
-        <Bar
-          dataKey="recebido"
-          name="Recebido"
-          fill="var(--primary)"
-          radius={[4, 4, 0, 0]}
-          cursor={onSelecionarMes ? "pointer" : undefined}
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          onClick={(data: any) => clicar(data)}
-        >
-          {dados.map((entry) => (
-            <Cell key={entry.mes} fillOpacity={fator(entry.mes)} />
-          ))}
-        </Bar>
+        <Bar dataKey="previsto" name="Previsto" fill="var(--muted-foreground)" fillOpacity={0.25} radius={[4, 4, 0, 0]} />
+        <Bar dataKey="recebido" name="Recebido" fill="var(--primary)" radius={[4, 4, 0, 0]} />
+        {/* A terceira barra é o que sai: sem ela o gráfico conta metade da
+            história e o advogado só enxerga o dinheiro entrando. */}
+        <Bar dataKey="pago" name="Pago" fill="var(--destructive)" fillOpacity={0.75} radius={[4, 4, 0, 0]} />
       </BarChart>
     </ResponsiveContainer>
   );
