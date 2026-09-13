@@ -32,7 +32,7 @@ export function estaEmAberto(parcela: ParcelaComPagamento): boolean {
   return !parcela.pagamento && !estaBaixada(parcela);
 }
 
-export type ContratoComRelacoes = Omit<Contrato, 'valorTotal' | 'tipoPagamento' | 'origem' | 'updatedAt' | 'contextoAnalise'> & {
+export type ContratoComRelacoes = Omit<Contrato, 'valorTotal' | 'tipoPagamento' | 'origem' | 'updatedAt'> & {
   valorTotal: number;
   tipoPagamento: TipoPagamento;
   origem: OrigemRegistro;
