@@ -1,4 +1,81 @@
 import { z } from "zod";
+import { obterRefreshTokenDrive } from "@/lib/db/drive-conexao";
+
+const SCOPE_DRIVE_READONLY = "https://www.googleapis.com/auth/drive.readonly";
+
+function getOAuthClientConfig() {
+  const clientId = process.env.GOOGLE_CLIENT_ID;
+  const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
+  const redirectUri = process.env.GOOGLE_REDIRECT_URI;
+  if (!clientId || !clientSecret || !redirectUri) {
+    throw new Error(
+      "Google Drive não configurado: defina GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET e GOOGLE_REDIRECT_URI.",
+    );
+  }
+  return { clientId, clientSecret, redirectUri };
+}
+
+// URL da tela de consentimento do Google. access_type=offline + prompt=consent
+// garantem que a resposta traga um refresh_token mesmo em reconexões.
+export function buildGoogleAuthUrl(): string {
+  const { clientId, redirectUri } = getOAuthClientConfig();
+  const params = new URLSearchParams({
+    client_id: clientId,
+    redirect_uri: redirectUri,
+    response_type: "code",
+    scope: SCOPE_DRIVE_READONLY,
+    access_type: "offline",
+    prompt: "consent",
+  });
+  return `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
+}
+
+export interface TrocaCodigoResultado {
+  refreshToken: string;
+  accessToken: string;
+}
+
+// Troca o "code" que o Google devolve no redirect de /callback por um
+// refresh_token (persistido) e um access_token (usado só para já buscar a
+// conta conectada, ver getContaConectada).
+export async function trocarCodigoPorTokens(code: string): Promise<TrocaCodigoResultado> {
+  const { clientId, clientSecret, redirectUri } = getOAuthClientConfig();
+  const response = await fetch("https://oauth2.googleapis.com/token", {
+    method: "POST",
+    headers: { "content-type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({
+      client_id: clientId,
+      client_secret: clientSecret,
+      redirect_uri: redirectUri,
+      code,
+      grant_type: "authorization_code",
+    }),
+  });
+  if (!response.ok) throw new Error(`Falha ao trocar o código de autorização do Drive (${response.status}).`);
+
+  const token = z
+    .object({ access_token: z.string().min(1), refresh_token: z.string().min(1).optional() })
+    .parse(await response.json());
+  if (!token.refresh_token) {
+    throw new Error(
+      "O Google não devolveu um refresh_token. Revogue o acesso do app em myaccount.google.com/permissions e conecte de novo.",
+    );
+  }
+  return { refreshToken: token.refresh_token, accessToken: token.access_token };
+}
+
+// Nome/e-mail da conta que acabou de conceder acesso — só para exibir na UI.
+export async function getContaConectada(accessToken: string): Promise<string | null> {
+  const response = await fetch("https://www.googleapis.com/drive/v3/about?fields=user", {
+    headers: { authorization: `Bearer ${accessToken}` },
+    cache: "no-store",
+  });
+  if (!response.ok) return null;
+  const data = z.object({ user: z.object({ emailAddress: z.string().optional() }).optional() }).parse(
+    await response.json(),
+  );
+  return data.user?.emailAddress ?? null;
+}
 
 const driveFileSchema = z.object({
   id: z.string().min(1),
@@ -22,13 +99,10 @@ async function getAccessToken(): Promise<string> {
     return cachedToken.value;
   }
 
-  const clientId = process.env.GOOGLE_CLIENT_ID;
-  const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
-  const refreshToken = process.env.GOOGLE_REFRESH_TOKEN;
-  if (!clientId || !clientSecret || !refreshToken) {
-    throw new Error(
-      "Google Drive não configurado: defina GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET e GOOGLE_REFRESH_TOKEN.",
-    );
+  const { clientId, clientSecret } = getOAuthClientConfig();
+  const refreshToken = await obterRefreshTokenDrive();
+  if (!refreshToken) {
+    throw new Error("Google Drive não conectado. Conecte uma conta em /contratos antes de sincronizar.");
   }
 
   const response = await fetch("https://oauth2.googleapis.com/token", {
@@ -101,4 +175,26 @@ export async function downloadDriveContract(fileId: string): Promise<DriveContra
   });
   if (!response.ok) throw new Error(`Não foi possível baixar o contrato do Drive (${response.status}).`);
   return { buffer: Buffer.from(await response.arrayBuffer()), mimeType, reference };
+}
+
+// Aceita tanto um ID de pasta quanto um link completo do Drive
+// (https://drive.google.com/drive/folders/<id>) colado pelo usuário.
+export function extrairIdDaPastaDrive(entrada: string): string {
+  const valor = entrada.trim();
+  const match = valor.match(/\/folders\/([a-zA-Z0-9_-]+)/);
+  return match ? match[1] : valor;
+}
+
+export async function listarArquivosDaPasta(pastaId: string): Promise<DriveFileReference[]> {
+  const safeId = z.string().trim().min(1).max(200).parse(pastaId);
+  const token = await getAccessToken();
+  const fields = encodeURIComponent("files(id,name,mimeType,webViewLink)");
+  const q = encodeURIComponent(`'${safeId}' in parents and trashed = false`);
+  const response = await fetch(
+    `https://www.googleapis.com/drive/v3/files?q=${q}&fields=${fields}&pageSize=100&supportsAllDrives=true&includeItemsFromAllDrives=true`,
+    { headers: { authorization: `Bearer ${token}` }, cache: "no-store" },
+  );
+  if (!response.ok) throw new Error(`Não foi possível listar os arquivos da pasta do Drive (${response.status}).`);
+  const data = z.object({ files: z.array(driveFileSchema) }).parse(await response.json());
+  return data.files;
 }

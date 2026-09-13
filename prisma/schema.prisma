@@ -67,3 +67,23 @@ enum TipoPagamento {
   EXITO
   MISTO
 }
+
+// Conexão única com o Google Drive (ferramenta de uso único, sem sistema de
+// login) — sempre uma única linha, identificada por id fixo "default".
+model DriveConexao {
+  id           String   @id
+  refreshToken String
+  contaEmail   String?
+  pastaId      String?
+  criadoEm     DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
+}
+
+// Evita reprocessar o mesmo arquivo do Drive a cada sincronização.
+model DriveArquivoImportado {
+  id          String   @id @default(cuid())
+  driveFileId String   @unique
+  status      String
+  contratoId  String?
+  importadoEm DateTime @default(now())
+}

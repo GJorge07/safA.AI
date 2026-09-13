@@ -393,7 +393,9 @@ export const ModelName = {
   Cliente: 'Cliente',
   Contrato: 'Contrato',
   Parcela: 'Parcela',
-  Pagamento: 'Pagamento'
+  Pagamento: 'Pagamento',
+  DriveConexao: 'DriveConexao',
+  DriveArquivoImportado: 'DriveArquivoImportado'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -409,7 +411,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "cliente" | "contrato" | "parcela" | "pagamento"
+    modelProps: "cliente" | "contrato" | "parcela" | "pagamento" | "driveConexao" | "driveArquivoImportado"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -709,6 +711,154 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    DriveConexao: {
+      payload: Prisma.$DriveConexaoPayload<ExtArgs>
+      fields: Prisma.DriveConexaoFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.DriveConexaoFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DriveConexaoPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.DriveConexaoFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DriveConexaoPayload>
+        }
+        findFirst: {
+          args: Prisma.DriveConexaoFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DriveConexaoPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.DriveConexaoFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DriveConexaoPayload>
+        }
+        findMany: {
+          args: Prisma.DriveConexaoFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DriveConexaoPayload>[]
+        }
+        create: {
+          args: Prisma.DriveConexaoCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DriveConexaoPayload>
+        }
+        createMany: {
+          args: Prisma.DriveConexaoCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.DriveConexaoCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DriveConexaoPayload>[]
+        }
+        delete: {
+          args: Prisma.DriveConexaoDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DriveConexaoPayload>
+        }
+        update: {
+          args: Prisma.DriveConexaoUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DriveConexaoPayload>
+        }
+        deleteMany: {
+          args: Prisma.DriveConexaoDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.DriveConexaoUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.DriveConexaoUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DriveConexaoPayload>[]
+        }
+        upsert: {
+          args: Prisma.DriveConexaoUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DriveConexaoPayload>
+        }
+        aggregate: {
+          args: Prisma.DriveConexaoAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateDriveConexao>
+        }
+        groupBy: {
+          args: Prisma.DriveConexaoGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.DriveConexaoGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.DriveConexaoCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.DriveConexaoCountAggregateOutputType> | number
+        }
+      }
+    }
+    DriveArquivoImportado: {
+      payload: Prisma.$DriveArquivoImportadoPayload<ExtArgs>
+      fields: Prisma.DriveArquivoImportadoFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.DriveArquivoImportadoFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DriveArquivoImportadoPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.DriveArquivoImportadoFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DriveArquivoImportadoPayload>
+        }
+        findFirst: {
+          args: Prisma.DriveArquivoImportadoFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DriveArquivoImportadoPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.DriveArquivoImportadoFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DriveArquivoImportadoPayload>
+        }
+        findMany: {
+          args: Prisma.DriveArquivoImportadoFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DriveArquivoImportadoPayload>[]
+        }
+        create: {
+          args: Prisma.DriveArquivoImportadoCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DriveArquivoImportadoPayload>
+        }
+        createMany: {
+          args: Prisma.DriveArquivoImportadoCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.DriveArquivoImportadoCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DriveArquivoImportadoPayload>[]
+        }
+        delete: {
+          args: Prisma.DriveArquivoImportadoDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DriveArquivoImportadoPayload>
+        }
+        update: {
+          args: Prisma.DriveArquivoImportadoUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DriveArquivoImportadoPayload>
+        }
+        deleteMany: {
+          args: Prisma.DriveArquivoImportadoDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.DriveArquivoImportadoUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.DriveArquivoImportadoUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DriveArquivoImportadoPayload>[]
+        }
+        upsert: {
+          args: Prisma.DriveArquivoImportadoUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DriveArquivoImportadoPayload>
+        }
+        aggregate: {
+          args: Prisma.DriveArquivoImportadoAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateDriveArquivoImportado>
+        }
+        groupBy: {
+          args: Prisma.DriveArquivoImportadoGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.DriveArquivoImportadoGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.DriveArquivoImportadoCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.DriveArquivoImportadoCountAggregateOutputType> | number
+        }
+      }
+    }
   }
 } & {
   other: {
@@ -792,6 +942,29 @@ export const PagamentoScalarFieldEnum = {
 export type PagamentoScalarFieldEnum = (typeof PagamentoScalarFieldEnum)[keyof typeof PagamentoScalarFieldEnum]
 
 
+export const DriveConexaoScalarFieldEnum = {
+  id: 'id',
+  refreshToken: 'refreshToken',
+  contaEmail: 'contaEmail',
+  pastaId: 'pastaId',
+  criadoEm: 'criadoEm',
+  atualizadoEm: 'atualizadoEm'
+} as const
+
+export type DriveConexaoScalarFieldEnum = (typeof DriveConexaoScalarFieldEnum)[keyof typeof DriveConexaoScalarFieldEnum]
+
+
+export const DriveArquivoImportadoScalarFieldEnum = {
+  id: 'id',
+  driveFileId: 'driveFileId',
+  status: 'status',
+  contratoId: 'contratoId',
+  importadoEm: 'importadoEm'
+} as const
+
+export type DriveArquivoImportadoScalarFieldEnum = (typeof DriveArquivoImportadoScalarFieldEnum)[keyof typeof DriveArquivoImportadoScalarFieldEnum]
+
+
 export const SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -806,6 +979,14 @@ export const QueryMode = {
 } as const
 
 export type QueryMode = (typeof QueryMode)[keyof typeof QueryMode]
+
+
+export const NullsOrder = {
+  first: 'first',
+  last: 'last'
+} as const
+
+export type NullsOrder = (typeof NullsOrder)[keyof typeof NullsOrder]
 
 
 
@@ -974,6 +1155,8 @@ export type GlobalOmitConfig = {
   contrato?: Prisma.ContratoOmit
   parcela?: Prisma.ParcelaOmit
   pagamento?: Prisma.PagamentoOmit
+  driveConexao?: Prisma.DriveConexaoOmit
+  driveArquivoImportado?: Prisma.DriveArquivoImportadoOmit
 }
 
 /* Types for Logging */

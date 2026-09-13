@@ -52,7 +52,9 @@ export const ModelName = {
   Cliente: 'Cliente',
   Contrato: 'Contrato',
   Parcela: 'Parcela',
-  Pagamento: 'Pagamento'
+  Pagamento: 'Pagamento',
+  DriveConexao: 'DriveConexao',
+  DriveArquivoImportado: 'DriveArquivoImportado'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -115,6 +117,29 @@ export const PagamentoScalarFieldEnum = {
 export type PagamentoScalarFieldEnum = (typeof PagamentoScalarFieldEnum)[keyof typeof PagamentoScalarFieldEnum]
 
 
+export const DriveConexaoScalarFieldEnum = {
+  id: 'id',
+  refreshToken: 'refreshToken',
+  contaEmail: 'contaEmail',
+  pastaId: 'pastaId',
+  criadoEm: 'criadoEm',
+  atualizadoEm: 'atualizadoEm'
+} as const
+
+export type DriveConexaoScalarFieldEnum = (typeof DriveConexaoScalarFieldEnum)[keyof typeof DriveConexaoScalarFieldEnum]
+
+
+export const DriveArquivoImportadoScalarFieldEnum = {
+  id: 'id',
+  driveFileId: 'driveFileId',
+  status: 'status',
+  contratoId: 'contratoId',
+  importadoEm: 'importadoEm'
+} as const
+
+export type DriveArquivoImportadoScalarFieldEnum = (typeof DriveArquivoImportadoScalarFieldEnum)[keyof typeof DriveArquivoImportadoScalarFieldEnum]
+
+
 export const SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -129,4 +154,12 @@ export const QueryMode = {
 } as const
 
 export type QueryMode = (typeof QueryMode)[keyof typeof QueryMode]
+
+
+export const NullsOrder = {
+  first: 'first',
+  last: 'last'
+} as const
+
+export type NullsOrder = (typeof NullsOrder)[keyof typeof NullsOrder]
 

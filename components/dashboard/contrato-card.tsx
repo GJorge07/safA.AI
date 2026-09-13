@@ -24,7 +24,7 @@ function formatMoeda(valor: number) {
   return valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
 
-export function ContratoCard({ contrato }: { contrato: ContratoComRelacoes }) {
+export function ContratoCard({ contrato, onClick }: { contrato: ContratoComRelacoes; onClick?: () => void }) {
   const status = statusDoContrato(contrato);
   const vencimento = proximoVencimento(contrato);
 
@@ -41,7 +41,22 @@ export function ContratoCard({ contrato }: { contrato: ContratoComRelacoes }) {
     : null;
 
   return (
-    <div className="flex flex-col gap-3 rounded-lg border border-border bg-card p-4">
+    <div
+      className="flex flex-col gap-3 rounded-lg border border-border bg-card p-4 text-left transition-colors hover:border-primary/50 hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      role={onClick ? "button" : undefined}
+      tabIndex={onClick ? 0 : undefined}
+      onClick={onClick}
+      onKeyDown={
+        onClick
+          ? (e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                onClick();
+              }
+            }
+          : undefined
+      }
+    >
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
           <p className="truncate text-sm font-medium">{contrato.cliente.nome}</p>

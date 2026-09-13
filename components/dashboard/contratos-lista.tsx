@@ -7,6 +7,7 @@ import { Select } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ContratoCard } from "./contrato-card";
+import { ContratoDetalhesModal } from "./contrato-detalhes-modal";
 import { statusDoContrato, type ContratoComRelacoes } from "./types";
 
 const PAGINA_TAMANHO = 10;
@@ -32,6 +33,7 @@ export function ContratosLista({
   const [tipo, setTipo] = useState("todos");
   const [status, setStatus] = useState("todos");
   const [pagina, setPagina] = useState(1);
+  const [selecionado, setSelecionado] = useState<ContratoComRelacoes | null>(null);
 
   const filtrados = useMemo(() => {
     if (!contratos) return [];
@@ -135,7 +137,7 @@ export function ContratosLista({
         <>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             {visiveis.map((c) => (
-              <ContratoCard key={c.id} contrato={c} />
+              <ContratoCard key={c.id} contrato={c} onClick={() => setSelecionado(c)} />
             ))}
           </div>
 
@@ -166,6 +168,8 @@ export function ContratosLista({
           )}
         </>
       )}
+
+      <ContratoDetalhesModal contrato={selecionado} onFechar={() => setSelecionado(null)} />
     </div>
   );
 }

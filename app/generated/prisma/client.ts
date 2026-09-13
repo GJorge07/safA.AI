@@ -64,3 +64,13 @@ export type Parcela = Prisma.ParcelaModel
  * 
  */
 export type Pagamento = Prisma.PagamentoModel
+/**
+ * Model DriveConexao
+ * 
+ */
+export type DriveConexao = Prisma.DriveConexaoModel
+/**
+ * Model DriveArquivoImportado
+ * 
+ */
+export type DriveArquivoImportado = Prisma.DriveArquivoImportadoModel

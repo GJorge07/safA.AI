@@ -115,8 +115,19 @@ assim, a Parte B não reinterpreta o contrato nem duplica o trabalho da Parte A.
 
 Para habilitar o Drive, ative a Google Drive API no projeto Cloud, crie um
 cliente OAuth 2.0 e configure `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` e
-`GOOGLE_REFRESH_TOKEN` somente no backend. A chave do Gemini não autentica o
-Drive: são credenciais e APIs independentes.
+`GOOGLE_REDIRECT_URI` (a URL de callback cadastrada no cliente OAuth, ex.:
+`http://localhost:3000/callback`) no backend. A chave do Gemini não autentica
+o Drive: são credenciais e APIs independentes.
+
+Diferente do Gemini, o Drive não usa um token fixo no `.env` — a conta é
+conectada uma vez pela UI em `/contratos` (botão "Conectar ao Google Drive"),
+que leva à tela de consentimento do Google; o `refresh_token` resultante fica
+salvo no banco (`DriveConexao`), não em variável de ambiente. Rotas
+envolvidas: `GET /api/integrations/drive/connect` (inicia o OAuth), `GET
+/callback` (troca o code pelo refresh_token e salva a conexão), `GET
+/api/integrations/drive/status`, `POST /api/integrations/drive/pasta` (define
+a pasta a sincronizar) e `POST /api/integrations/drive/sync` (lista e importa
+os contratos novos da pasta, usando o mesmo pipeline de `/api/contratos/importar`).
 
 Sem `driveFileIds`, o chat funciona normalmente e devolve `fontes: []`.
 
