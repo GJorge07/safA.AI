@@ -394,6 +394,7 @@ export const ModelName = {
   Contrato: 'Contrato',
   Parcela: 'Parcela',
   Pagamento: 'Pagamento',
+  Servico: 'Servico',
   Despesa: 'Despesa'
 } as const
 
@@ -410,7 +411,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "cliente" | "contrato" | "parcela" | "pagamento" | "despesa"
+    modelProps: "cliente" | "contrato" | "parcela" | "pagamento" | "servico" | "despesa"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -710,6 +711,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    Servico: {
+      payload: Prisma.$ServicoPayload<ExtArgs>
+      fields: Prisma.ServicoFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.ServicoFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ServicoPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.ServicoFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ServicoPayload>
+        }
+        findFirst: {
+          args: Prisma.ServicoFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ServicoPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.ServicoFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ServicoPayload>
+        }
+        findMany: {
+          args: Prisma.ServicoFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ServicoPayload>[]
+        }
+        create: {
+          args: Prisma.ServicoCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ServicoPayload>
+        }
+        createMany: {
+          args: Prisma.ServicoCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.ServicoCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ServicoPayload>[]
+        }
+        delete: {
+          args: Prisma.ServicoDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ServicoPayload>
+        }
+        update: {
+          args: Prisma.ServicoUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ServicoPayload>
+        }
+        deleteMany: {
+          args: Prisma.ServicoDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.ServicoUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.ServicoUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ServicoPayload>[]
+        }
+        upsert: {
+          args: Prisma.ServicoUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ServicoPayload>
+        }
+        aggregate: {
+          args: Prisma.ServicoAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateServico>
+        }
+        groupBy: {
+          args: Prisma.ServicoGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.ServicoGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.ServicoCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.ServicoCountAggregateOutputType> | number
+        }
+      }
+    }
     Despesa: {
       payload: Prisma.$DespesaPayload<ExtArgs>
       fields: Prisma.DespesaFieldRefs
@@ -875,6 +950,25 @@ export const PagamentoScalarFieldEnum = {
 export type PagamentoScalarFieldEnum = (typeof PagamentoScalarFieldEnum)[keyof typeof PagamentoScalarFieldEnum]
 
 
+export const ServicoScalarFieldEnum = {
+  id: 'id',
+  numero: 'numero',
+  descricao: 'descricao',
+  categoria: 'categoria',
+  valor: 'valor',
+  realizadoEm: 'realizadoEm',
+  vencimento: 'vencimento',
+  recebidoEm: 'recebidoEm',
+  clienteId: 'clienteId',
+  contratoId: 'contratoId',
+  observacao: 'observacao',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type ServicoScalarFieldEnum = (typeof ServicoScalarFieldEnum)[keyof typeof ServicoScalarFieldEnum]
+
+
 export const DespesaScalarFieldEnum = {
   id: 'id',
   numero: 'numero',
@@ -1009,6 +1103,20 @@ export type EnumOrigemRegistroFieldRefInput<$PrismaModel> = FieldRefInputType<$P
  * Reference to a field of type 'OrigemRegistro[]'
  */
 export type ListEnumOrigemRegistroFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'OrigemRegistro[]'>
+    
+
+
+/**
+ * Reference to a field of type 'CategoriaServico'
+ */
+export type EnumCategoriaServicoFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'CategoriaServico'>
+    
+
+
+/**
+ * Reference to a field of type 'CategoriaServico[]'
+ */
+export type ListEnumCategoriaServicoFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'CategoriaServico[]'>
     
 
 
@@ -1172,6 +1280,7 @@ export type GlobalOmitConfig = {
   contrato?: Prisma.ContratoOmit
   parcela?: Prisma.ParcelaOmit
   pagamento?: Prisma.PagamentoOmit
+  servico?: Prisma.ServicoOmit
   despesa?: Prisma.DespesaOmit
 }
 

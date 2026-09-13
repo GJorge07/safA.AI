@@ -1,16 +1,20 @@
 import Link from "next/link";
-import { ArrowDownRight, ArrowUpRight, Building2, Scale } from "lucide-react";
+import { ArrowDownRight, ArrowUpRight, Briefcase, Building2, FileText, Scale } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChipsFiltro, type Chip } from "@/components/dashboard/chips-filtro";
 import { ContratosTabela } from "@/components/dashboard/contratos-tabela";
 import { DespesaForm } from "@/components/dashboard/despesa-form";
 import { DespesasTabela } from "@/components/dashboard/despesas-tabela";
 import { DriveSync } from "@/components/dashboard/drive-sync";
+import { ServicoForm } from "@/components/dashboard/servico-form";
+import { ServicosTabela } from "@/components/dashboard/servicos-tabela";
 import { BuscaUrl, SelectUrl } from "@/components/dashboard/filtros-url";
 import { UploadContrato } from "@/components/dashboard/upload-contrato";
 import { VisaoToggle } from "@/components/dashboard/visao-toggle";
 import {
   contadoresContratos,
+  contarContratos,
+  listarClientesParaSelecao,
   listarContratosPaginado,
   listarContratosParaSelecao,
   type OrdenacaoContratos,
@@ -26,7 +30,15 @@ import {
   CATEGORIAS_PROCESSO,
   type FiltroDespesas,
 } from "@/lib/db/despesas";
-import type { CategoriaDespesa, TipoDespesa, TipoPagamento } from "@/lib/types";
+import {
+  contadoresServicos,
+  listarServicosPaginado,
+  resumoServicosDoMes,
+  rotuloCategoriaServico,
+  CATEGORIAS_SERVICO,
+  type FiltroServicos,
+} from "@/lib/db/servicos";
+import type { CategoriaDespesa, CategoriaServico, TipoDespesa, TipoPagamento } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
@@ -58,14 +70,14 @@ export default async function PagamentosPage({ searchParams }: PagamentosPagePro
   }
 
   const [receber, despesasResumo] = await Promise.all([aReceberNoMes(), resumoDespesasDoMes()]);
-  const saldo = receber - despesasResumo.emAbertoMes;
+  const saldo = receber.total - despesasResumo.emAbertoMes;
 
   return (
     <div className="flex flex-col gap-6">
       <div>
         <h1 className="text-xl font-semibold">Pagamentos</h1>
         <p className="text-sm text-muted-foreground">
-          O que entra pelos contratos de honorários e o que sai em despesas do escritório, no mesmo lugar.
+          O que entra — por contrato e por serviço avulso — e o que sai em despesas, no mesmo lugar.
         </p>
       </div>
 
@@ -75,8 +87,13 @@ export default async function PagamentosPage({ searchParams }: PagamentosPagePro
         <Resumo
           icone={<ArrowUpRight className="h-4 w-4" aria-hidden="true" />}
           rotulo="A receber neste mês"
-          valor={moeda(receber)}
+          valor={moeda(receber.total)}
           tom="success"
+          detalhe={
+            receber.servicos > 0
+              ? `${moeda(receber.contratos)} de contratos + ${moeda(receber.servicos)} de serviços`
+              : undefined
+          }
         />
         <Resumo
           icone={<ArrowDownRight className="h-4 w-4" aria-hidden="true" />}
@@ -125,6 +142,40 @@ function hrefAba(params: URLSearchParams, aba: "recebimentos" | "despesas") {
 }
 
 async function SecaoRecebimentos({ busca, params }: { busca: Busca; params: URLSearchParams }) {
+  // As duas vias pelas quais o dinheiro entra: o contrato de honorários, com
+  // parcelas e cláusula, e o serviço avulso, que é cobrança única.
+  const sub = texto(busca, "sub") === "servicos" ? "servicos" : "contratos";
+
+  return (
+    <div className="flex flex-col gap-6">
+      <SubAbasRecebimento sub={sub} />
+      {sub === "contratos" ? (
+        <ViaContratos busca={busca} params={params} />
+      ) : (
+        <ViaServicos busca={busca} params={params} />
+      )}
+    </div>
+  );
+}
+
+async function SubAbasRecebimento({ sub }: { sub: "contratos" | "servicos" }) {
+  const [contratos, servicos] = await Promise.all([contarContratos(), contadoresServicos()]);
+
+  return (
+    <nav className="flex flex-wrap gap-2" aria-label="Origem do recebimento">
+      <SubAba href="/pagamentos" ativa={sub === "contratos"} contagem={contratos}>
+        <FileText className="h-4 w-4" aria-hidden="true" />
+        Por contrato
+      </SubAba>
+      <SubAba href="/pagamentos?sub=servicos" ativa={sub === "servicos"} contagem={servicos.total}>
+        <Briefcase className="h-4 w-4" aria-hidden="true" />
+        Serviços avulsos
+      </SubAba>
+    </nav>
+  );
+}
+
+async function ViaContratos({ busca, params }: { busca: Busca; params: URLSearchParams }) {
   const visao = texto(busca, "visao") === "cards" ? "cards" : "tabela";
   const filtro = {
     pagina: Number(texto(busca, "pagina") ?? 1) || 1,
@@ -152,7 +203,11 @@ async function SecaoRecebimentos({ busca, params }: { busca: Busca; params: URLS
   );
 
   return (
-    <div className="flex flex-col gap-6">
+    <>
+      <p className="text-sm text-muted-foreground">
+        Honorários contratados: valor fechado, parcelas com vencimento e cláusula original para conferir.
+      </p>
+
       <DriveSync />
 
       <details className="group rounded-lg border border-border">
@@ -211,9 +266,96 @@ async function SecaoRecebimentos({ busca, params }: { busca: Busca; params: URLS
           <ContratosTabela pagina={pagina} visao={visao} params={params} temFiltro={temFiltro} />
         </CardContent>
       </Card>
-    </div>
+    </>
   );
 }
+
+async function ViaServicos({ busca, params }: { busca: Busca; params: URLSearchParams }) {
+  const filtro: FiltroServicos = {
+    pagina: Number(texto(busca, "pagina") ?? 1) || 1,
+    busca: texto(busca, "busca"),
+    categoria: (texto(busca, "categoria") ?? "todos") as CategoriaServico | "todos",
+    status: (texto(busca, "status") ?? "todos") as FiltroServicos["status"],
+  };
+
+  const [pagina, contadores, resumo, clientes, contratos] = await Promise.all([
+    listarServicosPaginado(filtro),
+    contadoresServicos(),
+    resumoServicosDoMes(),
+    listarClientesParaSelecao(),
+    listarContratosParaSelecao(),
+  ]);
+
+  const chips: Chip[] = [
+    { texto: "Todos", aplica: { status: null }, contagem: contadores.total },
+    { texto: "Atrasados", aplica: { status: "atrasado" }, contagem: contadores.atrasados, tom: "destructive" },
+    { texto: "A receber", aplica: { status: "a_receber" }, contagem: contadores.aReceber, tom: "warning" },
+    { texto: "Recebidos", aplica: { status: "recebido" }, contagem: contadores.recebidos },
+  ];
+
+  const temFiltro = Boolean(filtro.busca || filtro.categoria !== "todos" || filtro.status !== "todos");
+
+  return (
+    <>
+      <p className="text-sm text-muted-foreground">
+        O que você cobra sem contrato: consulta, parecer, petição avulsa, audiência fora do que foi
+        contratado. Cobrança única, sem parcela — e justamente por isso é o que mais deixa de ser cobrado.
+      </p>
+
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <MiniResumo
+          rotulo="Serviços no mês"
+          valor={moeda(resumo.totalMes)}
+          detalhe={`${resumo.quantidadeMes} serviço(s)`}
+        />
+        <MiniResumo rotulo="Já recebido" valor={moeda(resumo.recebidoMes)} />
+        <MiniResumo
+          rotulo="Vencido e não recebido"
+          valor={moeda(resumo.atrasado)}
+          destaque={resumo.atrasado > 0}
+        />
+      </div>
+
+      <details className="group rounded-lg border border-border" open={pagina.total === 0}>
+        <summary className="cursor-pointer list-none px-4 py-3 text-sm font-medium text-muted-foreground [&::-webkit-details-marker]:hidden">
+          <span className="group-open:hidden">+ Registrar serviço</span>
+          <span className="hidden group-open:inline">− Registrar serviço</span>
+        </summary>
+        <div className="border-t border-border p-4">
+          <ServicoForm clientes={clientes} contratos={contratos} />
+        </div>
+      </details>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Serviços avulsos</CardTitle>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-4">
+          <ChipsFiltro chips={chips} params={params} basePath="/pagamentos" />
+
+          <div className="flex flex-wrap items-center gap-2">
+            <BuscaUrl placeholder="Buscar por serviço, cliente ou nº..." rotulo="Buscar serviço" />
+            <SelectUrl
+              nome="categoria"
+              rotulo="Filtrar por tipo de serviço"
+              className="w-52"
+              opcoes={[
+                { valor: "todos", texto: "Todos os tipos" },
+                ...CATEGORIAS_SERVICO.map((categoria) => ({
+                  valor: categoria,
+                  texto: rotuloCategoriaServico[categoria],
+                })),
+              ]}
+            />
+          </div>
+
+          <ServicosTabela pagina={pagina} params={params} temFiltro={temFiltro} />
+        </CardContent>
+      </Card>
+    </>
+  );
+}
+
 
 async function SecaoDespesas({ busca, params }: { busca: Busca; params: URLSearchParams }) {
   // A separação que o advogado precisa enxergar: gasto de caso (que come a
@@ -434,7 +576,11 @@ function Resumo({
       >
         {valor}
       </div>
-      {detalhe && <div className="mt-0.5 text-xs text-destructive">{detalhe}</div>}
+      {detalhe && (
+        <div className={cn("mt-0.5 text-xs", tom === "success" ? "text-muted-foreground" : "text-destructive")}>
+          {detalhe}
+        </div>
+      )}
     </div>
   );
 }

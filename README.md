@@ -84,7 +84,17 @@ Depois que o sistema estiver aberto no navegador, existem três telas, e só. O 
 No topo, três números que só fazem sentido juntos: **a receber no mês**, **a pagar no mês** e o
 **saldo projetado**. Abaixo, duas abas.
 
-#### Aba **Recebimentos** — seus contratos de honorários
+#### Aba **Recebimentos** — o que entra
+
+Dividida em duas, porque o dinheiro entra por caminhos diferentes:
+
+- **Por contrato** — os honorários: valor fechado, parcelas com vencimento e cláusula original para
+  conferir.
+- **Serviços avulsos** — o que você cobra sem contrato: consulta, parecer, petição avulsa, audiência
+  fora do que foi contratado. Cobrança única, sem parcela. Um serviço pode ser amarrado a um caso já
+  contratado (a audiência extra no meio do processo), e aí soma à receita daquele processo.
+
+##### Por contrato
 
 Duas formas de colocar um contrato no sistema:
 
@@ -221,7 +231,7 @@ As rotas financeiras funcionam sem Gemini. Sem `driveFileIds`, o chat funciona e
 | `npm run lint` | ESLint |
 | `npm run eval:extraction` | roda os 6 cenários de avaliação da extração (consome a API do Gemini) |
 | `npm run prisma:generate` | regenera o client do Prisma |
-| `npm run db:seed` | popula o banco: 123 clientes, 184 contratos e 60 despesas de demonstração |
+| `npm run db:seed` | popula o banco: 123 clientes, 184 contratos, 47 serviços e 66 despesas de demonstração |
 | `SEED_VOLUME=0 npm run db:seed` | popula **só** o conjunto pequeno do pitch (3 clientes, 4 contratos) e remove o volume |
 
 ## Como funciona por dentro
@@ -319,6 +329,8 @@ Cliente ──1:N──> Contrato ──1:N──> Parcela ──1:1(opcional)�
 | `/api/parcelas/[id]` | PUT, DELETE | edita/exclui parcela |
 | `/api/parcelas/[id]/pagamento` | POST, PUT, DELETE | registra, corrige ou remove o pagamento |
 | `/api/fluxo-caixa` | GET | previsto (por vencimento) × recebido (por data do pagamento), por mês |
+| `/api/servicos` | GET, POST | lista paginada (busca, tipo, situação, caso); registra serviço avulso |
+| `/api/servicos/[id]` | GET, PATCH, DELETE | detalhe; marca como recebido; exclui |
 | `/api/despesas` | GET, POST | lista paginada (busca, tipo, categoria, status, caso); lança despesa |
 | `/api/despesas/[id]` | GET, PATCH, DELETE | detalhe; marca como paga ou cobrada do cliente; exclui |
 | `/api/despesas/extrair` | POST | lê recibo/guia (PDF, DOCX, TXT ou `driveFileId`) e devolve rascunho — não grava |

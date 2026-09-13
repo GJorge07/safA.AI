@@ -53,6 +53,7 @@ export const ModelName = {
   Contrato: 'Contrato',
   Parcela: 'Parcela',
   Pagamento: 'Pagamento',
+  Servico: 'Servico',
   Despesa: 'Despesa'
 } as const
 
@@ -122,6 +123,25 @@ export const PagamentoScalarFieldEnum = {
 } as const
 
 export type PagamentoScalarFieldEnum = (typeof PagamentoScalarFieldEnum)[keyof typeof PagamentoScalarFieldEnum]
+
+
+export const ServicoScalarFieldEnum = {
+  id: 'id',
+  numero: 'numero',
+  descricao: 'descricao',
+  categoria: 'categoria',
+  valor: 'valor',
+  realizadoEm: 'realizadoEm',
+  vencimento: 'vencimento',
+  recebidoEm: 'recebidoEm',
+  clienteId: 'clienteId',
+  contratoId: 'contratoId',
+  observacao: 'observacao',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type ServicoScalarFieldEnum = (typeof ServicoScalarFieldEnum)[keyof typeof ServicoScalarFieldEnum]
 
 
 export const DespesaScalarFieldEnum = {

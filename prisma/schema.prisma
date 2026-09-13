@@ -18,6 +18,7 @@ model Cliente {
   telefone  String?
 
   contratos Contrato[]
+  servicos  Servico[]
   createdAt DateTime   @default(now())
 }
 
@@ -41,6 +42,7 @@ model Contrato {
 
   parcelas         Parcela[]
   despesas         Despesa[]
+  servicos         Servico[]
 
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
@@ -75,6 +77,49 @@ model Pagamento {
   dataPago   DateTime @default(now())
 
   createdAt  DateTime @default(now())
+}
+
+// O outro lado do recebimento: o que o advogado cobra fora do contrato — a
+// consulta, o parecer, a audiência que não estava prevista. Não tem parcela
+// nem cláusula, então não cabe em Contrato; é cobrança única, e por isso o
+// recebimento mora na própria linha (recebidoEm) em vez de virar Pagamento.
+model Servico {
+  id          String   @id @default(cuid())
+  numero      Int      @default(autoincrement()) @unique
+
+  descricao   String
+  categoria   CategoriaServico
+  valor       Decimal  @db.Decimal(14, 2)
+
+  realizadoEm DateTime
+  vencimento  DateTime
+  recebidoEm  DateTime?
+
+  cliente     Cliente?  @relation(fields: [clienteId], references: [id], onDelete: SetNull)
+  clienteId   String?
+
+  // Serviço prestado dentro de um caso já contratado (a audiência extra) —
+  // entra na receita daquele processo.
+  contrato    Contrato? @relation(fields: [contratoId], references: [id], onDelete: SetNull)
+  contratoId  String?
+
+  observacao  String?
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([vencimento])
+  @@index([clienteId])
+  @@index([contratoId])
+}
+
+enum CategoriaServico {
+  CONSULTA
+  PARECER
+  PETICAO
+  AUDIENCIA
+  ELABORACAO_CONTRATO
+  OUTROS_SERVICO
 }
 
 // O que sai. Tabela própria de propósito: Pagamento é 1-para-1 com Parcela e

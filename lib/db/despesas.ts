@@ -376,6 +376,9 @@ export async function contadoresDespesas(
 
 export interface MargemDoCaso {
   honorarios: number;
+  /** Serviços avulsos prestados dentro deste caso — também são receita dele. */
+  servicos: number;
+  receita: number;
   recebido: number;
   /** Tudo que o caso consumiu, independentemente de quem arca. */
   despesasTotal: number;
@@ -383,9 +386,9 @@ export interface MargemDoCaso {
   porContaDoAdvogado: number;
   /** Era do cliente, o advogado pagou e ainda não repassou. */
   aReembolsar: number;
-  /** honorarios - porContaDoAdvogado. */
+  /** receita - porContaDoAdvogado. */
   margem: number;
-  /** Quanto do honorário as despesas do advogado já consumiram, em %. */
+  /** Quanto da receita do caso as despesas do advogado já consumiram, em %. */
   percentualConsumido: number;
 }
 
@@ -398,12 +401,16 @@ export async function margemDoCaso(contratoId: string): Promise<MargemDoCaso | n
       valorTotal: true,
       parcelas: { select: { pagamento: { select: { valorPago: true } } } },
       despesas: { select: { valor: true, quemPaga: true, pagoEm: true, cobradoEm: true } },
+      servicos: { select: { valor: true, recebidoEm: true } },
     },
   });
   if (!contrato) return null;
 
   const honorarios = contrato.valorTotal.toNumber();
-  const recebido = contrato.parcelas.reduce((t, p) => t + (p.pagamento?.valorPago.toNumber() ?? 0), 0);
+  const servicos = contrato.servicos.reduce((t, s) => t + s.valor.toNumber(), 0);
+  const recebido =
+    contrato.parcelas.reduce((t, p) => t + (p.pagamento?.valorPago.toNumber() ?? 0), 0) +
+    contrato.servicos.reduce((t, s) => t + (s.recebidoEm ? s.valor.toNumber() : 0), 0);
 
   let despesasTotal = 0;
   let porContaDoAdvogado = 0;
@@ -415,29 +422,53 @@ export async function margemDoCaso(contratoId: string): Promise<MargemDoCaso | n
     else if (despesa.pagoEm && !despesa.cobradoEm) aReembolsar += valor;
   }
 
+  const receita = honorarios + servicos;
+
   return {
     honorarios: centavos(honorarios),
+    servicos: centavos(servicos),
+    receita: centavos(receita),
     recebido: centavos(recebido),
     despesasTotal: centavos(despesasTotal),
     porContaDoAdvogado: centavos(porContaDoAdvogado),
     aReembolsar: centavos(aReembolsar),
-    margem: centavos(honorarios - porContaDoAdvogado),
-    percentualConsumido: honorarios > 0 ? Math.round((porContaDoAdvogado / honorarios) * 1000) / 10 : 0,
+    margem: centavos(receita - porContaDoAdvogado),
+    percentualConsumido: receita > 0 ? Math.round((porContaDoAdvogado / receita) * 1000) / 10 : 0,
   };
 }
 
-// Quanto o advogado ainda tem a receber no mês — par do resumo de despesas.
-export async function aReceberNoMes(hoje = new Date()): Promise<number> {
+export interface AReceber {
+  /** Parcelas de contrato ainda em aberto no mês. */
+  contratos: number;
+  /** Serviços avulsos ainda não recebidos no mês. */
+  servicos: number;
+  total: number;
+}
+
+// Par do resumo de despesas. Soma as duas vias de entrada — sem os serviços
+// avulsos, o "a receber" mentiria para quem cobra consulta e parecer.
+export async function aReceberNoMes(hoje = new Date()): Promise<AReceber> {
   const inicio = new Date(Date.UTC(hoje.getUTCFullYear(), hoje.getUTCMonth(), 1));
   const fim = new Date(Date.UTC(hoje.getUTCFullYear(), hoje.getUTCMonth() + 1, 1));
-  const parcelas = await prisma.parcela.findMany({
-    where: { vencimento: { gte: inicio, lt: fim } },
-    select: { valor: true, pagamento: { select: { valorPago: true } } },
-  });
-  return centavos(
+
+  const [parcelas, servicos] = await prisma.$transaction([
+    prisma.parcela.findMany({
+      where: { vencimento: { gte: inicio, lt: fim } },
+      select: { valor: true, pagamento: { select: { valorPago: true } } },
+    }),
+    prisma.servico.findMany({
+      where: { recebidoEm: null, vencimento: { gte: inicio, lt: fim } },
+      select: { valor: true },
+    }),
+  ]);
+
+  const contratos = centavos(
     parcelas.reduce(
       (total, p) => total + Math.max(0, p.valor.toNumber() - (p.pagamento?.valorPago.toNumber() ?? 0)),
       0,
     ),
   );
+  const avulsos = centavos(servicos.reduce((total, s) => total + s.valor.toNumber(), 0));
+
+  return { contratos, servicos: avulsos, total: centavos(contratos + avulsos) };
 }

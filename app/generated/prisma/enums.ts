@@ -9,6 +9,18 @@
 * 🟢 You can import this file directly.
 */
 
+export const CategoriaServico = {
+  CONSULTA: 'CONSULTA',
+  PARECER: 'PARECER',
+  PETICAO: 'PETICAO',
+  AUDIENCIA: 'AUDIENCIA',
+  ELABORACAO_CONTRATO: 'ELABORACAO_CONTRATO',
+  OUTROS_SERVICO: 'OUTROS_SERVICO'
+} as const
+
+export type CategoriaServico = (typeof CategoriaServico)[keyof typeof CategoriaServico]
+
+
 export const TipoPagamento = {
   FIXO: 'FIXO',
   EXITO: 'EXITO',
