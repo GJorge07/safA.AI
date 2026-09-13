@@ -23,6 +23,7 @@ model Contrato {
   tipoPagamento    TipoPagamento
   valorTotal       Decimal   @db.Decimal(14, 2)
 
+  contextoAnalise Json?
   clausulaOriginal String
 
   parcelas         Parcela[]
@@ -66,4 +67,12 @@ enum TipoPagamento {
   FIXO
   EXITO
   MISTO
+}
+
+// Perfil único do escritório nesta aplicação, sem dados pessoais de clientes.
+model PerfilAdvogado {
+  id String @id @default("principal")
+  areas String[]
+  valorHoraMinimo Decimal? @db.Decimal(14, 2)
+  updatedAt DateTime @updatedAt
 }

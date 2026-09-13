@@ -17,6 +17,7 @@ export interface ExtracaoDeArquivo {
   // que precisam de mais contexto do que o recorte em clausulaOriginal —
   // como avaliar se falta cláusula de mora/reajuste em outro trecho.
   textoCompleto: string;
+  evidenciasVerificadas: boolean;
 }
 
 export async function extractContractFile(
@@ -33,7 +34,10 @@ export async function extractContractFile(
     try {
       const result = await parser.getText();
       const pages = result.pages.map(({ num, text }) => ({ page: num, text }));
-      if (!result.text.trim()) throw new Error("O PDF não possui texto pesquisável; execute OCR antes da extração rigorosa.");
+      if (!result.text.trim()) {
+        const extracao = await extractContract({ kind: "pdf", base64: buffer.toString("base64") });
+        return { extracao, textoCompleto: "", evidenciasVerificadas: false };
+      }
       return extractAndValidate(pages);
     } finally {
       await parser.destroy();
@@ -53,5 +57,5 @@ async function extractAndValidate(pages: SourcePage[]): Promise<ExtracaoDeArquiv
   const markedText = pages.map(({ page, text }) => `[PÁGINA ${page}]\n${text}`).join("\n\n");
   const extraction = await extractContract({ kind: "text", text: markedText });
   const extracao = validateExtractionEvidence(extraction, pages);
-  return { extracao, textoCompleto: pages.map(({ text }) => text).join("\n\n") };
+  return { extracao, textoCompleto: pages.map(({ text }) => text).join("\n\n"), evidenciasVerificadas: true };
 }

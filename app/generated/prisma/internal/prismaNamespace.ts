@@ -393,7 +393,8 @@ export const ModelName = {
   Cliente: 'Cliente',
   Contrato: 'Contrato',
   Parcela: 'Parcela',
-  Pagamento: 'Pagamento'
+  Pagamento: 'Pagamento',
+  PerfilAdvogado: 'PerfilAdvogado'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -409,7 +410,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "cliente" | "contrato" | "parcela" | "pagamento"
+    modelProps: "cliente" | "contrato" | "parcela" | "pagamento" | "perfilAdvogado"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -709,6 +710,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    PerfilAdvogado: {
+      payload: Prisma.$PerfilAdvogadoPayload<ExtArgs>
+      fields: Prisma.PerfilAdvogadoFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.PerfilAdvogadoFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PerfilAdvogadoPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.PerfilAdvogadoFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PerfilAdvogadoPayload>
+        }
+        findFirst: {
+          args: Prisma.PerfilAdvogadoFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PerfilAdvogadoPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.PerfilAdvogadoFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PerfilAdvogadoPayload>
+        }
+        findMany: {
+          args: Prisma.PerfilAdvogadoFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PerfilAdvogadoPayload>[]
+        }
+        create: {
+          args: Prisma.PerfilAdvogadoCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PerfilAdvogadoPayload>
+        }
+        createMany: {
+          args: Prisma.PerfilAdvogadoCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.PerfilAdvogadoCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PerfilAdvogadoPayload>[]
+        }
+        delete: {
+          args: Prisma.PerfilAdvogadoDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PerfilAdvogadoPayload>
+        }
+        update: {
+          args: Prisma.PerfilAdvogadoUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PerfilAdvogadoPayload>
+        }
+        deleteMany: {
+          args: Prisma.PerfilAdvogadoDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.PerfilAdvogadoUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.PerfilAdvogadoUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PerfilAdvogadoPayload>[]
+        }
+        upsert: {
+          args: Prisma.PerfilAdvogadoUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PerfilAdvogadoPayload>
+        }
+        aggregate: {
+          args: Prisma.PerfilAdvogadoAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregatePerfilAdvogado>
+        }
+        groupBy: {
+          args: Prisma.PerfilAdvogadoGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.PerfilAdvogadoGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.PerfilAdvogadoCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.PerfilAdvogadoCountAggregateOutputType> | number
+        }
+      }
+    }
   }
 } & {
   other: {
@@ -762,6 +837,7 @@ export const ContratoScalarFieldEnum = {
   clienteId: 'clienteId',
   tipoPagamento: 'tipoPagamento',
   valorTotal: 'valorTotal',
+  contextoAnalise: 'contextoAnalise',
   clausulaOriginal: 'clausulaOriginal',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
@@ -792,6 +868,16 @@ export const PagamentoScalarFieldEnum = {
 export type PagamentoScalarFieldEnum = (typeof PagamentoScalarFieldEnum)[keyof typeof PagamentoScalarFieldEnum]
 
 
+export const PerfilAdvogadoScalarFieldEnum = {
+  id: 'id',
+  areas: 'areas',
+  valorHoraMinimo: 'valorHoraMinimo',
+  updatedAt: 'updatedAt'
+} as const
+
+export type PerfilAdvogadoScalarFieldEnum = (typeof PerfilAdvogadoScalarFieldEnum)[keyof typeof PerfilAdvogadoScalarFieldEnum]
+
+
 export const SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -800,12 +886,37 @@ export const SortOrder = {
 export type SortOrder = (typeof SortOrder)[keyof typeof SortOrder]
 
 
+export const NullableJsonNullValueInput = {
+  DbNull: DbNull,
+  JsonNull: JsonNull
+} as const
+
+export type NullableJsonNullValueInput = (typeof NullableJsonNullValueInput)[keyof typeof NullableJsonNullValueInput]
+
+
 export const QueryMode = {
   default: 'default',
   insensitive: 'insensitive'
 } as const
 
 export type QueryMode = (typeof QueryMode)[keyof typeof QueryMode]
+
+
+export const JsonNullValueFilter = {
+  DbNull: DbNull,
+  JsonNull: JsonNull,
+  AnyNull: AnyNull
+} as const
+
+export type JsonNullValueFilter = (typeof JsonNullValueFilter)[keyof typeof JsonNullValueFilter]
+
+
+export const NullsOrder = {
+  first: 'first',
+  last: 'last'
+} as const
+
+export type NullsOrder = (typeof NullsOrder)[keyof typeof NullsOrder]
 
 
 
@@ -868,6 +979,20 @@ export type DecimalFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel,
  */
 export type ListDecimalFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Decimal[]'>
     
+
+
+/**
+ * Reference to a field of type 'Json'
+ */
+export type JsonFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Json'>
+
+
+
+/**
+ * Reference to a field of type 'QueryMode'
+ */
+export type EnumQueryModeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'QueryMode'>
+
 
 
 /**
@@ -974,6 +1099,7 @@ export type GlobalOmitConfig = {
   contrato?: Prisma.ContratoOmit
   parcela?: Prisma.ParcelaOmit
   pagamento?: Prisma.PagamentoOmit
+  perfilAdvogado?: Prisma.PerfilAdvogadoOmit
 }
 
 /* Types for Logging */

@@ -14,7 +14,15 @@ export interface IngestionResult {
 }
 
 async function finalize(buffer: Buffer, mimeType: SupportedContractMimeType, fonte: DriveFileReference | null): Promise<IngestionResult> {
-  const { extracao, textoCompleto } = await extractContractFile(buffer, mimeType);
+  const { extracao, textoCompleto, evidenciasVerificadas } = await extractContractFile(buffer, mimeType);
+  if (!evidenciasVerificadas) {
+    return {
+      status: "revisao_necessaria", extracao, textoCompleto,
+      payloadBackend: null,
+      motivosRevisao: ["PDF sem texto pesquisável: a leitura visual precisa de confirmação manual antes de salvar"],
+      fonte,
+    };
+  }
   try {
     return { status: "pronto_para_salvar", extracao, textoCompleto, payloadBackend: adaptToBackend(extracao), motivosRevisao: [], fonte };
   } catch (error) {

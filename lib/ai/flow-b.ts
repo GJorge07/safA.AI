@@ -21,14 +21,14 @@ export async function runFlowB(input: unknown): Promise<FlowBResult> {
       contratoId: contract.id,
       clienteId: contract.clienteId,
       clienteNome: contract.cliente,
-      valor: installment.valor,
+      valor: installment.saldo ?? installment.valor,
       vencimento: installment.vencimento,
       pago: installment.status === "paga",
     })),
   );
 
   const [resposta, fontes] = await Promise.all([
-    answerFinancialQuestion({ pergunta: parsed.pergunta, dados: parsed.dados }),
+    answerFinancialQuestion({ pergunta: parsed.pergunta, dados: parsed.dados, contratoReferencia: parsed.contratoReferencia }),
     parsed.driveFileIds.length ? resolveDriveReferences(parsed.driveFileIds) : [],
   ]);
   const insights = generateAutomaticInsights(

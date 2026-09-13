@@ -1,3 +1,8 @@
+import { dadosAnaliseDocumentoSchema, extrairContextoDoContrato } from "../ai/extract-case-context";
+import { compararEscopo, perfilAdvogadoSchema } from "../ai/practice-profile";
+import type { ContextoEsforco } from "../ai/case-effort";
+import { avaliarContratoCadastrado, type ContratoParaAvaliacao } from "../ai/contract-assessment";
+import { resumirPagamentos } from "../ai/payment-history";
 // Camada única entre o Prisma e o resto do app. Traduz as duas diferenças de
 // representação que existem entre o banco e as outras camadas: o enum é
 // gravado em maiúsculas (schema.prisma) e os valores monetários são Decimal,
@@ -63,15 +68,45 @@ export function contarContratos(): Promise<number> {
 
 // Contexto que a IA recebe no Fluxo B. É montado aqui, no servidor, a partir
 // do banco — o cliente manda só a pergunta.
-export async function carregarDadosFinanceiros(hoje = new Date()): Promise<DadosFinanceiros> {
+export async function carregarDadosFinanceiros(hoje = new Date(), estimativa?: { contratoId: string; contexto: ContextoEsforco }): Promise<DadosFinanceiros> {
   const contratos = await prisma.contrato.findMany({ include: comRelacoes, orderBy: ordem });
+  const perfilRow = await prisma.perfilAdvogado.findUnique({ where: { id: "principal" } });
+  const perfil = perfilRow ? perfilAdvogadoSchema.parse({ areas: perfilRow.areas, valorHoraMinimo: perfilRow.valorHoraMinimo?.toNumber() ?? null }) : null;
+  const documentos = contratos.map(c => {
+    const salvo = dadosAnaliseDocumentoSchema.safeParse(c.contextoAnalise);
+    return salvo.success ? salvo.data : extrairContextoDoContrato(c.clausulaOriginal);
+  });
+  const carteiraAvaliacao: ContratoParaAvaliacao[] = contratos.map(c => ({
+    id: c.id, clienteId: c.clienteId,
+    tipoPagamento: c.tipoPagamento.toLowerCase() as TipoPagamento,
+    valorTotal: c.valorTotal.toNumber(),
+    parcelas: c.parcelas.map(p => ({ valor: p.valor.toNumber(), vencimento: p.vencimento,
+      pagamento: p.pagamento && { valorPago: p.pagamento.valorPago.toNumber(), dataPago: p.pagamento.dataPago },
+    })),
+  }));
   const dataReferencia = diaISO(hoje);
   let previsto = 0;
   let recebido = 0;
   let pendente = 0;
   let atrasado = 0;
 
-  const lista = contratos.map((contrato) => ({
+  const lista = contratos.map((contrato, indice) => ({
+    createdAt: contrato.createdAt?.toISOString(),
+    opiniao: (() => {
+      const documento = documentos[indice];
+      const contexto = { ...documento.contexto, ...(perfil?.valorHoraMinimo ? { valorHoraMinimo: perfil.valorHoraMinimo } : {}), ...(estimativa?.contratoId === contrato.id ? estimativa.contexto : {}) };
+      const opiniao = avaliarContratoCadastrado(carteiraAvaliacao[indice], carteiraAvaliacao, hoje, contexto);
+      for (const categoria of ["financeiro", "complexidade"] as const) {
+        opiniao.avaliacoes[categoria].evidencias = [
+          ...opiniao.avaliacoes[categoria].evidencias,
+          ...documento.evidencias.filter(e => categoria === "financeiro" ? !e.campo.startsWith("areas") : e.campo === "dificuldade" || e.campo.startsWith("fatores") || e.campo.startsWith("horas")).map(e => `Contrato — ${e.campo}: “${e.trecho}”`),
+          ...(perfil?.valorHoraMinimo && categoria === "financeiro" ? ["Meta por hora declarada no perfil"] : []),
+        ];
+      }
+      return compararEscopo(opiniao, documento.areas, perfil);
+    })(),
+    contextoSugerido: { ...documentos[indice].contexto, ...(perfil?.valorHoraMinimo ? { valorHoraMinimo: perfil.valorHoraMinimo } : {}) },
+    evidenciasContexto: documentos[indice].evidencias,
     id: contrato.id,
     clienteId: contrato.clienteId,
     cliente: contrato.cliente.nome,
@@ -91,7 +126,7 @@ export async function carregarDadosFinanceiros(hoje = new Date()): Promise<Dados
       if (atrasada) atrasado += saldo;
 
       const status = saldo === 0 ? "paga" : atrasada ? "atrasada" : "prevista";
-      return { id: parcela.id, valor, vencimento, status } as const;
+      return { id: parcela.id, valor, saldo: centavos(saldo), vencimento, status } as const;
     }),
   }));
 
@@ -152,7 +187,7 @@ export async function carregarEstatisticasCarteira(): Promise<EstatisticasCartei
 
 // Grava o que a extração aprovou. O cliente é reaproveitado por nome para o
 // mesmo escritório não virar dezenas de "João Pereira" a cada importação.
-export async function salvarContratoExtraido(extraido: ContratoExtraido) {
+export async function salvarContratoExtraido(extraido: ContratoExtraido, textoCompleto?: string) {
   const nome = extraido.cliente.trim();
   return prisma.$transaction(async (tx) => {
     const existente = await tx.cliente.findFirst({ where: { nome: { equals: nome, mode: "insensitive" } } });
@@ -160,6 +195,7 @@ export async function salvarContratoExtraido(extraido: ContratoExtraido) {
     return tx.contrato.create({
       data: {
         clienteId: cliente.id,
+        contextoAnalise: JSON.parse(JSON.stringify(extrairContextoDoContrato(textoCompleto ?? extraido.clausulaOriginal))),
         tipoPagamento: paraEnumDb[extraido.tipoPagamento],
         valorTotal: new Prisma.Decimal(extraido.valorTotal),
         clausulaOriginal: extraido.clausulaOriginal,
@@ -173,4 +209,25 @@ export async function salvarContratoExtraido(extraido: ContratoExtraido) {
       include: { cliente: true, parcelas: { orderBy: { vencimento: "asc" } } },
     });
   });
+}
+
+// O cadastro atual só identifica por nome: múltiplos candidatos não são atribuídos.
+export async function carregarHistoricoCliente(nome: string | null) {
+  if (!nome?.trim()) return { status: "cliente_nao_identificado" } as const;
+  const clientes = await prisma.cliente.findMany({
+    where: { nome: { equals: nome.trim(), mode: "insensitive" } },
+    include: { contratos: { include: { parcelas: { include: { pagamento: true } } } } },
+  });
+  if (clientes.length === 0) return { status: "sem_historico" } as const;
+  if (clientes.length > 1) return { status: "identidade_ambigua" } as const;
+  const contratos = clientes[0].contratos;
+  return {
+    status: contratos.some(c => c.parcelas.length > 0) ? "disponivel" : "sem_historico",
+    identificacao: "Correspondência apenas pelo nome; confirme a identidade do cliente.",
+    contratoIds: contratos.map(c => c.id),
+    ...resumirPagamentos(contratos.flatMap(c => c.parcelas.map(p => ({
+      valor: p.valor.toNumber(), vencimento: p.vencimento,
+      pagamento: p.pagamento && { valorPago: p.pagamento.valorPago.toNumber(), dataPago: p.pagamento.dataPago },
+    })))),
+  };
 }

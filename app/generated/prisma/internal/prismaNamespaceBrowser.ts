@@ -52,7 +52,8 @@ export const ModelName = {
   Cliente: 'Cliente',
   Contrato: 'Contrato',
   Parcela: 'Parcela',
-  Pagamento: 'Pagamento'
+  Pagamento: 'Pagamento',
+  PerfilAdvogado: 'PerfilAdvogado'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -85,6 +86,7 @@ export const ContratoScalarFieldEnum = {
   clienteId: 'clienteId',
   tipoPagamento: 'tipoPagamento',
   valorTotal: 'valorTotal',
+  contextoAnalise: 'contextoAnalise',
   clausulaOriginal: 'clausulaOriginal',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
@@ -115,6 +117,16 @@ export const PagamentoScalarFieldEnum = {
 export type PagamentoScalarFieldEnum = (typeof PagamentoScalarFieldEnum)[keyof typeof PagamentoScalarFieldEnum]
 
 
+export const PerfilAdvogadoScalarFieldEnum = {
+  id: 'id',
+  areas: 'areas',
+  valorHoraMinimo: 'valorHoraMinimo',
+  updatedAt: 'updatedAt'
+} as const
+
+export type PerfilAdvogadoScalarFieldEnum = (typeof PerfilAdvogadoScalarFieldEnum)[keyof typeof PerfilAdvogadoScalarFieldEnum]
+
+
 export const SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -123,10 +135,35 @@ export const SortOrder = {
 export type SortOrder = (typeof SortOrder)[keyof typeof SortOrder]
 
 
+export const NullableJsonNullValueInput = {
+  DbNull: DbNull,
+  JsonNull: JsonNull
+} as const
+
+export type NullableJsonNullValueInput = (typeof NullableJsonNullValueInput)[keyof typeof NullableJsonNullValueInput]
+
+
 export const QueryMode = {
   default: 'default',
   insensitive: 'insensitive'
 } as const
 
 export type QueryMode = (typeof QueryMode)[keyof typeof QueryMode]
+
+
+export const JsonNullValueFilter = {
+  DbNull: DbNull,
+  JsonNull: JsonNull,
+  AnyNull: AnyNull
+} as const
+
+export type JsonNullValueFilter = (typeof JsonNullValueFilter)[keyof typeof JsonNullValueFilter]
+
+
+export const NullsOrder = {
+  first: 'first',
+  last: 'last'
+} as const
+
+export type NullsOrder = (typeof NullsOrder)[keyof typeof NullsOrder]
 

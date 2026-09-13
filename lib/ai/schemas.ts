@@ -1,3 +1,4 @@
+import { contextoEsforcoSchema } from "./case-effort";
 import { z } from "zod";
 
 const isoDate = /^\d{4}-\d{2}-\d{2}$/;
@@ -113,14 +114,84 @@ export const extracaoContratoJsonSchema = {
   ],
 } as const;
 
+// Avaliação qualitativa de um contrato para o advogado (risco financeiro,
+// completude jurídica da cláusula e comparação com a carteira dele).
+export const contextoAdvogadoSchema = z.string().trim().max(6000).default("");
+const avaliacaoDimensaoSchema = z.object({
+  status: z.enum(["favoravel", "atencao", "desfavoravel", "dados_insuficientes"]),
+  justificativa: z.string().min(1),
+  evidencias: z.array(z.string().min(1)),
+  dadosFaltantes: z.array(z.string().min(1)),
+});
+
+export const opiniaoContratoSchema = z.object({
+  avaliacoes: z.object({ financeiro: avaliacaoDimensaoSchema, pagamentos: avaliacaoDimensaoSchema, complexidade: avaliacaoDimensaoSchema, escopo: avaliacaoDimensaoSchema }),
+  classificacao: z.enum(["favoravel", "atencao", "desfavoravel"]),
+  resumo: z.string().min(1),
+  pontosFortes: z.array(z.string().min(1)),
+  riscos: z.array(z.object({
+    categoria: z.enum(["financeiro", "juridico", "carteira", "pagamentos", "complexidade", "escopo"]),
+    descricao: z.string().min(1),
+  })),
+  recomendacao: z.string().min(1),
+});
+
+export type OpiniaoContrato = z.infer<typeof opiniaoContratoSchema>;
+
+const avaliacaoDimensaoJsonSchema = {
+  type: "object", additionalProperties: false,
+  properties: {
+    status: { type: "string", enum: ["favoravel", "atencao", "desfavoravel", "dados_insuficientes"] },
+    justificativa: { type: "string" },
+    evidencias: { type: "array", items: { type: "string" } },
+    dadosFaltantes: { type: "array", items: { type: "string" } },
+  },
+  required: ["status", "justificativa", "evidencias", "dadosFaltantes"],
+} as const;
+
+export const opiniaoContratoJsonSchema = {
+  type: "object",
+  additionalProperties: false,
+  properties: {
+    avaliacoes: {
+      type: "object", additionalProperties: false,
+      properties: { financeiro: avaliacaoDimensaoJsonSchema, pagamentos: avaliacaoDimensaoJsonSchema, complexidade: avaliacaoDimensaoJsonSchema, escopo: avaliacaoDimensaoJsonSchema },
+      required: ["financeiro", "pagamentos", "complexidade", "escopo"],
+    },
+    classificacao: { type: "string", enum: ["favoravel", "atencao", "desfavoravel"] },
+    resumo: { type: "string" },
+    pontosFortes: { type: "array", items: { type: "string" } },
+    riscos: {
+      type: "array",
+      items: {
+        type: "object",
+        additionalProperties: false,
+        properties: {
+          categoria: { type: "string", enum: ["financeiro", "juridico", "carteira", "pagamentos", "complexidade", "escopo"] },
+          descricao: { type: "string" },
+        },
+        required: ["categoria", "descricao"],
+      },
+    },
+    recomendacao: { type: "string" },
+  },
+  required: ["avaliacoes", "classificacao", "resumo", "pontosFortes", "riscos", "recomendacao"],
+} as const;
+
+
 export const parcelaFinanceiraSchema = z.object({
   id: z.string().min(1),
   valor: z.number().nonnegative(),
   vencimento: z.string().regex(isoDate),
   status: z.enum(["prevista", "paga", "atrasada"]),
+  saldo: z.number().nonnegative().optional(),
 });
 
 export const contratoFinanceiroSchema = z.object({
+  createdAt: z.string().datetime().optional(),
+  contextoSugerido: contextoEsforcoSchema.optional(),
+  evidenciasContexto: z.array(z.object({ campo: z.string(), trecho: z.string() })).optional(),
+  opiniao: opiniaoContratoSchema.optional(),
   id: z.string().min(1),
   clienteId: z.string().min(1),
   cliente: z.string().min(1),
@@ -142,6 +213,7 @@ export const dadosFinanceirosSchema = z.object({
 });
 
 export const contextoFinanceiroSchema = z.object({
+  contratoReferencia: z.string().min(1).max(200).optional(),
   pergunta: z.string().trim().min(1).max(500),
   dados: dadosFinanceirosSchema,
 });
@@ -159,45 +231,6 @@ export const respostaFinanceiraSchema = z.object({
 });
 
 export type RespostaFinanceira = z.infer<typeof respostaFinanceiraSchema>;
-
-// Avaliação qualitativa de um contrato para o advogado (risco financeiro,
-// completude jurídica da cláusula e comparação com a carteira dele).
-export const opiniaoContratoSchema = z.object({
-  classificacao: z.enum(["favoravel", "atencao", "desfavoravel"]),
-  resumo: z.string().min(1),
-  pontosFortes: z.array(z.string().min(1)),
-  riscos: z.array(z.object({
-    categoria: z.enum(["financeiro", "juridico", "carteira"]),
-    descricao: z.string().min(1),
-  })),
-  recomendacao: z.string().min(1),
-});
-
-export type OpiniaoContrato = z.infer<typeof opiniaoContratoSchema>;
-
-export const opiniaoContratoJsonSchema = {
-  type: "object",
-  additionalProperties: false,
-  properties: {
-    classificacao: { type: "string", enum: ["favoravel", "atencao", "desfavoravel"] },
-    resumo: { type: "string" },
-    pontosFortes: { type: "array", items: { type: "string" } },
-    riscos: {
-      type: "array",
-      items: {
-        type: "object",
-        additionalProperties: false,
-        properties: {
-          categoria: { type: "string", enum: ["financeiro", "juridico", "carteira"] },
-          descricao: { type: "string" },
-        },
-        required: ["categoria", "descricao"],
-      },
-    },
-    recomendacao: { type: "string" },
-  },
-  required: ["classificacao", "resumo", "pontosFortes", "riscos", "recomendacao"],
-} as const;
 
 export const respostaFinanceiraJsonSchema = {
   type: "object",

@@ -22,7 +22,7 @@ registerHooks({
         source: `
           const unexpected = () => { throw new Error('Consulta ao banco sem mock no teste'); };
           const delegate = () => Object.fromEntries(['findMany', 'findUnique', 'create', 'update', 'delete'].map(name => [name, unexpected]));
-          export const prisma = { cliente: delegate(), contrato: delegate(), parcela: delegate(), pagamento: delegate(), $transaction: unexpected };
+          export const prisma = { perfilAdvogado: { findUnique: async () => null, upsert: unexpected }, cliente: delegate(), contrato: delegate(), parcela: delegate(), pagamento: delegate(), $transaction: unexpected };
         `,
       };
     }

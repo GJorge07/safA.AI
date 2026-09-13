@@ -10,7 +10,7 @@ import type { TipoPagamento } from "@/lib/types";
 type PagamentoUI = Omit<Pagamento, 'valorPago' | 'createdAt'> & { valorPago: number };
 export type ParcelaComPagamento = Omit<Parcela, 'valor' | 'createdAt'> & { valor: number; pagamento: PagamentoUI | null };
 
-export type ContratoComRelacoes = Omit<Contrato, 'valorTotal' | 'tipoPagamento' | 'updatedAt'> & {
+export type ContratoComRelacoes = Omit<Contrato, 'valorTotal' | 'tipoPagamento' | 'updatedAt' | 'contextoAnalise'> & {
   valorTotal: number;
   tipoPagamento: TipoPagamento;
   cliente: Cliente;

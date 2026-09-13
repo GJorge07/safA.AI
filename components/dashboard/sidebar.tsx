@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Bot, FileText, Home, PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import { Bot, FileText, Home, UserRound, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "./theme-toggle";
 
@@ -11,6 +11,7 @@ const nav = [
   { href: "/", label: "Início", icon: Home },
   { href: "/contratos", label: "Contratos", icon: FileText },
   { href: "/agente", label: "Safa AI", icon: Bot },
+  { href: "/perfil", label: "Meu perfil", icon: UserRound },
 ];
 
 export function Sidebar() {
