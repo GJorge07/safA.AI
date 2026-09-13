@@ -136,7 +136,6 @@ export const ServicoScalarFieldEnum = {
   recebidoEm: 'recebidoEm',
   clienteId: 'clienteId',
   contratoId: 'contratoId',
-  observacao: 'observacao',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
@@ -153,7 +152,6 @@ export const DespesaScalarFieldEnum = {
   vencimento: 'vencimento',
   pagoEm: 'pagoEm',
   tipo: 'tipo',
-  recorrencia: 'recorrencia',
   fornecedor: 'fornecedor',
   contratoId: 'contratoId',
   quemPaga: 'quemPaga',

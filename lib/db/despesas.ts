@@ -9,7 +9,6 @@ import type {
   CategoriaDespesaProcesso,
   OrigemRegistro,
   QuemPaga,
-  Recorrencia,
   TipoDespesa,
 } from "@/lib/types";
 
@@ -36,7 +35,6 @@ export const categoriaParaDb = {
 
 export const tipoParaDb = { processo: "PROCESSO", escritorio: "ESCRITORIO" } as const;
 export const quemPagaParaDb = { cliente: "CLIENTE", advogado: "ADVOGADO" } as const;
-export const recorrenciaParaDb = { unica: "UNICA", mensal: "MENSAL", anual: "ANUAL" } as const;
 const origemParaDb = { manual: "MANUAL", upload: "UPLOAD", drive: "DRIVE" } as const;
 
 // Rótulos no vocabulário do dia a dia — "Transporte até o fórum", não
@@ -79,12 +77,6 @@ export const rotuloTipo: Record<TipoDespesa, string> = {
   escritorio: "Do escritório",
 };
 
-export const rotuloRecorrencia: Record<Recorrencia, string> = {
-  unica: "Única",
-  mensal: "Mensal",
-  anual: "Anual",
-};
-
 function centavos(valor: number): number {
   return Math.round(valor * 100) / 100;
 }
@@ -99,7 +91,6 @@ function paraUI(despesa: DespesaRow): DespesaUI {
     valor: despesa.valor.toNumber(),
     vencimento: despesa.vencimento,
     pagoEm: despesa.pagoEm,
-    recorrencia: despesa.recorrencia.toLowerCase() as Recorrencia,
     fornecedor: despesa.fornecedor,
     contratoId: despesa.contratoId,
     contrato: despesa.contrato,
@@ -115,10 +106,10 @@ function paraUI(despesa: DespesaRow): DespesaUI {
 // advogado faz ("o que eu ainda devo?"), e que "prevista" sozinha não responde.
 export type StatusDespesaFiltro =
   | "todos"
-  | "paga"
   | "em_aberto"
   | "atrasada"
-  | "prevista"
+  | "vence_7"
+  | "paga"
   | "a_reembolsar";
 
 export type OrdenacaoDespesas = "recentes" | "maior_valor" | "vencimento";
@@ -131,10 +122,7 @@ export interface FiltroDespesas {
   categoria?: CategoriaDespesa | "todos";
   status?: StatusDespesaFiltro;
   ordenar?: OrdenacaoDespesas;
-  recorrencia?: Recorrencia | "todos";
   contratoId?: string;
-  /** Só o que vence nos próximos 7 dias e ainda não foi pago. */
-  vence7?: boolean;
   hoje?: Date;
 }
 
@@ -159,9 +147,7 @@ function where({
   tipo,
   categoria,
   status,
-  recorrencia,
   contratoId,
-  vence7,
   hoje = new Date(),
 }: FiltroDespesas): Prisma.DespesaWhereInput {
   const filtros: Prisma.DespesaWhereInput[] = [];
@@ -181,18 +167,15 @@ function where({
 
   if (tipo && tipo !== "todos") filtros.push({ tipo: tipoParaDb[tipo] });
   if (categoria && categoria !== "todos") filtros.push({ categoria: categoriaParaDb[categoria] });
-  if (recorrencia && recorrencia !== "todos") filtros.push({ recorrencia: recorrenciaParaDb[recorrencia] });
   if (contratoId) filtros.push({ contratoId });
 
   if (status === "paga") filtros.push({ pagoEm: { not: null } });
   if (status === "em_aberto") filtros.push({ pagoEm: null });
   if (status === "atrasada") filtros.push({ pagoEm: null, vencimento: { lt: hoje } });
-  if (status === "prevista") filtros.push({ pagoEm: null, vencimento: { gte: hoje } });
-  if (status === "a_reembolsar") filtros.push(A_REEMBOLSAR);
-
-  if (vence7) {
+  if (status === "vence_7") {
     filtros.push({ pagoEm: null, vencimento: { gte: hoje, lt: new Date(hoje.getTime() + 7 * 86400000) } });
   }
+  if (status === "a_reembolsar") filtros.push(A_REEMBOLSAR);
 
   return filtros.length === 0 ? {} : { AND: filtros };
 }
@@ -247,7 +230,6 @@ export interface NovaDespesa {
   categoria: CategoriaDespesa;
   valor: number;
   vencimento: Date;
-  recorrencia?: Recorrencia;
   fornecedor?: string | null;
   contratoId?: string | null;
   quemPaga?: QuemPaga;
@@ -266,7 +248,6 @@ export async function criarDespesa(dados: NovaDespesa): Promise<DespesaUI> {
       valor: new Prisma.Decimal(dados.valor),
       vencimento: dados.vencimento,
       pagoEm: dados.pagoEm ?? null,
-      recorrencia: recorrenciaParaDb[dados.recorrencia ?? "unica"],
       fornecedor: dados.fornecedor ?? null,
       // Gasto de escritório nunca pertence a um caso.
       contratoId: dados.tipo === "escritorio" ? null : (dados.contratoId ?? null),
@@ -291,7 +272,6 @@ export async function atualizarDespesa(id: string, dados: Partial<NovaDespesa>):
       ...(dados.vencimento === undefined ? {} : { vencimento: dados.vencimento }),
       ...(dados.pagoEm === undefined ? {} : { pagoEm: dados.pagoEm }),
       ...(dados.cobradoEm === undefined ? {} : { cobradoEm: dados.cobradoEm }),
-      ...(dados.recorrencia === undefined ? {} : { recorrencia: recorrenciaParaDb[dados.recorrencia] }),
       ...(dados.fornecedor === undefined ? {} : { fornecedor: dados.fornecedor }),
       ...(dados.contratoId === undefined ? {} : { contratoId: dados.contratoId }),
       ...(dados.quemPaga === undefined ? {} : { quemPaga: quemPagaParaDb[dados.quemPaga] }),

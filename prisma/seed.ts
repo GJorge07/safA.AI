@@ -314,7 +314,6 @@ async function semearDespesas(contratoIds: string[], hoje: Date) {
       ? {
           ...escolher(DESPESAS_ESCRITORIO),
           tipo: "ESCRITORIO" as const,
-          recorrencia: "MENSAL" as const,
           contratoId: null,
           quemPaga: "ADVOGADO" as const,
         }
@@ -326,7 +325,6 @@ async function semearDespesas(contratoIds: string[], hoje: Date) {
             fornecedor: modelo.fornecedor,
             valor: inteiro(modelo.min, modelo.max),
             tipo: "PROCESSO" as const,
-            recorrencia: "UNICA" as const,
             contratoId: escolher(contratoIds),
             // Metade dos contratos não prevê reembolso: esse gasto sai do
             // bolso do advogado e nunca volta.
@@ -352,7 +350,6 @@ async function semearDespesas(contratoIds: string[], hoje: Date) {
       vencimento,
       pagoEm,
       cobradoEm,
-      recorrencia: base.recorrencia,
       fornecedor: base.fornecedor,
       contratoId: base.contratoId,
       quemPaga: base.quemPaga,
@@ -401,7 +398,6 @@ async function semearServicos(clienteIds: string[], contratoIds: string[], hoje:
       recebidoEm: jaVenceu && aleatorio() < 0.6 ? new Date(vencimento.getTime() + inteiro(0, 10) * 86400000) : null,
       clienteId: clienteIds.length > 0 ? escolher(clienteIds) : null,
       contratoId: dentroDeUmCaso ? escolher(contratoIds) : null,
-      observacao: null,
     };
 
     await prisma.servico.upsert({
@@ -449,7 +445,6 @@ async function semearServicosDemo(hoje: Date) {
       recebidoEm: modelo.recebido ? realizadoEm : null,
       clienteId: modelo.clienteId,
       contratoId: modelo.contratoId,
-      observacao: null,
     };
     await prisma.servico.upsert({
       where: { id: modelo.id },
@@ -538,7 +533,6 @@ async function semearDespesasDemo(hoje: Date) {
       vencimento,
       pagoEm: vencimento,
       cobradoEm: modelo.cobrada ? new Date(vencimento.getTime() + 5 * 86400000) : null,
-      recorrencia: "UNICA" as const,
       fornecedor: null,
       contratoId: modelo.contratoId,
       quemPaga: modelo.quemPaga,

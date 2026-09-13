@@ -58,7 +58,6 @@ function paraUI(servico: ServicoRow): ServicoUI {
     cliente: servico.cliente,
     contratoId: servico.contratoId,
     contrato: servico.contrato,
-    observacao: servico.observacao,
     createdAt: servico.createdAt,
   };
 }
@@ -155,7 +154,6 @@ export interface NovoServico {
   recebidoEm?: Date | null;
   clienteId?: string | null;
   contratoId?: string | null;
-  observacao?: string | null;
 }
 
 export async function criarServico(dados: NovoServico): Promise<ServicoUI> {
@@ -169,7 +167,6 @@ export async function criarServico(dados: NovoServico): Promise<ServicoUI> {
       recebidoEm: dados.recebidoEm ?? null,
       clienteId: dados.clienteId ?? null,
       contratoId: dados.contratoId ?? null,
-      observacao: dados.observacao ?? null,
     },
     include: comRelacoes,
   });
@@ -188,7 +185,6 @@ export async function atualizarServico(id: string, dados: Partial<NovoServico>):
       ...(dados.recebidoEm === undefined ? {} : { recebidoEm: dados.recebidoEm }),
       ...(dados.clienteId === undefined ? {} : { clienteId: dados.clienteId }),
       ...(dados.contratoId === undefined ? {} : { contratoId: dados.contratoId }),
-      ...(dados.observacao === undefined ? {} : { observacao: dados.observacao }),
     },
     include: comRelacoes,
   });

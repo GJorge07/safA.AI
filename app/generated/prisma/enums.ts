@@ -64,15 +64,6 @@ export const CategoriaDespesa = {
 export type CategoriaDespesa = (typeof CategoriaDespesa)[keyof typeof CategoriaDespesa]
 
 
-export const Recorrencia = {
-  UNICA: 'UNICA',
-  MENSAL: 'MENSAL',
-  ANUAL: 'ANUAL'
-} as const
-
-export type Recorrencia = (typeof Recorrencia)[keyof typeof Recorrencia]
-
-
 export const OrigemRegistro = {
   MANUAL: 'MANUAL',
   UPLOAD: 'UPLOAD',

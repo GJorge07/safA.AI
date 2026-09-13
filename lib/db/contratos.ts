@@ -106,7 +106,7 @@ export async function listarContratosDoCliente(
   return contratos.map(paraUI);
 }
 
-export type StatusFiltro = "todos" | "em_dia" | "atrasado" | "quitado";
+export type StatusFiltro = "todos" | "atrasado" | "vence_7" | "em_dia" | "quitado";
 export type OrdenacaoContratos = "recentes" | "vencimento" | "maior_valor" | "cliente";
 
 export interface FiltroContratos {
@@ -116,8 +116,6 @@ export interface FiltroContratos {
   tipo?: TipoPagamento | "todos";
   status?: StatusFiltro;
   ordenar?: OrdenacaoContratos;
-  /** Só contratos com parcela em aberto vencendo nos próximos 7 dias. */
-  vence7?: boolean;
   hoje?: Date;
 }
 
@@ -131,7 +129,7 @@ export interface PaginaContratos {
 
 // O status vira condição SQL de verdade: com centenas de contratos, trazer tudo
 // para filtrar em JS derrubaria a página.
-function where({ busca, tipo, status, vence7, hoje = new Date() }: FiltroContratos): Prisma.ContratoWhereInput {
+function where({ busca, tipo, status, hoje = new Date() }: FiltroContratos): Prisma.ContratoWhereInput {
   const filtros: Prisma.ContratoWhereInput[] = [];
 
   const termo = busca?.trim();
@@ -155,17 +153,17 @@ function where({ busca, tipo, status, vence7, hoje = new Date() }: FiltroContrat
   if (status === "quitado") {
     filtros.push({ parcelas: { every: { pagamento: { isNot: null } }, some: {} } });
   }
-  if (status === "em_dia") {
-    filtros.push({ parcelas: { none: vencida }, NOT: { parcelas: { every: { pagamento: { isNot: null } }, some: {} } } });
-  }
-
-  if (vence7) {
+  if (status === "vence_7") {
     filtros.push({
       parcelas: {
         some: { pagamento: { is: null }, vencimento: { gte: hoje, lt: new Date(hoje.getTime() + 7 * 86400000) } },
       },
     });
   }
+  if (status === "em_dia") {
+    filtros.push({ parcelas: { none: vencida }, NOT: { parcelas: { every: { pagamento: { isNot: null } }, some: {} } } });
+  }
+
 
   return filtros.length === 0 ? {} : { AND: filtros };
 }
@@ -209,7 +207,7 @@ export interface ContadoresContratos {
   quitados: number;
 }
 
-// Os chips de filtro rápido: contados no banco, não no array da página atual.
+// Contados no banco, nunca no array da página atual.
 export async function contadoresContratos(hoje = new Date()): Promise<ContadoresContratos> {
   const em7Dias = new Date(hoje.getTime() + 7 * 86400000);
   const [total, atrasados, vencendoEm7Dias, quitados] = await prisma.$transaction([

@@ -107,7 +107,6 @@ function LinhaDespesa({ despesa, mostrarCaso }: { despesa: DespesaUI; mostrarCas
         <span className="block truncate text-xs text-muted-foreground">
           {rotuloCategoria[despesa.categoria]}
           {despesa.fornecedor && ` · ${despesa.fornecedor}`}
-          {despesa.recorrencia !== "unica" && ` · ${despesa.recorrencia}`}
         </span>
       </TableCell>
       <TableCell className="font-mono text-xs text-muted-foreground">{numeroDespesa(despesa)}</TableCell>

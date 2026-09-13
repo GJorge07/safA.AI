@@ -57,8 +57,6 @@ export async function POST(request: Request) {
       clienteId: dados.clienteId === undefined || dados.clienteId === null ? null : text(dados.clienteId, "clienteId"),
       contratoId:
         dados.contratoId === undefined || dados.contratoId === null ? null : text(dados.contratoId, "contratoId"),
-      observacao:
-        dados.observacao === undefined || dados.observacao === null ? null : text(dados.observacao, "observacao", 2000),
     });
     return Response.json(servico, { status: 201 });
   });

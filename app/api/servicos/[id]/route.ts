@@ -32,9 +32,6 @@ export async function PATCH(request: Request, { params }: Context) {
         ...(dados.contratoId === undefined
           ? {}
           : { contratoId: dados.contratoId === null ? null : text(dados.contratoId, "contratoId") }),
-        ...(dados.observacao === undefined
-          ? {}
-          : { observacao: dados.observacao === null ? null : text(dados.observacao, "observacao", 2000) }),
       }),
     );
   });

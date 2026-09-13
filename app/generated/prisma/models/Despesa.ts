@@ -45,7 +45,6 @@ export type DespesaMinAggregateOutputType = {
   vencimento: Date | null
   pagoEm: Date | null
   tipo: $Enums.TipoDespesa | null
-  recorrencia: $Enums.Recorrencia | null
   fornecedor: string | null
   contratoId: string | null
   quemPaga: $Enums.QuemPaga | null
@@ -65,7 +64,6 @@ export type DespesaMaxAggregateOutputType = {
   vencimento: Date | null
   pagoEm: Date | null
   tipo: $Enums.TipoDespesa | null
-  recorrencia: $Enums.Recorrencia | null
   fornecedor: string | null
   contratoId: string | null
   quemPaga: $Enums.QuemPaga | null
@@ -85,7 +83,6 @@ export type DespesaCountAggregateOutputType = {
   vencimento: number
   pagoEm: number
   tipo: number
-  recorrencia: number
   fornecedor: number
   contratoId: number
   quemPaga: number
@@ -117,7 +114,6 @@ export type DespesaMinAggregateInputType = {
   vencimento?: true
   pagoEm?: true
   tipo?: true
-  recorrencia?: true
   fornecedor?: true
   contratoId?: true
   quemPaga?: true
@@ -137,7 +133,6 @@ export type DespesaMaxAggregateInputType = {
   vencimento?: true
   pagoEm?: true
   tipo?: true
-  recorrencia?: true
   fornecedor?: true
   contratoId?: true
   quemPaga?: true
@@ -157,7 +152,6 @@ export type DespesaCountAggregateInputType = {
   vencimento?: true
   pagoEm?: true
   tipo?: true
-  recorrencia?: true
   fornecedor?: true
   contratoId?: true
   quemPaga?: true
@@ -264,7 +258,6 @@ export type DespesaGroupByOutputType = {
   vencimento: Date
   pagoEm: Date | null
   tipo: $Enums.TipoDespesa
-  recorrencia: $Enums.Recorrencia
   fornecedor: string | null
   contratoId: string | null
   quemPaga: $Enums.QuemPaga
@@ -307,7 +300,6 @@ export type DespesaWhereInput = {
   vencimento?: Prisma.DateTimeFilter<"Despesa"> | Date | string
   pagoEm?: Prisma.DateTimeNullableFilter<"Despesa"> | Date | string | null
   tipo?: Prisma.EnumTipoDespesaFilter<"Despesa"> | $Enums.TipoDespesa
-  recorrencia?: Prisma.EnumRecorrenciaFilter<"Despesa"> | $Enums.Recorrencia
   fornecedor?: Prisma.StringNullableFilter<"Despesa"> | string | null
   contratoId?: Prisma.StringNullableFilter<"Despesa"> | string | null
   quemPaga?: Prisma.EnumQuemPagaFilter<"Despesa"> | $Enums.QuemPaga
@@ -328,7 +320,6 @@ export type DespesaOrderByWithRelationInput = {
   vencimento?: Prisma.SortOrder
   pagoEm?: Prisma.SortOrderInput | Prisma.SortOrder
   tipo?: Prisma.SortOrder
-  recorrencia?: Prisma.SortOrder
   fornecedor?: Prisma.SortOrderInput | Prisma.SortOrder
   contratoId?: Prisma.SortOrderInput | Prisma.SortOrder
   quemPaga?: Prisma.SortOrder
@@ -352,7 +343,6 @@ export type DespesaWhereUniqueInput = Prisma.AtLeast<{
   vencimento?: Prisma.DateTimeFilter<"Despesa"> | Date | string
   pagoEm?: Prisma.DateTimeNullableFilter<"Despesa"> | Date | string | null
   tipo?: Prisma.EnumTipoDespesaFilter<"Despesa"> | $Enums.TipoDespesa
-  recorrencia?: Prisma.EnumRecorrenciaFilter<"Despesa"> | $Enums.Recorrencia
   fornecedor?: Prisma.StringNullableFilter<"Despesa"> | string | null
   contratoId?: Prisma.StringNullableFilter<"Despesa"> | string | null
   quemPaga?: Prisma.EnumQuemPagaFilter<"Despesa"> | $Enums.QuemPaga
@@ -373,7 +363,6 @@ export type DespesaOrderByWithAggregationInput = {
   vencimento?: Prisma.SortOrder
   pagoEm?: Prisma.SortOrderInput | Prisma.SortOrder
   tipo?: Prisma.SortOrder
-  recorrencia?: Prisma.SortOrder
   fornecedor?: Prisma.SortOrderInput | Prisma.SortOrder
   contratoId?: Prisma.SortOrderInput | Prisma.SortOrder
   quemPaga?: Prisma.SortOrder
@@ -401,7 +390,6 @@ export type DespesaScalarWhereWithAggregatesInput = {
   vencimento?: Prisma.DateTimeWithAggregatesFilter<"Despesa"> | Date | string
   pagoEm?: Prisma.DateTimeNullableWithAggregatesFilter<"Despesa"> | Date | string | null
   tipo?: Prisma.EnumTipoDespesaWithAggregatesFilter<"Despesa"> | $Enums.TipoDespesa
-  recorrencia?: Prisma.EnumRecorrenciaWithAggregatesFilter<"Despesa"> | $Enums.Recorrencia
   fornecedor?: Prisma.StringNullableWithAggregatesFilter<"Despesa"> | string | null
   contratoId?: Prisma.StringNullableWithAggregatesFilter<"Despesa"> | string | null
   quemPaga?: Prisma.EnumQuemPagaWithAggregatesFilter<"Despesa"> | $Enums.QuemPaga
@@ -421,7 +409,6 @@ export type DespesaCreateInput = {
   vencimento: Date | string
   pagoEm?: Date | string | null
   tipo?: $Enums.TipoDespesa
-  recorrencia?: $Enums.Recorrencia
   fornecedor?: string | null
   quemPaga?: $Enums.QuemPaga
   cobradoEm?: Date | string | null
@@ -441,7 +428,6 @@ export type DespesaUncheckedCreateInput = {
   vencimento: Date | string
   pagoEm?: Date | string | null
   tipo?: $Enums.TipoDespesa
-  recorrencia?: $Enums.Recorrencia
   fornecedor?: string | null
   contratoId?: string | null
   quemPaga?: $Enums.QuemPaga
@@ -460,7 +446,6 @@ export type DespesaUpdateInput = {
   vencimento?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   pagoEm?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   tipo?: Prisma.EnumTipoDespesaFieldUpdateOperationsInput | $Enums.TipoDespesa
-  recorrencia?: Prisma.EnumRecorrenciaFieldUpdateOperationsInput | $Enums.Recorrencia
   fornecedor?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   quemPaga?: Prisma.EnumQuemPagaFieldUpdateOperationsInput | $Enums.QuemPaga
   cobradoEm?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -480,7 +465,6 @@ export type DespesaUncheckedUpdateInput = {
   vencimento?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   pagoEm?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   tipo?: Prisma.EnumTipoDespesaFieldUpdateOperationsInput | $Enums.TipoDespesa
-  recorrencia?: Prisma.EnumRecorrenciaFieldUpdateOperationsInput | $Enums.Recorrencia
   fornecedor?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   contratoId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   quemPaga?: Prisma.EnumQuemPagaFieldUpdateOperationsInput | $Enums.QuemPaga
@@ -500,7 +484,6 @@ export type DespesaCreateManyInput = {
   vencimento: Date | string
   pagoEm?: Date | string | null
   tipo?: $Enums.TipoDespesa
-  recorrencia?: $Enums.Recorrencia
   fornecedor?: string | null
   contratoId?: string | null
   quemPaga?: $Enums.QuemPaga
@@ -519,7 +502,6 @@ export type DespesaUpdateManyMutationInput = {
   vencimento?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   pagoEm?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   tipo?: Prisma.EnumTipoDespesaFieldUpdateOperationsInput | $Enums.TipoDespesa
-  recorrencia?: Prisma.EnumRecorrenciaFieldUpdateOperationsInput | $Enums.Recorrencia
   fornecedor?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   quemPaga?: Prisma.EnumQuemPagaFieldUpdateOperationsInput | $Enums.QuemPaga
   cobradoEm?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -538,7 +520,6 @@ export type DespesaUncheckedUpdateManyInput = {
   vencimento?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   pagoEm?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   tipo?: Prisma.EnumTipoDespesaFieldUpdateOperationsInput | $Enums.TipoDespesa
-  recorrencia?: Prisma.EnumRecorrenciaFieldUpdateOperationsInput | $Enums.Recorrencia
   fornecedor?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   contratoId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   quemPaga?: Prisma.EnumQuemPagaFieldUpdateOperationsInput | $Enums.QuemPaga
@@ -568,7 +549,6 @@ export type DespesaCountOrderByAggregateInput = {
   vencimento?: Prisma.SortOrder
   pagoEm?: Prisma.SortOrder
   tipo?: Prisma.SortOrder
-  recorrencia?: Prisma.SortOrder
   fornecedor?: Prisma.SortOrder
   contratoId?: Prisma.SortOrder
   quemPaga?: Prisma.SortOrder
@@ -593,7 +573,6 @@ export type DespesaMaxOrderByAggregateInput = {
   vencimento?: Prisma.SortOrder
   pagoEm?: Prisma.SortOrder
   tipo?: Prisma.SortOrder
-  recorrencia?: Prisma.SortOrder
   fornecedor?: Prisma.SortOrder
   contratoId?: Prisma.SortOrder
   quemPaga?: Prisma.SortOrder
@@ -613,7 +592,6 @@ export type DespesaMinOrderByAggregateInput = {
   vencimento?: Prisma.SortOrder
   pagoEm?: Prisma.SortOrder
   tipo?: Prisma.SortOrder
-  recorrencia?: Prisma.SortOrder
   fornecedor?: Prisma.SortOrder
   contratoId?: Prisma.SortOrder
   quemPaga?: Prisma.SortOrder
@@ -679,10 +657,6 @@ export type EnumTipoDespesaFieldUpdateOperationsInput = {
   set?: $Enums.TipoDespesa
 }
 
-export type EnumRecorrenciaFieldUpdateOperationsInput = {
-  set?: $Enums.Recorrencia
-}
-
 export type EnumQuemPagaFieldUpdateOperationsInput = {
   set?: $Enums.QuemPaga
 }
@@ -696,7 +670,6 @@ export type DespesaCreateWithoutContratoInput = {
   vencimento: Date | string
   pagoEm?: Date | string | null
   tipo?: $Enums.TipoDespesa
-  recorrencia?: $Enums.Recorrencia
   fornecedor?: string | null
   quemPaga?: $Enums.QuemPaga
   cobradoEm?: Date | string | null
@@ -715,7 +688,6 @@ export type DespesaUncheckedCreateWithoutContratoInput = {
   vencimento: Date | string
   pagoEm?: Date | string | null
   tipo?: $Enums.TipoDespesa
-  recorrencia?: $Enums.Recorrencia
   fornecedor?: string | null
   quemPaga?: $Enums.QuemPaga
   cobradoEm?: Date | string | null
@@ -763,7 +735,6 @@ export type DespesaScalarWhereInput = {
   vencimento?: Prisma.DateTimeFilter<"Despesa"> | Date | string
   pagoEm?: Prisma.DateTimeNullableFilter<"Despesa"> | Date | string | null
   tipo?: Prisma.EnumTipoDespesaFilter<"Despesa"> | $Enums.TipoDespesa
-  recorrencia?: Prisma.EnumRecorrenciaFilter<"Despesa"> | $Enums.Recorrencia
   fornecedor?: Prisma.StringNullableFilter<"Despesa"> | string | null
   contratoId?: Prisma.StringNullableFilter<"Despesa"> | string | null
   quemPaga?: Prisma.EnumQuemPagaFilter<"Despesa"> | $Enums.QuemPaga
@@ -783,7 +754,6 @@ export type DespesaCreateManyContratoInput = {
   vencimento: Date | string
   pagoEm?: Date | string | null
   tipo?: $Enums.TipoDespesa
-  recorrencia?: $Enums.Recorrencia
   fornecedor?: string | null
   quemPaga?: $Enums.QuemPaga
   cobradoEm?: Date | string | null
@@ -801,7 +771,6 @@ export type DespesaUpdateWithoutContratoInput = {
   vencimento?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   pagoEm?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   tipo?: Prisma.EnumTipoDespesaFieldUpdateOperationsInput | $Enums.TipoDespesa
-  recorrencia?: Prisma.EnumRecorrenciaFieldUpdateOperationsInput | $Enums.Recorrencia
   fornecedor?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   quemPaga?: Prisma.EnumQuemPagaFieldUpdateOperationsInput | $Enums.QuemPaga
   cobradoEm?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -820,7 +789,6 @@ export type DespesaUncheckedUpdateWithoutContratoInput = {
   vencimento?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   pagoEm?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   tipo?: Prisma.EnumTipoDespesaFieldUpdateOperationsInput | $Enums.TipoDespesa
-  recorrencia?: Prisma.EnumRecorrenciaFieldUpdateOperationsInput | $Enums.Recorrencia
   fornecedor?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   quemPaga?: Prisma.EnumQuemPagaFieldUpdateOperationsInput | $Enums.QuemPaga
   cobradoEm?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -839,7 +807,6 @@ export type DespesaUncheckedUpdateManyWithoutContratoInput = {
   vencimento?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   pagoEm?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   tipo?: Prisma.EnumTipoDespesaFieldUpdateOperationsInput | $Enums.TipoDespesa
-  recorrencia?: Prisma.EnumRecorrenciaFieldUpdateOperationsInput | $Enums.Recorrencia
   fornecedor?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   quemPaga?: Prisma.EnumQuemPagaFieldUpdateOperationsInput | $Enums.QuemPaga
   cobradoEm?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -860,7 +827,6 @@ export type DespesaSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs 
   vencimento?: boolean
   pagoEm?: boolean
   tipo?: boolean
-  recorrencia?: boolean
   fornecedor?: boolean
   contratoId?: boolean
   quemPaga?: boolean
@@ -881,7 +847,6 @@ export type DespesaSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Exten
   vencimento?: boolean
   pagoEm?: boolean
   tipo?: boolean
-  recorrencia?: boolean
   fornecedor?: boolean
   contratoId?: boolean
   quemPaga?: boolean
@@ -902,7 +867,6 @@ export type DespesaSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Exten
   vencimento?: boolean
   pagoEm?: boolean
   tipo?: boolean
-  recorrencia?: boolean
   fornecedor?: boolean
   contratoId?: boolean
   quemPaga?: boolean
@@ -923,7 +887,6 @@ export type DespesaSelectScalar = {
   vencimento?: boolean
   pagoEm?: boolean
   tipo?: boolean
-  recorrencia?: boolean
   fornecedor?: boolean
   contratoId?: boolean
   quemPaga?: boolean
@@ -934,7 +897,7 @@ export type DespesaSelectScalar = {
   updatedAt?: boolean
 }
 
-export type DespesaOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "numero" | "descricao" | "categoria" | "valor" | "vencimento" | "pagoEm" | "tipo" | "recorrencia" | "fornecedor" | "contratoId" | "quemPaga" | "cobradoEm" | "origem" | "textoOriginal" | "createdAt" | "updatedAt", ExtArgs["result"]["despesa"]>
+export type DespesaOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "numero" | "descricao" | "categoria" | "valor" | "vencimento" | "pagoEm" | "tipo" | "fornecedor" | "contratoId" | "quemPaga" | "cobradoEm" | "origem" | "textoOriginal" | "createdAt" | "updatedAt", ExtArgs["result"]["despesa"]>
 export type DespesaInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   contrato?: boolean | Prisma.Despesa$contratoArgs<ExtArgs>
 }
@@ -959,7 +922,6 @@ export type $DespesaPayload<ExtArgs extends runtime.Types.Extensions.InternalArg
     vencimento: Date
     pagoEm: Date | null
     tipo: $Enums.TipoDespesa
-    recorrencia: $Enums.Recorrencia
     fornecedor: string | null
     contratoId: string | null
     quemPaga: $Enums.QuemPaga
@@ -1400,7 +1362,6 @@ export interface DespesaFieldRefs {
   readonly vencimento: Prisma.FieldRef<"Despesa", 'DateTime'>
   readonly pagoEm: Prisma.FieldRef<"Despesa", 'DateTime'>
   readonly tipo: Prisma.FieldRef<"Despesa", 'TipoDespesa'>
-  readonly recorrencia: Prisma.FieldRef<"Despesa", 'Recorrencia'>
   readonly fornecedor: Prisma.FieldRef<"Despesa", 'String'>
   readonly contratoId: Prisma.FieldRef<"Despesa", 'String'>
   readonly quemPaga: Prisma.FieldRef<"Despesa", 'QuemPaga'>
