@@ -1,5 +1,15 @@
 # Histórico de prompts e regras — Fluxos A e B
 
+## contract-extraction-v1.2 — 13/09/2026
+
+- Proíbe explicitamente concatenar trechos não adjacentes com reticências em
+  clausulaOriginal — o modelo tentava "resumir" condições espalhadas em mais
+  de uma cláusula (ex.: valor na 2ª + parcelas na 3ª) unindo os dois trechos
+  com "...", o que nunca bate literalmente com o documento e a validação de
+  evidência (lib/ai/evidence.ts) rejeitava contratos válidos por causa disso.
+- Agora clausulaOriginal deve ser um único trecho contíguo; o parcelamento
+  continua coberto pela evidência individual de cada parcela (regra 6).
+
 ## contract-extraction-v1.1 — 12/09/2026
 
 - Exige evidência individual para todo campo preenchido.

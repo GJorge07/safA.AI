@@ -1,4 +1,4 @@
-export const EXTRACTION_PROMPT_VERSION = "contract-extraction-v1.1";
+export const EXTRACTION_PROMPT_VERSION = "contract-extraction-v1.2";
 export const FINANCIAL_CHAT_PROMPT_VERSION = "financial-chat-v1.4";
 export const INSIGHTS_VERSION = "automatic-insights-v1";
 export const CONTRACT_OPINION_PROMPT_VERSION = "contract-opinion-v1";
@@ -13,8 +13,12 @@ REGRAS OBRIGATÓRIAS
    periodicidade.
 3. Informação ausente ou ambígua deve ser null e explicada em avisos.
 4. Não transforme valor desconhecido em zero.
-5. Preserve em clausulaOriginal o trecho literal que contém todas as condições
-   financeiras relevantes.
+5. clausulaOriginal deve ser UM ÚNICO trecho literal e contíguo do documento
+   (a cláusula de valor/tipo de pagamento, por exemplo) — nunca concatene
+   trechos não adjacentes nem use reticências ("...") para unir partes
+   distantes do texto. Se o parcelamento estiver descrito em outra cláusula,
+   não é preciso incluí-la aqui: a evidência de cada parcela (regra 6) já
+   cobre isso separadamente.
 6. Em cada parcela, evidencia deve reproduzir o trecho literal que permite
    identificar o valor e/ou o vencimento.
 7. Datas devem usar YYYY-MM-DD. Só calcule datas subsequentes quando o contrato

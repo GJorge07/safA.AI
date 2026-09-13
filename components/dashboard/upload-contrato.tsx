@@ -49,7 +49,13 @@ export function UploadContrato() {
       setFila((f) => f.map((it) => (it.id === id ? { ...it, progresso: 100, status: "lendo" } : it)));
 
       const data = await res.json();
-      if (!res.ok) throw new Error(data?.erro ?? "Não foi possível processar o arquivo.");
+      if (!res.ok) {
+        const base = data?.erro ?? "Não foi possível processar o arquivo.";
+        const detalhes: string[] = Array.isArray(data?.detalhes)
+          ? data.detalhes.map((d: unknown) => (typeof d === "string" ? d : JSON.stringify(d)))
+          : [];
+        throw new Error(detalhes.length > 0 ? `${base} (${detalhes.join("; ")})` : base);
+      }
       if (!data.payloadBackend) {
         const motivos: string[] = data.motivosRevisao ?? [];
         throw new Error(
