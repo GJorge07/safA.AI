@@ -3,13 +3,13 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Bot, FileText, Home, PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import { Bot, Home, PanelLeftClose, PanelLeftOpen, Wallet } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "./theme-toggle";
 
 const nav = [
   { href: "/", label: "Início", icon: Home },
-  { href: "/contratos", label: "Contratos", icon: FileText },
+  { href: "/pagamentos", label: "Pagamentos", icon: Wallet },
   { href: "/agente", label: "Safa AI", icon: Bot },
 ];
 
@@ -51,7 +51,10 @@ export function Sidebar() {
         aria-label="Navegação principal"
       >
         {nav.map((item) => {
-          const active = pathname === item.href;
+          // O detalhe de um contrato mora sob /pagamentos — o item precisa
+          // continuar marcado como atual lá dentro.
+          const active =
+            item.href === "/" ? pathname === "/" : pathname === item.href || pathname.startsWith(`${item.href}/`);
           const Icon = item.icon;
           return (
             <Link

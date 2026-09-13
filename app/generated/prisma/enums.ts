@@ -16,3 +16,35 @@ export const TipoPagamento = {
 } as const
 
 export type TipoPagamento = (typeof TipoPagamento)[keyof typeof TipoPagamento]
+
+
+export const CategoriaDespesa = {
+  CUSTAS_PROCESSUAIS: 'CUSTAS_PROCESSUAIS',
+  DILIGENCIA: 'DILIGENCIA',
+  PERICIA: 'PERICIA',
+  SOFTWARE: 'SOFTWARE',
+  ESTRUTURA: 'ESTRUTURA',
+  TRIBUTOS: 'TRIBUTOS',
+  PESSOAL: 'PESSOAL',
+  OUTROS: 'OUTROS'
+} as const
+
+export type CategoriaDespesa = (typeof CategoriaDespesa)[keyof typeof CategoriaDespesa]
+
+
+export const Recorrencia = {
+  UNICA: 'UNICA',
+  MENSAL: 'MENSAL',
+  ANUAL: 'ANUAL'
+} as const
+
+export type Recorrencia = (typeof Recorrencia)[keyof typeof Recorrencia]
+
+
+export const OrigemRegistro = {
+  MANUAL: 'MANUAL',
+  UPLOAD: 'UPLOAD',
+  DRIVE: 'DRIVE'
+} as const
+
+export type OrigemRegistro = (typeof OrigemRegistro)[keyof typeof OrigemRegistro]

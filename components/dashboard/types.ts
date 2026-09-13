@@ -2,19 +2,28 @@
 // dados. Nada aqui é um schema novo: são apenas as relações que o dashboard
 // precisa incluídas (cliente, parcelas, pagamento), como uma query real do
 // Prisma devolveria.
-import type { Cliente, Contrato, Parcela, Pagamento } from "@/app/generated/prisma/client";
-import type { TipoPagamento } from "@/lib/types";
+import type { Cliente, Contrato, Despesa, Parcela, Pagamento } from "@/app/generated/prisma/client";
+import type { CategoriaDespesa, OrigemRegistro, Recorrencia, TipoPagamento } from "@/lib/types";
 
 // Modelo de apresentação: valores numéricos e enum compartilhado em minúsculas.
 // Os campos de auditoria não usados na UI podem ser omitidos nos dados de demonstração.
 type PagamentoUI = Omit<Pagamento, 'valorPago' | 'createdAt'> & { valorPago: number };
 export type ParcelaComPagamento = Omit<Parcela, 'valor' | 'createdAt'> & { valor: number; pagamento: PagamentoUI | null };
 
-export type ContratoComRelacoes = Omit<Contrato, 'valorTotal' | 'tipoPagamento' | 'updatedAt'> & {
+export type ContratoComRelacoes = Omit<Contrato, 'valorTotal' | 'tipoPagamento' | 'origem' | 'updatedAt'> & {
   valorTotal: number;
   tipoPagamento: TipoPagamento;
+  origem: OrigemRegistro;
   cliente: Cliente;
   parcelas: ParcelaComPagamento[];
+};
+
+export type DespesaUI = Omit<Despesa, 'valor' | 'categoria' | 'recorrencia' | 'origem' | 'updatedAt'> & {
+  valor: number;
+  categoria: CategoriaDespesa;
+  recorrencia: Recorrencia;
+  origem: OrigemRegistro;
+  contrato: { id: string; numero: number; cliente: { nome: string } } | null;
 };
 
 export type StatusContrato = "em_dia" | "atrasado" | "quitado";
@@ -26,6 +35,68 @@ export function statusDoContrato(contrato: ContratoComRelacoes): StatusContrato 
   const hoje = new Date();
   const temAtraso = contrato.parcelas.some((p) => !p.pagamento && p.vencimento < hoje);
   return temAtraso ? "atrasado" : "em_dia";
+}
+
+// CT-0042: número curto e estável para o advogado citar numa cobrança.
+export function numeroContrato(contrato: { numero: number }): string {
+  return `CT-${String(contrato.numero).padStart(4, "0")}`;
+}
+
+export function numeroDespesa(despesa: { numero: number }): string {
+  return `DP-${String(despesa.numero).padStart(4, "0")}`;
+}
+
+// Comparação só por dia civil — usar o horário faria o mesmo vencimento contar
+// como atrasado ou não dependendo da hora em que a página foi aberta.
+function soDia(data: Date): number {
+  return Date.UTC(data.getUTCFullYear(), data.getUTCMonth(), data.getUTCDate());
+}
+
+export function diasDeAtraso(vencimento: Date, hoje: Date = new Date()): number {
+  const diff = soDia(hoje) - soDia(vencimento);
+  return diff > 0 ? Math.floor(diff / 86400000) : 0;
+}
+
+export interface ParcelaAtrasada {
+  parcela: ParcelaComPagamento;
+  /** Posição da parcela dentro do contrato, base 1 — "Parcela 2 de 3". */
+  indice: number;
+  total: number;
+  dias: number;
+  saldo: number;
+}
+
+// Da mais antiga para a mais nova: é a ordem em que o advogado cobra.
+export function parcelasAtrasadas(
+  contrato: ContratoComRelacoes,
+  hoje: Date = new Date(),
+): ParcelaAtrasada[] {
+  const total = contrato.parcelas.length;
+  return contrato.parcelas
+    .map((parcela, i) => {
+      const saldo = Math.max(0, parcela.valor - (parcela.pagamento?.valorPago ?? 0));
+      return { parcela, indice: i + 1, total, dias: diasDeAtraso(parcela.vencimento, hoje), saldo };
+    })
+    .filter((item) => item.saldo > 0 && item.dias > 0)
+    .sort((a, b) => b.dias - a.dias);
+}
+
+export function totalPagoDoContrato(contrato: ContratoComRelacoes): number {
+  return contrato.parcelas.reduce((soma, p) => soma + (p.pagamento?.valorPago ?? 0), 0);
+}
+
+export function saldoEmAberto(contrato: ContratoComRelacoes): number {
+  return contrato.parcelas.reduce(
+    (soma, p) => soma + Math.max(0, p.valor - (p.pagamento?.valorPago ?? 0)),
+    0,
+  );
+}
+
+export type StatusDespesa = "paga" | "atrasada" | "prevista";
+
+export function statusDaDespesa(despesa: DespesaUI, hoje: Date = new Date()): StatusDespesa {
+  if (despesa.pagoEm) return "paga";
+  return diasDeAtraso(despesa.vencimento, hoje) > 0 ? "atrasada" : "prevista";
 }
 
 export function proximoVencimento(contrato: ContratoComRelacoes): Date | null {

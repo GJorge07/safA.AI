@@ -67,6 +67,7 @@ citando de qual contrato tirou a resposta.
 ## Como usar, passo a passo
 
 Depois que o sistema estiver aberto no navegador, existem três telas, e só. O menu fica na lateral esquerda.
+(A aba antiga `/contratos` continua funcionando: ela redireciona para `/pagamentos`.)
 
 ### Tela **Início** — o retrato do seu dinheiro
 
@@ -78,7 +79,12 @@ Depois que o sistema estiver aberto no navegador, existem três telas, e só. O 
 - **a lista de contratos**, com a situação de cada um;
 - **os filtros:** dá para olhar só um tipo de honorário, só um cliente, ou só o que está em aberto.
 
-### Tela **Contratos** — de onde vêm os dados
+### Tela **Pagamentos** — o que entra e o que sai
+
+No topo, três números que só fazem sentido juntos: **a receber no mês**, **a pagar no mês** e o
+**saldo projetado**. Abaixo, duas abas.
+
+#### Aba **Recebimentos** — seus contratos de honorários
 
 Duas formas de colocar um contrato no sistema:
 
@@ -88,9 +94,23 @@ Duas formas de colocar um contrato no sistema:
 - **Enviar manualmente.** Para um caso avulso: clique em "Enviar manualmente", escolha o arquivo
   (PDF, Word ou texto) e pronto.
 
-Logo abaixo fica a lista dos contratos lidos. **Em cada um aparece a cláusula original do contrato ao
-lado do que o sistema entendeu.** É onde você confere se a leitura ficou certa. Se algo estiver errado,
-você corrige ali — o sistema não sobrescreve a sua correção.
+Logo abaixo fica a lista dos contratos lidos, em tabela, 20 por página — com busca por cliente,
+documento ou número, filtros de tipo e situação, e atalhos para "Atrasados", "Vencem em 7 dias" e
+"Quitados". Os filtros ficam no endereço da página: dá para mandar para alguém o link de
+*todos os atrasados*.
+
+**Clique em qualquer contrato** para abrir a ficha dele. Se estiver atrasado, a primeira coisa que
+aparece é o bloco de cobrança: qual parcela venceu, há quantos dias, quanto está em aberto, e o
+telefone e o e-mail de quem deve — com um botão que copia a mensagem de cobrança já escrita. Nas abas
+da ficha você vê as parcelas (e registra um pagamento), **a cláusula original do contrato ao lado do
+que o sistema entendeu**, os dados e os outros contratos do mesmo cliente, e as despesas daquele caso.
+
+#### Aba **Despesas** — o que sai do caixa
+
+Custas processuais, diligências, perícias, assinatura de software, aluguel, tributos. O lançamento é
+manual — é mais rápido do que procurar um documento para cada boleto. Uma despesa pode ser amarrada a
+um contrato e marcada como **reembolsável**, e aí ela aparece na ficha daquele caso: é assim que você
+enxerga a margem real, e não só o valor bruto do honorário.
 
 ### Tela **Safa AI** — o chat
 
@@ -161,6 +181,7 @@ npm install
 cp .env.example .env      # preencha DATABASE_URL e GEMINI_API_KEY
 npx prisma generate       # rode sempre que prisma/schema.prisma mudar
 npx prisma db push        # cria as tabelas (ainda não há migrations versionadas)
+npm run db:seed           # popula com dados de demonstração
 
 npm run dev               # abre em http://localhost:3000
 ```
@@ -172,6 +193,7 @@ npm run dev               # abre em http://localhost:3000
 | `DATABASE_URL` | sim | conexão com o PostgreSQL |
 | `GEMINI_API_KEY` | para extração e chat | chave da API do Gemini. **Nunca** use prefixo `NEXT_PUBLIC_` |
 | `GEMINI_MODEL` | sim | modelo com suporte a PDF e saída estruturada (ex.: `gemini-3.8-flash`) |
+| `SEED_VOLUME` | opcional | `0` faz `npm run db:seed` popular apenas os dados do pitch, sem o volume |
 | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REFRESH_TOKEN` | opcional | importação via Google Drive. São credenciais independentes do Gemini e exigem a Google Drive API ativa no projeto Cloud |
 
 As rotas financeiras funcionam sem Gemini. Sem `driveFileIds`, o chat funciona e devolve `fontes: []`.
@@ -187,6 +209,8 @@ As rotas financeiras funcionam sem Gemini. Sem `driveFileIds`, o chat funciona e
 | `npm run lint` | ESLint |
 | `npm run eval:extraction` | roda os 6 cenários de avaliação da extração (consome a API do Gemini) |
 | `npm run prisma:generate` | regenera o client do Prisma |
+| `npm run db:seed` | popula o banco: 123 clientes, 184 contratos e 60 despesas de demonstração |
+| `SEED_VOLUME=0 npm run db:seed` | popula **só** o conjunto pequeno do pitch (3 clientes, 4 contratos) e remove o volume |
 
 ## Como funciona por dentro
 
@@ -244,7 +268,7 @@ Monorepo TypeScript de propósito: evita fronteira de linguagem entre front e ba
 | `app/api/` | Backend | endpoints REST |
 | `lib/api/` | Backend | regras financeiras puras e testáveis (`finance.ts`) |
 | `lib/ai/` | IA | extração, evidências, prompts versionados, chat, insights |
-| `app/(dashboard)/` | Frontend | telas: início, contratos, agente |
+| `app/(dashboard)/` | Frontend | telas: início, pagamentos (recebimentos/despesas), agente |
 | `components/dashboard/` | Frontend | gráfico, lista, chat, upload, sync do Drive |
 | `components/ui/` | Frontend | primitivos shadcn/ui |
 | `lib/types.ts` | **Compartilhado** | contrato de tipos entre as 4 camadas |
@@ -283,6 +307,9 @@ Cliente ──1:N──> Contrato ──1:N──> Parcela ──1:1(opcional)�
 | `/api/parcelas/[id]` | PUT, DELETE | edita/exclui parcela |
 | `/api/parcelas/[id]/pagamento` | POST, PUT, DELETE | registra, corrige ou remove o pagamento |
 | `/api/fluxo-caixa` | GET | previsto (por vencimento) × recebido (por data do pagamento), por mês |
+| `/api/despesas` | GET, POST | lista paginada (busca, categoria, status, recorrência); lança despesa |
+| `/api/despesas/[id]` | GET, PATCH, DELETE | detalhe; edita ou marca como paga; exclui |
+| `/api/contratos/[id]/opiniao` | POST | avaliação da IA sob demanda para um contrato já gravado |
 | `/api/insights` | GET | alertas de atraso e concentração de receita |
 | `/api/contratos/extrair` | POST | extração simples (PDF/TXT/texto) para revisão |
 | `/api/contratos/importar` | POST | pipeline completo com evidências (PDF/DOCX/Drive) |

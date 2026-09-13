@@ -7,7 +7,7 @@ import { prisma } from "@/lib/prisma";
 import { cashflow } from "@/lib/api/finance";
 import type { ContratoComRelacoes } from "@/components/dashboard/types";
 import type { DadosFinanceiros } from "@/lib/ai/schemas";
-import type { ContratoExtraido, FluxoCaixaMes, TipoPagamento } from "@/lib/types";
+import type { ContratoExtraido, FluxoCaixaMes, OrigemRegistro, TipoPagamento } from "@/lib/types";
 
 const comRelacoes = {
   cliente: true,
@@ -31,11 +31,16 @@ function centavos(valor: number): number {
 function paraUI(contrato: ContratoRow): ContratoComRelacoes {
   return {
     id: contrato.id,
+    numero: contrato.numero,
+    titulo: contrato.titulo,
+    processo: contrato.processo,
     clienteId: contrato.clienteId,
     cliente: contrato.cliente,
     tipoPagamento: contrato.tipoPagamento.toLowerCase() as TipoPagamento,
     valorTotal: contrato.valorTotal.toNumber(),
     clausulaOriginal: contrato.clausulaOriginal,
+    origem: contrato.origem.toLowerCase() as OrigemRegistro,
+    arquivoNome: contrato.arquivoNome,
     createdAt: contrato.createdAt,
     parcelas: contrato.parcelas.map((parcela) => ({
       id: parcela.id,
@@ -59,6 +64,154 @@ export async function listarContratosComRelacoes(): Promise<ContratoComRelacoes[
 
 export function contarContratos(): Promise<number> {
   return prisma.contrato.count();
+}
+
+// Só o suficiente para o <select> de "despesa amarrada a um caso".
+export async function listarContratosParaSelecao(limite = 200) {
+  const contratos = await prisma.contrato.findMany({
+    select: { id: true, numero: true, cliente: { select: { nome: true } } },
+    orderBy: ordem,
+    take: limite,
+  });
+  return contratos.map((c) => ({
+    id: c.id,
+    rotulo: `CT-${String(c.numero).padStart(4, "0")} · ${c.cliente.nome}`,
+  }));
+}
+
+export async function obterContratoComRelacoes(id: string): Promise<ContratoComRelacoes | null> {
+  const contrato = await prisma.contrato.findUnique({ where: { id }, include: comRelacoes });
+  return contrato && paraUI(contrato);
+}
+
+// Outros contratos do mesmo cliente — a aba "Cliente" do detalhe.
+export async function listarContratosDoCliente(
+  clienteId: string,
+  exceto?: string,
+): Promise<ContratoComRelacoes[]> {
+  const contratos = await prisma.contrato.findMany({
+    where: { clienteId, ...(exceto ? { id: { not: exceto } } : {}) },
+    include: comRelacoes,
+    orderBy: ordem,
+  });
+  return contratos.map(paraUI);
+}
+
+export type StatusFiltro = "todos" | "em_dia" | "atrasado" | "quitado";
+export type OrdenacaoContratos = "recentes" | "vencimento" | "maior_valor" | "cliente";
+
+export interface FiltroContratos {
+  pagina?: number;
+  tamanho?: number;
+  busca?: string;
+  tipo?: TipoPagamento | "todos";
+  status?: StatusFiltro;
+  ordenar?: OrdenacaoContratos;
+  /** Só contratos com parcela em aberto vencendo nos próximos 7 dias. */
+  vence7?: boolean;
+  hoje?: Date;
+}
+
+export interface PaginaContratos {
+  itens: ContratoComRelacoes[];
+  total: number;
+  paginas: number;
+  pagina: number;
+  tamanho: number;
+}
+
+// O status vira condição SQL de verdade: com centenas de contratos, trazer tudo
+// para filtrar em JS derrubaria a página.
+function where({ busca, tipo, status, vence7, hoje = new Date() }: FiltroContratos): Prisma.ContratoWhereInput {
+  const filtros: Prisma.ContratoWhereInput[] = [];
+
+  const termo = busca?.trim();
+  if (termo) {
+    const comoNumero = Number(termo.replace(/\D/g, ""));
+    filtros.push({
+      OR: [
+        { cliente: { nome: { contains: termo, mode: "insensitive" } } },
+        { cliente: { documento: { contains: termo, mode: "insensitive" } } },
+        { titulo: { contains: termo, mode: "insensitive" } },
+        { processo: { contains: termo, mode: "insensitive" } },
+        ...(Number.isFinite(comoNumero) && comoNumero > 0 ? [{ numero: comoNumero }] : []),
+      ],
+    });
+  }
+
+  if (tipo && tipo !== "todos") filtros.push({ tipoPagamento: paraEnumDb[tipo] });
+
+  const vencida: Prisma.ParcelaWhereInput = { pagamento: { is: null }, vencimento: { lt: hoje } };
+  if (status === "atrasado") filtros.push({ parcelas: { some: vencida } });
+  if (status === "quitado") {
+    filtros.push({ parcelas: { every: { pagamento: { isNot: null } }, some: {} } });
+  }
+  if (status === "em_dia") {
+    filtros.push({ parcelas: { none: vencida }, NOT: { parcelas: { every: { pagamento: { isNot: null } }, some: {} } } });
+  }
+
+  if (vence7) {
+    filtros.push({
+      parcelas: {
+        some: { pagamento: { is: null }, vencimento: { gte: hoje, lt: new Date(hoje.getTime() + 7 * 86400000) } },
+      },
+    });
+  }
+
+  return filtros.length === 0 ? {} : { AND: filtros };
+}
+
+const ordenacoes: Record<OrdenacaoContratos, Prisma.ContratoOrderByWithRelationInput[]> = {
+  recentes: ordem,
+  maior_valor: [{ valorTotal: "desc" }, { id: "desc" }],
+  cliente: [{ cliente: { nome: "asc" } }, { id: "desc" }],
+  // Sem campo de vencimento no contrato, o proxy é a parcela mais antiga.
+  vencimento: [{ parcelas: { _count: "desc" } }, { createdAt: "asc" }],
+};
+
+export async function listarContratosPaginado(filtro: FiltroContratos = {}): Promise<PaginaContratos> {
+  const tamanho = Math.min(Math.max(filtro.tamanho ?? 20, 1), 100);
+  const condicao = where(filtro);
+  const [total, contratos] = await prisma.$transaction([
+    prisma.contrato.count({ where: condicao }),
+    prisma.contrato.findMany({
+      where: condicao,
+      include: comRelacoes,
+      orderBy: ordenacoes[filtro.ordenar ?? "recentes"],
+      skip: (Math.max(filtro.pagina ?? 1, 1) - 1) * tamanho,
+      take: tamanho,
+    }),
+  ]);
+
+  const paginas = Math.max(1, Math.ceil(total / tamanho));
+  return {
+    itens: contratos.map(paraUI),
+    total,
+    paginas,
+    pagina: Math.min(Math.max(filtro.pagina ?? 1, 1), paginas),
+    tamanho,
+  };
+}
+
+export interface ContadoresContratos {
+  total: number;
+  atrasados: number;
+  vencendoEm7Dias: number;
+  quitados: number;
+}
+
+// Os chips de filtro rápido: contados no banco, não no array da página atual.
+export async function contadoresContratos(hoje = new Date()): Promise<ContadoresContratos> {
+  const em7Dias = new Date(hoje.getTime() + 7 * 86400000);
+  const [total, atrasados, vencendoEm7Dias, quitados] = await prisma.$transaction([
+    prisma.contrato.count(),
+    prisma.contrato.count({ where: where({ status: "atrasado", hoje }) }),
+    prisma.contrato.count({
+      where: { parcelas: { some: { pagamento: { is: null }, vencimento: { gte: hoje, lt: em7Dias } } } },
+    }),
+    prisma.contrato.count({ where: where({ status: "quitado", hoje }) }),
+  ]);
+  return { total, atrasados, vencendoEm7Dias, quitados };
 }
 
 // Contexto que a IA recebe no Fluxo B. É montado aqui, no servidor, a partir
