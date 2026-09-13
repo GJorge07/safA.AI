@@ -3,6 +3,7 @@ import { ingestDriveContract, ingestUploadedContract, type SupportedContractMime
 import { UnsupportedEvidenceError } from "@/lib/ai/evidence";
 
 export const runtime = "nodejs";
+export const maxDuration = 120;
 
 const driveRequestSchema = z.object({ driveFileId: z.string().trim().min(1).max(200) });
 const supported = new Set<SupportedContractMimeType>([
@@ -32,6 +33,13 @@ async function ingestUpload(request: Request) {
   const form = await request.formData();
   const file = form.get("file");
   if (!(file instanceof File)) throw new Error("Envie o contrato no campo 'file'.");
-  if (!supported.has(file.type as SupportedContractMimeType)) throw new Error("Formato não suportado. Use PDF, DOCX ou TXT.");
-  return ingestUploadedContract(Buffer.from(await file.arrayBuffer()), file.type as SupportedContractMimeType);
+  if (!file.size) throw new Error("O arquivo está vazio.");
+  if (file.size > 20 * 1024 * 1024) throw new Error("O arquivo excede o limite de 20 MB.");
+  const extensions: Record<string, SupportedContractMimeType> = {
+    pdf: "application/pdf", docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document", txt: "text/plain",
+  };
+  const mime = file.type && file.type !== "application/octet-stream"
+    ? file.type : extensions[file.name.split(".").pop()?.toLowerCase() ?? ""];
+  if (!supported.has(mime as SupportedContractMimeType)) throw new Error("Formato não suportado. Use PDF, DOCX ou TXT.");
+  return ingestUploadedContract(Buffer.from(await file.arrayBuffer()), mime as SupportedContractMimeType);
 }

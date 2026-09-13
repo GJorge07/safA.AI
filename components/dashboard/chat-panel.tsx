@@ -1,10 +1,12 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { AlertTriangle, ArrowUp, Loader2, MessageCircle, Plus, Sparkles } from "lucide-react";
+import { AlertTriangle, ArrowUp, Loader2, Plus, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { gerarTitulo, salvarConversa, obterConversa, type MensagemConversa } from "./conversas";
 import type { ContratoComRelacoes } from "./types";
+
+import { enviarContrato, obterDocumentos, resumoDocumento } from "./contract-upload";
 
 interface ChatPanelProps {
   contratos: ContratoComRelacoes[];
@@ -27,13 +29,15 @@ export function ChatPanel({ contratos, perguntaInicial, conversaId }: ChatPanelP
   });
   const [pergunta, setPergunta] = useState("");
   const [carregando, setCarregando] = useState(false);
-  const [erro, setErro] = useState(false);
+  const [erro, setErro] = useState<string | null>(null);
+  const ultimaPergunta = useRef("");
+  const ultimoArquivo = useRef<File | null>(null);
   const jaEnviouInicial = useRef(false);
   const inputArquivoRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (perguntaInicial && !jaEnviouInicial.current && contratos.length > 0) {
+    if (perguntaInicial && !jaEnviouInicial.current) {
       jaEnviouInicial.current = true;
       enviar(perguntaInicial);
     }
@@ -55,22 +59,12 @@ export function ChatPanel({ contratos, perguntaInicial, conversaId }: ChatPanelP
     });
   }
 
-  if (contratos.length === 0) {
-    return (
-      <div className="flex h-full flex-col items-center justify-center gap-2 text-center">
-        <MessageCircle className="h-6 w-6 text-muted-foreground" aria-hidden="true" />
-        <p className="text-sm font-medium">Ainda não há contratos para consultar</p>
-        <p className="text-xs text-muted-foreground">
-          Envie um contrato primeiro para eu poder responder perguntas sobre ele.
-        </p>
-      </div>
-    );
-  }
-
   async function enviar(textoParam?: string) {
     const texto = (textoParam ?? pergunta).trim();
     if (!texto || carregando) return;
-    setErro(false);
+    setErro(null);
+    ultimaPergunta.current = texto;
+    ultimoArquivo.current = null;
     setPergunta("");
     setCarregando(true);
     setMensagens((atuais) => {
@@ -85,6 +79,7 @@ export function ChatPanel({ contratos, perguntaInicial, conversaId }: ChatPanelP
         body: JSON.stringify({
           pergunta: texto,
           dados: {
+            documentos: obterDocumentos(),
             dataReferencia: new Date().toISOString().slice(0, 10),
             resumo: contratos.flatMap(c => c.parcelas).reduce((total, p) => {
               const recebido = p.pagamento?.valorPago ?? 0;
@@ -108,45 +103,41 @@ export function ChatPanel({ contratos, perguntaInicial, conversaId }: ChatPanelP
           },
         }),
       });
-      if (!res.ok) throw new Error("Falha na resposta");
-      const data = await res.json();
+      const data = await res.json().catch(() => null);
+      if (!res.ok) throw new Error(data?.erro ?? "Falha na resposta");
       setMensagens((atuais) => {
         const comResposta = [...atuais, { autor: "assistente", texto: data.resposta.resposta } as MensagemConversa];
         persistir(comResposta);
         return comResposta;
       });
-    } catch {
-      setErro(true);
+    } catch (error) {
+      setErro(error instanceof Error ? error.message : "Não consegui responder agora.");
     } finally {
       setCarregando(false);
     }
   }
 
-  // TODO(ia): reaproveitar o pipeline real de extração (o mesmo de
-  // components/dashboard/upload-contrato.tsx) quando app/api/contratos
-  // existir de verdade — aqui é uma simulação para o anexo funcionar ponta
-  // a ponta no chat.
-  function anexarArquivo(arquivo: File | undefined) {
-    if (!arquivo) return;
-    setErro(false);
-    setMensagens((atuais) => [...atuais, { autor: "usuario", texto: `📎 ${arquivo.name}` }]);
+  async function anexarArquivo(arquivo: File | undefined) {
+    if (!arquivo || carregando) return;
+    ultimoArquivo.current = arquivo;
+    setErro(null);
+    setMensagens(atuais => [...atuais, { autor: "usuario", texto: `📎 ${arquivo.name}` }]);
     setCarregando(true);
-    setTimeout(() => {
-      setMensagens((atuais) => {
-        const comResposta: MensagemConversa[] = [
-          ...atuais,
-          {
-            autor: "assistente",
-            texto:
-              `Li o contrato e extraí: cliente Construtora Alvorada Ltda., pagamento misto, ` +
-              `R$ 45.000 em 3 parcelas de R$ 15.000. Quer conferir a cláusula original na aba Contratos?`,
-          },
-        ];
-        persistir(comResposta);
-        return comResposta;
+    try {
+      const documento = await enviarContrato(arquivo);
+      setMensagens(atuais => {
+        const atualizadas: MensagemConversa[] = [...atuais, {
+          autor: "assistente",
+          texto: `${resumoDocumento(documento)}\nVocê já pode perguntar sobre este documento. A extração ainda não foi salva no controle financeiro.`,
+        }];
+        persistir(atualizadas);
+        return atualizadas;
       });
+    } catch (error) {
+      setErro(error instanceof Error ? error.message : "Falha ao ler o arquivo.");
+    } finally {
       setCarregando(false);
-    }, 1400);
+    }
   }
 
   const semMensagens = mensagens.length === 0;
@@ -205,8 +196,8 @@ export function ChatPanel({ contratos, perguntaInicial, conversaId }: ChatPanelP
           {erro && (
             <div className="mr-auto flex max-w-[80%] items-center gap-2 rounded-2xl bg-destructive-bg px-3.5 py-2 text-sm text-destructive">
               <AlertTriangle className="h-4 w-4 shrink-0" aria-hidden="true" />
-              Não consegui responder agora.
-              <Button size="sm" variant="secondary" onClick={() => enviar()}>
+              {erro}
+              <Button size="sm" variant="secondary" onClick={() => ultimoArquivo.current ? anexarArquivo(ultimoArquivo.current) : enviar(ultimaPergunta.current)}>
                 Tentar de novo
               </Button>
             </div>
@@ -218,9 +209,9 @@ export function ChatPanel({ contratos, perguntaInicial, conversaId }: ChatPanelP
         <input
           ref={inputArquivoRef}
           type="file"
-          accept=".pdf,.docx"
+          accept=".pdf,.docx,.txt"
           className="hidden"
-          onChange={(e) => anexarArquivo(e.target.files?.[0])}
+          onChange={(e) => { void anexarArquivo(e.target.files?.[0]); e.target.value = ""; }}
         />
         <Button
           size="sm"
@@ -228,7 +219,7 @@ export function ChatPanel({ contratos, perguntaInicial, conversaId }: ChatPanelP
           className="h-10 w-10 shrink-0 rounded-full p-0"
           onClick={() => inputArquivoRef.current?.click()}
           disabled={carregando}
-          aria-label="Anexar contrato (PDF ou DOCX)"
+          aria-label="Anexar contrato (PDF, DOCX ou TXT)"
         >
           <Plus className="h-5 w-5" aria-hidden="true" />
         </Button>

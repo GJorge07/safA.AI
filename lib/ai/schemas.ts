@@ -138,6 +138,12 @@ export const dadosFinanceirosSchema = z.object({
     atrasado: z.number().nonnegative(),
   }),
   contratos: z.array(contratoFinanceiroSchema),
+  documentos: z.array(z.object({
+    id: z.string().min(1),
+    nome: z.string().min(1),
+    extracao: extracaoContratoSchema,
+    motivosRevisao: z.array(z.string()),
+  })).optional(),
 });
 
 export const contextoFinanceiroSchema = z.object({

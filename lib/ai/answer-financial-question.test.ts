@@ -63,3 +63,28 @@ test("rejeita inconsistência entre lista e fontes detalhadas", () => {
   };
   assert.throws(() => validateAnswerContractCitations(answer, data), /não corresponde/);
 });
+
+test("preserva documentos enviados no contexto e aceita citação da cláusula", async () => {
+  const { contextoFinanceiroSchema } = await import("./schemas");
+  const context = contextoFinanceiroSchema.parse({
+    pergunta: "Qual a cláusula do arquivo?",
+    dados: { ...data, documentos: [{
+      id: "upload-1", nome: "contrato.txt", motivosRevisao: ["Data ausente"],
+      extracao: {
+        cliente: "Ana", tipoPagamento: "fixo", valorTotal: 1000,
+        honorariosExito: null, parcelas: [], clausulaOriginal: "Honorários de R$ 1.000,00.",
+        evidencias: [], confianca: 0.8, avisos: ["Data ausente"],
+      },
+    }] },
+  });
+  assert.equal(context.dados.documentos?.[0].extracao.valorTotal, 1000);
+  const answer = {
+    resposta: "Honorários de R$ 1.000,00.", contratosCitados: [],
+    citacoes: [{ contratoId: null, campos: ["documentos.0.extracao.clausulaOriginal"] }],
+    aviso: "Data ausente",
+  };
+  assert.equal(validateAnswerContractCitations(answer, context.dados), answer);
+  assert.throws(() => validateAnswerContractCitations({ ...answer,
+    citacoes: [{ contratoId: null, campos: ["documentos.1.extracao.clausulaOriginal"] }],
+  }, context.dados), /campo inexistente/);
+});

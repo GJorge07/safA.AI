@@ -1,107 +1,37 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { AlertTriangle, CheckCircle2, FileText, FolderOpen, Loader2, Sparkles, Upload } from "lucide-react";
+import { AlertTriangle, CheckCircle2, FolderOpen, Loader2, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
-import type { ContratoExtraido } from "@/lib/types";
 
-type ItemStatus = "na_fila" | "enviando" | "lendo" | "extraido" | "erro";
+import { enviarContrato, resumoDocumento, type DocumentoEnviado } from "./contract-upload";
 
+type ItemStatus = "lendo" | "extraido" | "erro";
 interface ItemFila {
   id: string;
   nome: string;
   status: ItemStatus;
-  progresso: number;
-  extraido?: ContratoExtraido;
+  documento?: DocumentoEnviado;
   mensagemErro?: string;
 }
 
-const filaInicial: ItemFila[] = [
-  {
-    id: "seed-1",
-    nome: "contrato-mercado-bompreco.pdf",
-    status: "extraido",
-    progresso: 100,
-    extraido: {
-      cliente: "Mercado Bom Preço S.A.",
-      tipoPagamento: "fixo",
-      valorTotal: 12000,
-      parcelas: [{ valor: 3000, vencimento: "2026-10-15" }],
-      clausulaOriginal:
-        "Cláusula 2ª — Dos Honorários Fixos: o valor total de R$ 12.000,00 será pago em 4 parcelas iguais de R$ 3.000,00, com vencimento todo dia 15.",
-    },
-  },
-  { id: "seed-2", nome: "contrato-joao-pereira.pdf", status: "na_fila", progresso: 0 },
-];
-
-// TODO(ia): trocar a simulação abaixo por POST real para app/api/contratos,
-// que dispara a extração em lib/ai/ e valida o retorno contra ContratoExtraido
-// (ver lib/types.ts) antes de gravar no banco.
 export function UploadContrato() {
-  const [fila, setFila] = useState<ItemFila[]>(filaInicial);
+  const [fila, setFila] = useState<ItemFila[]>([]);
   const [arrastando, setArrastando] = useState(false);
   const [abertoId, setAbertoId] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  function simularEnvio(nome: string) {
+  async function handleFile(file: File | undefined) {
+    if (!file) return;
     const id = crypto.randomUUID();
-    setFila((f) => [...f, { id, nome, status: "enviando", progresso: 0 }]);
-    let progresso = 0;
-    const timer = setInterval(() => {
-      progresso += 20;
-      setFila((f) => f.map((it) => (it.id === id ? { ...it, progresso } : it)));
-      if (progresso >= 100) {
-        clearInterval(timer);
-        setFila((f) => f.map((it) => (it.id === id ? { ...it, status: "lendo" } : it)));
-        setTimeout(() => {
-          setFila((f) =>
-            f.map((it) =>
-              it.id === id
-                ? {
-                    ...it,
-                    status: "extraido",
-                    extraido: {
-                      cliente: "Construtora Alvorada Ltda.",
-                      tipoPagamento: "misto",
-                      valorTotal: 45000,
-                      parcelas: [
-                        { valor: 15000, vencimento: "2026-10-05" },
-                        { valor: 15000, vencimento: "2026-11-05" },
-                        { valor: 15000, vencimento: "2026-12-05" },
-                      ],
-                      clausulaOriginal:
-                        "Cláusula 4ª — Dos Honorários: as partes ajustam o pagamento em 3 parcelas mensais de R$ 15.000,00, vencíveis todo dia 5.",
-                    },
-                  }
-                : it,
-            ),
-          );
-        }, 1100);
-      }
-    }, 260);
-  }
-
-  function simularErro() {
-    const id = crypto.randomUUID();
-    setFila((f) => [
-      ...f,
-      {
-        id,
-        nome: "contrato-ilegivel-scan.pdf",
-        status: "erro",
-        progresso: 0,
-        mensagemErro: "Não conseguimos ler este PDF (parece ser uma imagem escaneada).",
-      },
-    ]);
-  }
-
-  function remover(id: string) {
-    setFila((f) => f.filter((it) => it.id !== id));
-  }
-
-  function handleFile(file: File | undefined) {
-    if (file) simularEnvio(file.name);
+    setFila(f => [...f, { id, nome: file.name, status: "lendo" }]);
+    try {
+      const documento = await enviarContrato(file);
+      setFila(f => f.map(it => it.id === id ? { ...it, status: "extraido", documento } : it));
+      setAbertoId(id);
+    } catch (error) {
+      setFila(f => f.map(it => it.id === id ? { ...it, status: "erro", mensagemErro: error instanceof Error ? error.message : "Falha ao enviar arquivo." } : it));
+    }
   }
 
   return (
@@ -125,23 +55,16 @@ export function UploadContrato() {
         <input
           ref={inputRef}
           type="file"
-          accept=".pdf,.docx"
+          accept=".pdf,.docx,.txt"
           className="hidden"
-          onChange={(e) => handleFile(e.target.files?.[0])}
+          onChange={(e) => { void handleFile(e.target.files?.[0]); e.target.value = ""; }}
         />
         <Upload className="h-6 w-6 text-muted-foreground" aria-hidden="true" />
-        <p className="text-sm font-medium">Arraste um PDF ou DOCX aqui</p>
+        <p className="text-sm font-medium">Arraste um PDF, DOCX ou TXT aqui</p>
         <p className="text-xs text-muted-foreground">ou clique para escolher — máx. 20MB</p>
         <div className="mt-2 flex flex-wrap justify-center gap-2">
           <Button size="sm" variant="secondary" onClick={() => inputRef.current?.click()}>
             Escolher arquivo
-          </Button>
-          <Button size="sm" variant="ia" onClick={() => simularEnvio("contrato-alvorada-2026.docx")}>
-            <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
-            Simular envio
-          </Button>
-          <Button size="sm" variant="destructive" onClick={simularErro}>
-            Simular erro
           </Button>
         </div>
       </div>
@@ -163,20 +86,14 @@ export function UploadContrato() {
                 {item.status === "erro" && (
                   <AlertTriangle className="h-4 w-4 shrink-0 text-destructive" aria-hidden="true" />
                 )}
-                {(item.status === "enviando" || item.status === "lendo") && (
+                {item.status === "lendo" && (
                   <Loader2 className="h-4 w-4 shrink-0 animate-spin text-primary" aria-hidden="true" />
                 )}
-                {item.status === "na_fila" && (
-                  <FileText className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
-                )}
-
                 <span className="flex-1 truncate text-sm">{item.nome}</span>
 
                 <span className="shrink-0 text-xs text-muted-foreground">
-                  {item.status === "na_fila" && "Na fila"}
-                  {item.status === "enviando" && `Enviando… ${item.progresso}%`}
                   {item.status === "lendo" && "Lendo cláusulas com IA…"}
-                  {item.status === "extraido" && `Extraído — ${item.extraido?.parcelas.length} parcela(s)`}
+                  {item.status === "extraido" && (item.documento?.motivosRevisao.length ? "Revisão necessária" : "Extraído")}
                   {item.status === "erro" && "Falha na extração"}
                 </span>
 
@@ -190,27 +107,20 @@ export function UploadContrato() {
                   </Button>
                 )}
                 {item.status === "erro" && (
-                  <Button size="sm" variant="secondary" onClick={() => remover(item.id)}>
+                  <Button size="sm" variant="secondary" onClick={() => inputRef.current?.click()}>
                     Tentar de novo
                   </Button>
                 )}
               </div>
 
-              {item.status === "enviando" && (
-                <Progress value={item.progresso} className="mt-2" />
-              )}
-
               {item.status === "erro" && item.mensagemErro && (
                 <p className="mt-2 text-xs text-destructive">{item.mensagemErro}</p>
               )}
 
-              {item.status === "extraido" && abertoId === item.id && item.extraido && (
-                <div className="mt-3 rounded-md bg-muted p-3 text-xs">
-                  <p className="mb-2 font-medium text-foreground">
-                    {item.extraido.cliente} · {item.extraido.tipoPagamento} ·{" "}
-                    {item.extraido.valorTotal.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
-                  </p>
-                  <p className="italic text-muted-foreground">&ldquo;{item.extraido.clausulaOriginal}&rdquo;</p>
+              {item.status === "extraido" && abertoId === item.id && item.documento && (
+                <div className="mt-3 whitespace-pre-wrap rounded-md bg-muted p-3 text-xs">
+                  {resumoDocumento(item.documento)}
+                  <p className="mt-2">Disponível para consulta no agente neste navegador. Ainda não salvo no controle financeiro.</p>
                 </div>
               )}
             </li>
