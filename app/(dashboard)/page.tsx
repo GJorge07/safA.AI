@@ -1,12 +1,32 @@
 import { HomeDashboard } from "@/components/dashboard/home-dashboard";
-import { carregarFluxoCaixa, listarContratosComRelacoes } from "@/lib/db/contratos";
+import {
+  acoesPendentes,
+  carregarFluxoComDespesas,
+  carteiraPorTipo,
+  receitaPorCliente,
+  resumoDoInicio,
+} from "@/lib/db/inicio";
 
 export const dynamic = "force-dynamic";
 
 export default async function InicioPage() {
-  const [contratos, fluxoCaixa] = await Promise.all([
-    listarContratosComRelacoes(),
-    carregarFluxoCaixa(),
+  // Cinco agregados em vez da carteira inteira: o que sobe para o cliente é o
+  // que a tela desenha, nada além disso.
+  const [resumo, fluxoCaixa, porTipo, porCliente, acoes] = await Promise.all([
+    resumoDoInicio(),
+    carregarFluxoComDespesas(),
+    carteiraPorTipo(),
+    receitaPorCliente(),
+    acoesPendentes(),
   ]);
-  return <HomeDashboard contratos={contratos} fluxoCaixa={fluxoCaixa} />;
+
+  return (
+    <HomeDashboard
+      resumo={resumo}
+      fluxoCaixa={fluxoCaixa}
+      porTipo={porTipo}
+      porCliente={porCliente}
+      acoes={acoes}
+    />
+  );
 }
