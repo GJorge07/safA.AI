@@ -1,6 +1,9 @@
+import { revalidatePath } from "next/cache";
 import { ZodError, z } from "zod";
-import { ingestDriveContract, ingestUploadedContract, type SupportedContractMimeType } from "@/lib/ai";
+import { ingestDriveContract, ingestUploadedContract, opinarSobreContrato, type SupportedContractMimeType } from "@/lib/ai";
 import { UnsupportedEvidenceError } from "@/lib/ai/evidence";
+import { carregarEstatisticasCarteira, salvarContratoExtraido } from "@/lib/db/contratos";
+import type { ExtracaoContrato, OpiniaoContrato } from "@/lib/ai/schemas";
 
 export const runtime = "nodejs";
 
@@ -17,7 +20,19 @@ export async function POST(request: Request): Promise<Response> {
     const result = contentType.includes("application/json")
       ? await ingestDriveContract(driveRequestSchema.parse(await request.json()).driveFileId)
       : await ingestUpload(request);
-    return Response.json(result, { status: result.status === "pronto_para_salvar" ? 200 : 202 });
+
+    // A opinião é um extra sobre a extração; se o Gemini falhar nela, o
+    // advogado ainda recebe o contrato extraído/salvo normalmente.
+    const opiniao = await gerarOpiniaoComFallback(result.extracao, result.textoCompleto);
+
+    // Só grava o que a validação de evidência aprovou; o que precisa de
+    // revisão volta para o advogado sem sujar o banco.
+    if (!result.payloadBackend) return Response.json({ ...result, contratoId: null, opiniao }, { status: 202 });
+
+    const contrato = await salvarContratoExtraido(result.payloadBackend);
+    revalidatePath("/");
+    revalidatePath("/contratos");
+    return Response.json({ ...result, contratoId: contrato.id, opiniao }, { status: 201 });
   } catch (error) {
     if (error instanceof ZodError) return Response.json({ erro: "Dados inválidos.", detalhes: error.issues }, { status: 400 });
     if (error instanceof UnsupportedEvidenceError) {
@@ -25,6 +40,17 @@ export async function POST(request: Request): Promise<Response> {
     }
     const message = error instanceof Error ? error.message : "Erro inesperado.";
     return Response.json({ erro: message }, { status: 502 });
+  }
+}
+
+async function gerarOpiniaoComFallback(extracao: ExtracaoContrato, textoCompleto: string): Promise<OpiniaoContrato | null> {
+  if (!textoCompleto.trim()) return null;
+  try {
+    const carteira = await carregarEstatisticasCarteira();
+    return await opinarSobreContrato(extracao, textoCompleto, carteira);
+  } catch (error) {
+    console.error("Falha ao gerar opinião do contrato:", error);
+    return null;
   }
 }
 

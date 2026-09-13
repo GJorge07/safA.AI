@@ -7,5 +7,6 @@ export * from "./drive";
 export * from "./flow-b";
 export * from "./insights";
 export * from "./ingest-contract";
+export * from "./opine-contract";
 export * from "./prompts";
 export * from "./schemas";

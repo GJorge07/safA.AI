@@ -2,9 +2,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DriveSync } from "@/components/dashboard/drive-sync";
 import { UploadContrato } from "@/components/dashboard/upload-contrato";
 import { ContratosLista } from "@/components/dashboard/contratos-lista";
-import { contratosMock } from "@/lib/mock-data";
+import { listarContratosComRelacoes } from "@/lib/db/contratos";
 
-export default function ContratosPage() {
+export const dynamic = "force-dynamic";
+
+export default async function ContratosPage() {
+  const contratos = await listarContratosComRelacoes();
+
   return (
     <div className="flex flex-col gap-6">
       <div>
@@ -32,7 +36,7 @@ export default function ContratosPage() {
           <CardTitle>Todos os contratos</CardTitle>
         </CardHeader>
         <CardContent>
-          <ContratosLista contratos={contratosMock} carregando={false} erro={null} mostrarFiltros />
+          <ContratosLista contratos={contratos} carregando={false} erro={null} mostrarFiltros />
         </CardContent>
       </Card>
     </div>

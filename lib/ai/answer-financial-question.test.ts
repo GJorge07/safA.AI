@@ -8,6 +8,7 @@ const data = {
   contratos: [{
     id: "contrato-1", clienteId: "cliente-1", cliente: "Ana",
     tipoPagamento: "fixo" as const, valorTotal: 1000,
+    clausulaOriginal: "Cláusula 2ª — Honorários fixos de R$ 1.000,00, em parcela única.",
     parcelas: [{ id: "p-1", valor: 1000, vencimento: "2026-09-01", status: "atrasada" as const }],
   }],
 };
