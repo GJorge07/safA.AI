@@ -3,7 +3,14 @@
 // precisa incluídas (cliente, parcelas, pagamento), como uma query real do
 // Prisma devolveria.
 import type { Cliente, Contrato, Despesa, Parcela, Pagamento } from "@/app/generated/prisma/client";
-import type { CategoriaDespesa, OrigemRegistro, Recorrencia, TipoPagamento } from "@/lib/types";
+import type {
+  CategoriaDespesa,
+  OrigemRegistro,
+  QuemPaga,
+  Recorrencia,
+  TipoDespesa,
+  TipoPagamento,
+} from "@/lib/types";
 
 // Modelo de apresentação: valores numéricos e enum compartilhado em minúsculas.
 // Os campos de auditoria não usados na UI podem ser omitidos nos dados de demonstração.
@@ -18,10 +25,15 @@ export type ContratoComRelacoes = Omit<Contrato, 'valorTotal' | 'tipoPagamento' 
   parcelas: ParcelaComPagamento[];
 };
 
-export type DespesaUI = Omit<Despesa, 'valor' | 'categoria' | 'recorrencia' | 'origem' | 'updatedAt'> & {
+export type DespesaUI = Omit<
+  Despesa,
+  'valor' | 'tipo' | 'categoria' | 'recorrencia' | 'quemPaga' | 'origem' | 'updatedAt'
+> & {
   valor: number;
+  tipo: TipoDespesa;
   categoria: CategoriaDespesa;
   recorrencia: Recorrencia;
+  quemPaga: QuemPaga;
   origem: OrigemRegistro;
   contrato: { id: string; numero: number; cliente: { nome: string } } | null;
 };
@@ -93,6 +105,12 @@ export function saldoEmAberto(contrato: ContratoComRelacoes): number {
 }
 
 export type StatusDespesa = "paga" | "atrasada" | "prevista";
+
+// Era do cliente, o advogado já pagou e ainda não repassou. É o valor que o
+// advogado está emprestando ao cliente sem perceber.
+export function aguardandoReembolso(despesa: DespesaUI): boolean {
+  return despesa.quemPaga === "cliente" && despesa.pagoEm !== null && despesa.cobradoEm === null;
+}
 
 export function statusDaDespesa(despesa: DespesaUI, hoje: Date = new Date()): StatusDespesa {
   if (despesa.pagoEm) return "paga";

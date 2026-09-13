@@ -44,10 +44,12 @@ export type DespesaMinAggregateOutputType = {
   valor: runtime.Decimal | null
   vencimento: Date | null
   pagoEm: Date | null
+  tipo: $Enums.TipoDespesa | null
   recorrencia: $Enums.Recorrencia | null
   fornecedor: string | null
   contratoId: string | null
-  reembolsavel: boolean | null
+  quemPaga: $Enums.QuemPaga | null
+  cobradoEm: Date | null
   origem: $Enums.OrigemRegistro | null
   textoOriginal: string | null
   createdAt: Date | null
@@ -62,10 +64,12 @@ export type DespesaMaxAggregateOutputType = {
   valor: runtime.Decimal | null
   vencimento: Date | null
   pagoEm: Date | null
+  tipo: $Enums.TipoDespesa | null
   recorrencia: $Enums.Recorrencia | null
   fornecedor: string | null
   contratoId: string | null
-  reembolsavel: boolean | null
+  quemPaga: $Enums.QuemPaga | null
+  cobradoEm: Date | null
   origem: $Enums.OrigemRegistro | null
   textoOriginal: string | null
   createdAt: Date | null
@@ -80,10 +84,12 @@ export type DespesaCountAggregateOutputType = {
   valor: number
   vencimento: number
   pagoEm: number
+  tipo: number
   recorrencia: number
   fornecedor: number
   contratoId: number
-  reembolsavel: number
+  quemPaga: number
+  cobradoEm: number
   origem: number
   textoOriginal: number
   createdAt: number
@@ -110,10 +116,12 @@ export type DespesaMinAggregateInputType = {
   valor?: true
   vencimento?: true
   pagoEm?: true
+  tipo?: true
   recorrencia?: true
   fornecedor?: true
   contratoId?: true
-  reembolsavel?: true
+  quemPaga?: true
+  cobradoEm?: true
   origem?: true
   textoOriginal?: true
   createdAt?: true
@@ -128,10 +136,12 @@ export type DespesaMaxAggregateInputType = {
   valor?: true
   vencimento?: true
   pagoEm?: true
+  tipo?: true
   recorrencia?: true
   fornecedor?: true
   contratoId?: true
-  reembolsavel?: true
+  quemPaga?: true
+  cobradoEm?: true
   origem?: true
   textoOriginal?: true
   createdAt?: true
@@ -146,10 +156,12 @@ export type DespesaCountAggregateInputType = {
   valor?: true
   vencimento?: true
   pagoEm?: true
+  tipo?: true
   recorrencia?: true
   fornecedor?: true
   contratoId?: true
-  reembolsavel?: true
+  quemPaga?: true
+  cobradoEm?: true
   origem?: true
   textoOriginal?: true
   createdAt?: true
@@ -251,10 +263,12 @@ export type DespesaGroupByOutputType = {
   valor: runtime.Decimal
   vencimento: Date
   pagoEm: Date | null
+  tipo: $Enums.TipoDespesa
   recorrencia: $Enums.Recorrencia
   fornecedor: string | null
   contratoId: string | null
-  reembolsavel: boolean
+  quemPaga: $Enums.QuemPaga
+  cobradoEm: Date | null
   origem: $Enums.OrigemRegistro
   textoOriginal: string | null
   createdAt: Date
@@ -292,10 +306,12 @@ export type DespesaWhereInput = {
   valor?: Prisma.DecimalFilter<"Despesa"> | runtime.Decimal | runtime.DecimalJsLike | number | string
   vencimento?: Prisma.DateTimeFilter<"Despesa"> | Date | string
   pagoEm?: Prisma.DateTimeNullableFilter<"Despesa"> | Date | string | null
+  tipo?: Prisma.EnumTipoDespesaFilter<"Despesa"> | $Enums.TipoDespesa
   recorrencia?: Prisma.EnumRecorrenciaFilter<"Despesa"> | $Enums.Recorrencia
   fornecedor?: Prisma.StringNullableFilter<"Despesa"> | string | null
   contratoId?: Prisma.StringNullableFilter<"Despesa"> | string | null
-  reembolsavel?: Prisma.BoolFilter<"Despesa"> | boolean
+  quemPaga?: Prisma.EnumQuemPagaFilter<"Despesa"> | $Enums.QuemPaga
+  cobradoEm?: Prisma.DateTimeNullableFilter<"Despesa"> | Date | string | null
   origem?: Prisma.EnumOrigemRegistroFilter<"Despesa"> | $Enums.OrigemRegistro
   textoOriginal?: Prisma.StringNullableFilter<"Despesa"> | string | null
   createdAt?: Prisma.DateTimeFilter<"Despesa"> | Date | string
@@ -311,10 +327,12 @@ export type DespesaOrderByWithRelationInput = {
   valor?: Prisma.SortOrder
   vencimento?: Prisma.SortOrder
   pagoEm?: Prisma.SortOrderInput | Prisma.SortOrder
+  tipo?: Prisma.SortOrder
   recorrencia?: Prisma.SortOrder
   fornecedor?: Prisma.SortOrderInput | Prisma.SortOrder
   contratoId?: Prisma.SortOrderInput | Prisma.SortOrder
-  reembolsavel?: Prisma.SortOrder
+  quemPaga?: Prisma.SortOrder
+  cobradoEm?: Prisma.SortOrderInput | Prisma.SortOrder
   origem?: Prisma.SortOrder
   textoOriginal?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -333,10 +351,12 @@ export type DespesaWhereUniqueInput = Prisma.AtLeast<{
   valor?: Prisma.DecimalFilter<"Despesa"> | runtime.Decimal | runtime.DecimalJsLike | number | string
   vencimento?: Prisma.DateTimeFilter<"Despesa"> | Date | string
   pagoEm?: Prisma.DateTimeNullableFilter<"Despesa"> | Date | string | null
+  tipo?: Prisma.EnumTipoDespesaFilter<"Despesa"> | $Enums.TipoDespesa
   recorrencia?: Prisma.EnumRecorrenciaFilter<"Despesa"> | $Enums.Recorrencia
   fornecedor?: Prisma.StringNullableFilter<"Despesa"> | string | null
   contratoId?: Prisma.StringNullableFilter<"Despesa"> | string | null
-  reembolsavel?: Prisma.BoolFilter<"Despesa"> | boolean
+  quemPaga?: Prisma.EnumQuemPagaFilter<"Despesa"> | $Enums.QuemPaga
+  cobradoEm?: Prisma.DateTimeNullableFilter<"Despesa"> | Date | string | null
   origem?: Prisma.EnumOrigemRegistroFilter<"Despesa"> | $Enums.OrigemRegistro
   textoOriginal?: Prisma.StringNullableFilter<"Despesa"> | string | null
   createdAt?: Prisma.DateTimeFilter<"Despesa"> | Date | string
@@ -352,10 +372,12 @@ export type DespesaOrderByWithAggregationInput = {
   valor?: Prisma.SortOrder
   vencimento?: Prisma.SortOrder
   pagoEm?: Prisma.SortOrderInput | Prisma.SortOrder
+  tipo?: Prisma.SortOrder
   recorrencia?: Prisma.SortOrder
   fornecedor?: Prisma.SortOrderInput | Prisma.SortOrder
   contratoId?: Prisma.SortOrderInput | Prisma.SortOrder
-  reembolsavel?: Prisma.SortOrder
+  quemPaga?: Prisma.SortOrder
+  cobradoEm?: Prisma.SortOrderInput | Prisma.SortOrder
   origem?: Prisma.SortOrder
   textoOriginal?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -378,10 +400,12 @@ export type DespesaScalarWhereWithAggregatesInput = {
   valor?: Prisma.DecimalWithAggregatesFilter<"Despesa"> | runtime.Decimal | runtime.DecimalJsLike | number | string
   vencimento?: Prisma.DateTimeWithAggregatesFilter<"Despesa"> | Date | string
   pagoEm?: Prisma.DateTimeNullableWithAggregatesFilter<"Despesa"> | Date | string | null
+  tipo?: Prisma.EnumTipoDespesaWithAggregatesFilter<"Despesa"> | $Enums.TipoDespesa
   recorrencia?: Prisma.EnumRecorrenciaWithAggregatesFilter<"Despesa"> | $Enums.Recorrencia
   fornecedor?: Prisma.StringNullableWithAggregatesFilter<"Despesa"> | string | null
   contratoId?: Prisma.StringNullableWithAggregatesFilter<"Despesa"> | string | null
-  reembolsavel?: Prisma.BoolWithAggregatesFilter<"Despesa"> | boolean
+  quemPaga?: Prisma.EnumQuemPagaWithAggregatesFilter<"Despesa"> | $Enums.QuemPaga
+  cobradoEm?: Prisma.DateTimeNullableWithAggregatesFilter<"Despesa"> | Date | string | null
   origem?: Prisma.EnumOrigemRegistroWithAggregatesFilter<"Despesa"> | $Enums.OrigemRegistro
   textoOriginal?: Prisma.StringNullableWithAggregatesFilter<"Despesa"> | string | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"Despesa"> | Date | string
@@ -396,9 +420,11 @@ export type DespesaCreateInput = {
   valor: runtime.Decimal | runtime.DecimalJsLike | number | string
   vencimento: Date | string
   pagoEm?: Date | string | null
+  tipo?: $Enums.TipoDespesa
   recorrencia?: $Enums.Recorrencia
   fornecedor?: string | null
-  reembolsavel?: boolean
+  quemPaga?: $Enums.QuemPaga
+  cobradoEm?: Date | string | null
   origem?: $Enums.OrigemRegistro
   textoOriginal?: string | null
   createdAt?: Date | string
@@ -414,10 +440,12 @@ export type DespesaUncheckedCreateInput = {
   valor: runtime.Decimal | runtime.DecimalJsLike | number | string
   vencimento: Date | string
   pagoEm?: Date | string | null
+  tipo?: $Enums.TipoDespesa
   recorrencia?: $Enums.Recorrencia
   fornecedor?: string | null
   contratoId?: string | null
-  reembolsavel?: boolean
+  quemPaga?: $Enums.QuemPaga
+  cobradoEm?: Date | string | null
   origem?: $Enums.OrigemRegistro
   textoOriginal?: string | null
   createdAt?: Date | string
@@ -431,9 +459,11 @@ export type DespesaUpdateInput = {
   valor?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   vencimento?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   pagoEm?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  tipo?: Prisma.EnumTipoDespesaFieldUpdateOperationsInput | $Enums.TipoDespesa
   recorrencia?: Prisma.EnumRecorrenciaFieldUpdateOperationsInput | $Enums.Recorrencia
   fornecedor?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  reembolsavel?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  quemPaga?: Prisma.EnumQuemPagaFieldUpdateOperationsInput | $Enums.QuemPaga
+  cobradoEm?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   origem?: Prisma.EnumOrigemRegistroFieldUpdateOperationsInput | $Enums.OrigemRegistro
   textoOriginal?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -449,10 +479,12 @@ export type DespesaUncheckedUpdateInput = {
   valor?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   vencimento?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   pagoEm?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  tipo?: Prisma.EnumTipoDespesaFieldUpdateOperationsInput | $Enums.TipoDespesa
   recorrencia?: Prisma.EnumRecorrenciaFieldUpdateOperationsInput | $Enums.Recorrencia
   fornecedor?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   contratoId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  reembolsavel?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  quemPaga?: Prisma.EnumQuemPagaFieldUpdateOperationsInput | $Enums.QuemPaga
+  cobradoEm?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   origem?: Prisma.EnumOrigemRegistroFieldUpdateOperationsInput | $Enums.OrigemRegistro
   textoOriginal?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -467,10 +499,12 @@ export type DespesaCreateManyInput = {
   valor: runtime.Decimal | runtime.DecimalJsLike | number | string
   vencimento: Date | string
   pagoEm?: Date | string | null
+  tipo?: $Enums.TipoDespesa
   recorrencia?: $Enums.Recorrencia
   fornecedor?: string | null
   contratoId?: string | null
-  reembolsavel?: boolean
+  quemPaga?: $Enums.QuemPaga
+  cobradoEm?: Date | string | null
   origem?: $Enums.OrigemRegistro
   textoOriginal?: string | null
   createdAt?: Date | string
@@ -484,9 +518,11 @@ export type DespesaUpdateManyMutationInput = {
   valor?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   vencimento?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   pagoEm?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  tipo?: Prisma.EnumTipoDespesaFieldUpdateOperationsInput | $Enums.TipoDespesa
   recorrencia?: Prisma.EnumRecorrenciaFieldUpdateOperationsInput | $Enums.Recorrencia
   fornecedor?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  reembolsavel?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  quemPaga?: Prisma.EnumQuemPagaFieldUpdateOperationsInput | $Enums.QuemPaga
+  cobradoEm?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   origem?: Prisma.EnumOrigemRegistroFieldUpdateOperationsInput | $Enums.OrigemRegistro
   textoOriginal?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -501,10 +537,12 @@ export type DespesaUncheckedUpdateManyInput = {
   valor?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   vencimento?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   pagoEm?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  tipo?: Prisma.EnumTipoDespesaFieldUpdateOperationsInput | $Enums.TipoDespesa
   recorrencia?: Prisma.EnumRecorrenciaFieldUpdateOperationsInput | $Enums.Recorrencia
   fornecedor?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   contratoId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  reembolsavel?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  quemPaga?: Prisma.EnumQuemPagaFieldUpdateOperationsInput | $Enums.QuemPaga
+  cobradoEm?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   origem?: Prisma.EnumOrigemRegistroFieldUpdateOperationsInput | $Enums.OrigemRegistro
   textoOriginal?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -529,10 +567,12 @@ export type DespesaCountOrderByAggregateInput = {
   valor?: Prisma.SortOrder
   vencimento?: Prisma.SortOrder
   pagoEm?: Prisma.SortOrder
+  tipo?: Prisma.SortOrder
   recorrencia?: Prisma.SortOrder
   fornecedor?: Prisma.SortOrder
   contratoId?: Prisma.SortOrder
-  reembolsavel?: Prisma.SortOrder
+  quemPaga?: Prisma.SortOrder
+  cobradoEm?: Prisma.SortOrder
   origem?: Prisma.SortOrder
   textoOriginal?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -552,10 +592,12 @@ export type DespesaMaxOrderByAggregateInput = {
   valor?: Prisma.SortOrder
   vencimento?: Prisma.SortOrder
   pagoEm?: Prisma.SortOrder
+  tipo?: Prisma.SortOrder
   recorrencia?: Prisma.SortOrder
   fornecedor?: Prisma.SortOrder
   contratoId?: Prisma.SortOrder
-  reembolsavel?: Prisma.SortOrder
+  quemPaga?: Prisma.SortOrder
+  cobradoEm?: Prisma.SortOrder
   origem?: Prisma.SortOrder
   textoOriginal?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -570,10 +612,12 @@ export type DespesaMinOrderByAggregateInput = {
   valor?: Prisma.SortOrder
   vencimento?: Prisma.SortOrder
   pagoEm?: Prisma.SortOrder
+  tipo?: Prisma.SortOrder
   recorrencia?: Prisma.SortOrder
   fornecedor?: Prisma.SortOrder
   contratoId?: Prisma.SortOrder
-  reembolsavel?: Prisma.SortOrder
+  quemPaga?: Prisma.SortOrder
+  cobradoEm?: Prisma.SortOrder
   origem?: Prisma.SortOrder
   textoOriginal?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -635,12 +679,16 @@ export type NullableDateTimeFieldUpdateOperationsInput = {
   set?: Date | string | null
 }
 
+export type EnumTipoDespesaFieldUpdateOperationsInput = {
+  set?: $Enums.TipoDespesa
+}
+
 export type EnumRecorrenciaFieldUpdateOperationsInput = {
   set?: $Enums.Recorrencia
 }
 
-export type BoolFieldUpdateOperationsInput = {
-  set?: boolean
+export type EnumQuemPagaFieldUpdateOperationsInput = {
+  set?: $Enums.QuemPaga
 }
 
 export type DespesaCreateWithoutContratoInput = {
@@ -651,9 +699,11 @@ export type DespesaCreateWithoutContratoInput = {
   valor: runtime.Decimal | runtime.DecimalJsLike | number | string
   vencimento: Date | string
   pagoEm?: Date | string | null
+  tipo?: $Enums.TipoDespesa
   recorrencia?: $Enums.Recorrencia
   fornecedor?: string | null
-  reembolsavel?: boolean
+  quemPaga?: $Enums.QuemPaga
+  cobradoEm?: Date | string | null
   origem?: $Enums.OrigemRegistro
   textoOriginal?: string | null
   createdAt?: Date | string
@@ -668,9 +718,11 @@ export type DespesaUncheckedCreateWithoutContratoInput = {
   valor: runtime.Decimal | runtime.DecimalJsLike | number | string
   vencimento: Date | string
   pagoEm?: Date | string | null
+  tipo?: $Enums.TipoDespesa
   recorrencia?: $Enums.Recorrencia
   fornecedor?: string | null
-  reembolsavel?: boolean
+  quemPaga?: $Enums.QuemPaga
+  cobradoEm?: Date | string | null
   origem?: $Enums.OrigemRegistro
   textoOriginal?: string | null
   createdAt?: Date | string
@@ -714,10 +766,12 @@ export type DespesaScalarWhereInput = {
   valor?: Prisma.DecimalFilter<"Despesa"> | runtime.Decimal | runtime.DecimalJsLike | number | string
   vencimento?: Prisma.DateTimeFilter<"Despesa"> | Date | string
   pagoEm?: Prisma.DateTimeNullableFilter<"Despesa"> | Date | string | null
+  tipo?: Prisma.EnumTipoDespesaFilter<"Despesa"> | $Enums.TipoDespesa
   recorrencia?: Prisma.EnumRecorrenciaFilter<"Despesa"> | $Enums.Recorrencia
   fornecedor?: Prisma.StringNullableFilter<"Despesa"> | string | null
   contratoId?: Prisma.StringNullableFilter<"Despesa"> | string | null
-  reembolsavel?: Prisma.BoolFilter<"Despesa"> | boolean
+  quemPaga?: Prisma.EnumQuemPagaFilter<"Despesa"> | $Enums.QuemPaga
+  cobradoEm?: Prisma.DateTimeNullableFilter<"Despesa"> | Date | string | null
   origem?: Prisma.EnumOrigemRegistroFilter<"Despesa"> | $Enums.OrigemRegistro
   textoOriginal?: Prisma.StringNullableFilter<"Despesa"> | string | null
   createdAt?: Prisma.DateTimeFilter<"Despesa"> | Date | string
@@ -732,9 +786,11 @@ export type DespesaCreateManyContratoInput = {
   valor: runtime.Decimal | runtime.DecimalJsLike | number | string
   vencimento: Date | string
   pagoEm?: Date | string | null
+  tipo?: $Enums.TipoDespesa
   recorrencia?: $Enums.Recorrencia
   fornecedor?: string | null
-  reembolsavel?: boolean
+  quemPaga?: $Enums.QuemPaga
+  cobradoEm?: Date | string | null
   origem?: $Enums.OrigemRegistro
   textoOriginal?: string | null
   createdAt?: Date | string
@@ -748,9 +804,11 @@ export type DespesaUpdateWithoutContratoInput = {
   valor?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   vencimento?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   pagoEm?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  tipo?: Prisma.EnumTipoDespesaFieldUpdateOperationsInput | $Enums.TipoDespesa
   recorrencia?: Prisma.EnumRecorrenciaFieldUpdateOperationsInput | $Enums.Recorrencia
   fornecedor?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  reembolsavel?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  quemPaga?: Prisma.EnumQuemPagaFieldUpdateOperationsInput | $Enums.QuemPaga
+  cobradoEm?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   origem?: Prisma.EnumOrigemRegistroFieldUpdateOperationsInput | $Enums.OrigemRegistro
   textoOriginal?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -765,9 +823,11 @@ export type DespesaUncheckedUpdateWithoutContratoInput = {
   valor?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   vencimento?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   pagoEm?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  tipo?: Prisma.EnumTipoDespesaFieldUpdateOperationsInput | $Enums.TipoDespesa
   recorrencia?: Prisma.EnumRecorrenciaFieldUpdateOperationsInput | $Enums.Recorrencia
   fornecedor?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  reembolsavel?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  quemPaga?: Prisma.EnumQuemPagaFieldUpdateOperationsInput | $Enums.QuemPaga
+  cobradoEm?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   origem?: Prisma.EnumOrigemRegistroFieldUpdateOperationsInput | $Enums.OrigemRegistro
   textoOriginal?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -782,9 +842,11 @@ export type DespesaUncheckedUpdateManyWithoutContratoInput = {
   valor?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   vencimento?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   pagoEm?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  tipo?: Prisma.EnumTipoDespesaFieldUpdateOperationsInput | $Enums.TipoDespesa
   recorrencia?: Prisma.EnumRecorrenciaFieldUpdateOperationsInput | $Enums.Recorrencia
   fornecedor?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  reembolsavel?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  quemPaga?: Prisma.EnumQuemPagaFieldUpdateOperationsInput | $Enums.QuemPaga
+  cobradoEm?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   origem?: Prisma.EnumOrigemRegistroFieldUpdateOperationsInput | $Enums.OrigemRegistro
   textoOriginal?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -801,10 +863,12 @@ export type DespesaSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs 
   valor?: boolean
   vencimento?: boolean
   pagoEm?: boolean
+  tipo?: boolean
   recorrencia?: boolean
   fornecedor?: boolean
   contratoId?: boolean
-  reembolsavel?: boolean
+  quemPaga?: boolean
+  cobradoEm?: boolean
   origem?: boolean
   textoOriginal?: boolean
   createdAt?: boolean
@@ -820,10 +884,12 @@ export type DespesaSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Exten
   valor?: boolean
   vencimento?: boolean
   pagoEm?: boolean
+  tipo?: boolean
   recorrencia?: boolean
   fornecedor?: boolean
   contratoId?: boolean
-  reembolsavel?: boolean
+  quemPaga?: boolean
+  cobradoEm?: boolean
   origem?: boolean
   textoOriginal?: boolean
   createdAt?: boolean
@@ -839,10 +905,12 @@ export type DespesaSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Exten
   valor?: boolean
   vencimento?: boolean
   pagoEm?: boolean
+  tipo?: boolean
   recorrencia?: boolean
   fornecedor?: boolean
   contratoId?: boolean
-  reembolsavel?: boolean
+  quemPaga?: boolean
+  cobradoEm?: boolean
   origem?: boolean
   textoOriginal?: boolean
   createdAt?: boolean
@@ -858,17 +926,19 @@ export type DespesaSelectScalar = {
   valor?: boolean
   vencimento?: boolean
   pagoEm?: boolean
+  tipo?: boolean
   recorrencia?: boolean
   fornecedor?: boolean
   contratoId?: boolean
-  reembolsavel?: boolean
+  quemPaga?: boolean
+  cobradoEm?: boolean
   origem?: boolean
   textoOriginal?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type DespesaOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "numero" | "descricao" | "categoria" | "valor" | "vencimento" | "pagoEm" | "recorrencia" | "fornecedor" | "contratoId" | "reembolsavel" | "origem" | "textoOriginal" | "createdAt" | "updatedAt", ExtArgs["result"]["despesa"]>
+export type DespesaOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "numero" | "descricao" | "categoria" | "valor" | "vencimento" | "pagoEm" | "tipo" | "recorrencia" | "fornecedor" | "contratoId" | "quemPaga" | "cobradoEm" | "origem" | "textoOriginal" | "createdAt" | "updatedAt", ExtArgs["result"]["despesa"]>
 export type DespesaInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   contrato?: boolean | Prisma.Despesa$contratoArgs<ExtArgs>
 }
@@ -892,10 +962,12 @@ export type $DespesaPayload<ExtArgs extends runtime.Types.Extensions.InternalArg
     valor: runtime.Decimal
     vencimento: Date
     pagoEm: Date | null
+    tipo: $Enums.TipoDespesa
     recorrencia: $Enums.Recorrencia
     fornecedor: string | null
     contratoId: string | null
-    reembolsavel: boolean
+    quemPaga: $Enums.QuemPaga
+    cobradoEm: Date | null
     origem: $Enums.OrigemRegistro
     textoOriginal: string | null
     createdAt: Date
@@ -1331,10 +1403,12 @@ export interface DespesaFieldRefs {
   readonly valor: Prisma.FieldRef<"Despesa", 'Decimal'>
   readonly vencimento: Prisma.FieldRef<"Despesa", 'DateTime'>
   readonly pagoEm: Prisma.FieldRef<"Despesa", 'DateTime'>
+  readonly tipo: Prisma.FieldRef<"Despesa", 'TipoDespesa'>
   readonly recorrencia: Prisma.FieldRef<"Despesa", 'Recorrencia'>
   readonly fornecedor: Prisma.FieldRef<"Despesa", 'String'>
   readonly contratoId: Prisma.FieldRef<"Despesa", 'String'>
-  readonly reembolsavel: Prisma.FieldRef<"Despesa", 'Boolean'>
+  readonly quemPaga: Prisma.FieldRef<"Despesa", 'QuemPaga'>
+  readonly cobradoEm: Prisma.FieldRef<"Despesa", 'DateTime'>
   readonly origem: Prisma.FieldRef<"Despesa", 'OrigemRegistro'>
   readonly textoOriginal: Prisma.FieldRef<"Despesa", 'String'>
   readonly createdAt: Prisma.FieldRef<"Despesa", 'DateTime'>

@@ -16,15 +16,32 @@ export interface ContratoExtraido {
 
 // O que sai do caixa. Espelha o modelo Despesa do schema, com os enums em
 // minúsculas como TipoPagamento já faz.
-export type CategoriaDespesa =
-  | "custas_processuais"
+//
+// A divisão é entre gasto DO PROCESSO (ida ao fórum, custas, diligência) — o
+// que come a margem de um caso — e gasto DO ESCRITÓRIO, que é custo fixo e
+// não pertence a caso nenhum.
+export type TipoDespesa = "processo" | "escritorio";
+
+export type CategoriaDespesaProcesso =
+  | "deslocamento"
+  | "custas"
   | "diligencia"
+  | "cartorio"
   | "pericia"
-  | "software"
+  | "correspondente"
+  | "outros_processo";
+
+export type CategoriaDespesaEscritorio =
   | "estrutura"
+  | "software"
   | "tributos"
   | "pessoal"
-  | "outros";
+  | "outros_escritorio";
+
+export type CategoriaDespesa = CategoriaDespesaProcesso | CategoriaDespesaEscritorio;
+
+/** Quem o contrato prevê que arca com o gasto. */
+export type QuemPaga = "cliente" | "advogado";
 
 export type Recorrencia = "unica" | "mensal" | "anual";
 
@@ -32,6 +49,7 @@ export type OrigemRegistro = "manual" | "upload" | "drive";
 
 export interface DespesaExtraida {
   descricao: string;
+  tipo: TipoDespesa;
   categoria: CategoriaDespesa;
   valor: number;
   vencimento: string; // ISO date

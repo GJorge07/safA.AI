@@ -3,8 +3,13 @@ import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { DespesaAcoes } from "@/components/dashboard/despesa-acoes";
-import { numeroDespesa, statusDaDespesa, type StatusDespesa } from "@/components/dashboard/types";
-import { obterDespesa, rotuloCategoria, rotuloRecorrencia } from "@/lib/db/despesas";
+import {
+  aguardandoReembolso,
+  numeroDespesa,
+  statusDaDespesa,
+  type StatusDespesa,
+} from "@/components/dashboard/types";
+import { obterDespesa, rotuloCategoria, rotuloRecorrencia, rotuloTipo } from "@/lib/db/despesas";
 
 export const dynamic = "force-dynamic";
 
@@ -36,6 +41,7 @@ export default async function DespesaDetalhePage({ params }: { params: Promise<{
   if (!despesa) notFound();
 
   const status = statusDaDespesa(despesa);
+  const reembolso = aguardandoReembolso(despesa);
 
   return (
     <div className="flex flex-col gap-6">
@@ -55,7 +61,8 @@ export default async function DespesaDetalhePage({ params }: { params: Promise<{
               <Badge variant={statusVariant[status]} dot>
                 {statusLabel[status]}
               </Badge>
-              {despesa.reembolsavel && <Badge variant="warning">reembolsável</Badge>}
+              <Badge variant="neutral">{rotuloTipo[despesa.tipo]}</Badge>
+              {reembolso && <Badge variant="warning">a reembolsar</Badge>}
             </div>
             <h1 className="mt-1 text-xl font-semibold">{despesa.descricao}</h1>
             <p className="text-sm text-muted-foreground">
@@ -68,12 +75,22 @@ export default async function DespesaDetalhePage({ params }: { params: Promise<{
             <div className="text-xs text-muted-foreground">vence em {data(despesa.vencimento)}</div>
           </div>
         </div>
-        <DespesaAcoes id={despesa.id} paga={status === "paga"} />
+        <DespesaAcoes id={despesa.id} paga={status === "paga"} aReembolsar={reembolso} />
       </div>
 
       <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <Campo rotulo="Recorrência" valor={rotuloRecorrencia[despesa.recorrencia]} />
         <Campo rotulo="Pagamento" valor={despesa.pagoEm ? `pago em ${data(despesa.pagoEm)}` : "em aberto"} />
+        <Campo
+          rotulo="Quem arca com o gasto"
+          valor={
+            despesa.quemPaga === "cliente"
+              ? despesa.cobradoEm
+                ? `cliente — cobrado em ${data(despesa.cobradoEm)}`
+                : "cliente — ainda não cobrado"
+              : "você (sai do seu bolso)"
+          }
+        />
         <Campo rotulo="Origem do registro" valor={rotuloOrigem[despesa.origem]} />
         <Campo rotulo="Lançada em" valor={data(despesa.createdAt)} />
         <div className="rounded-lg border border-border bg-card p-4">

@@ -216,6 +216,13 @@ export type DateTimeNullableFilter<$PrismaModel = never> = {
   not?: Prisma.NestedDateTimeNullableFilter<$PrismaModel> | Date | string | null
 }
 
+export type EnumTipoDespesaFilter<$PrismaModel = never> = {
+  equals?: $Enums.TipoDespesa | Prisma.EnumTipoDespesaFieldRefInput<$PrismaModel>
+  in?: $Enums.TipoDespesa[] | Prisma.ListEnumTipoDespesaFieldRefInput<$PrismaModel>
+  notIn?: $Enums.TipoDespesa[] | Prisma.ListEnumTipoDespesaFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumTipoDespesaFilter<$PrismaModel> | $Enums.TipoDespesa
+}
+
 export type EnumRecorrenciaFilter<$PrismaModel = never> = {
   equals?: $Enums.Recorrencia | Prisma.EnumRecorrenciaFieldRefInput<$PrismaModel>
   in?: $Enums.Recorrencia[] | Prisma.ListEnumRecorrenciaFieldRefInput<$PrismaModel>
@@ -223,9 +230,11 @@ export type EnumRecorrenciaFilter<$PrismaModel = never> = {
   not?: Prisma.NestedEnumRecorrenciaFilter<$PrismaModel> | $Enums.Recorrencia
 }
 
-export type BoolFilter<$PrismaModel = never> = {
-  equals?: boolean | Prisma.BooleanFieldRefInput<$PrismaModel>
-  not?: Prisma.NestedBoolFilter<$PrismaModel> | boolean
+export type EnumQuemPagaFilter<$PrismaModel = never> = {
+  equals?: $Enums.QuemPaga | Prisma.EnumQuemPagaFieldRefInput<$PrismaModel>
+  in?: $Enums.QuemPaga[] | Prisma.ListEnumQuemPagaFieldRefInput<$PrismaModel>
+  notIn?: $Enums.QuemPaga[] | Prisma.ListEnumQuemPagaFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumQuemPagaFilter<$PrismaModel> | $Enums.QuemPaga
 }
 
 export type EnumCategoriaDespesaWithAggregatesFilter<$PrismaModel = never> = {
@@ -252,6 +261,16 @@ export type DateTimeNullableWithAggregatesFilter<$PrismaModel = never> = {
   _max?: Prisma.NestedDateTimeNullableFilter<$PrismaModel>
 }
 
+export type EnumTipoDespesaWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.TipoDespesa | Prisma.EnumTipoDespesaFieldRefInput<$PrismaModel>
+  in?: $Enums.TipoDespesa[] | Prisma.ListEnumTipoDespesaFieldRefInput<$PrismaModel>
+  notIn?: $Enums.TipoDespesa[] | Prisma.ListEnumTipoDespesaFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumTipoDespesaWithAggregatesFilter<$PrismaModel> | $Enums.TipoDespesa
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumTipoDespesaFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumTipoDespesaFilter<$PrismaModel>
+}
+
 export type EnumRecorrenciaWithAggregatesFilter<$PrismaModel = never> = {
   equals?: $Enums.Recorrencia | Prisma.EnumRecorrenciaFieldRefInput<$PrismaModel>
   in?: $Enums.Recorrencia[] | Prisma.ListEnumRecorrenciaFieldRefInput<$PrismaModel>
@@ -262,12 +281,14 @@ export type EnumRecorrenciaWithAggregatesFilter<$PrismaModel = never> = {
   _max?: Prisma.NestedEnumRecorrenciaFilter<$PrismaModel>
 }
 
-export type BoolWithAggregatesFilter<$PrismaModel = never> = {
-  equals?: boolean | Prisma.BooleanFieldRefInput<$PrismaModel>
-  not?: Prisma.NestedBoolWithAggregatesFilter<$PrismaModel> | boolean
+export type EnumQuemPagaWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.QuemPaga | Prisma.EnumQuemPagaFieldRefInput<$PrismaModel>
+  in?: $Enums.QuemPaga[] | Prisma.ListEnumQuemPagaFieldRefInput<$PrismaModel>
+  notIn?: $Enums.QuemPaga[] | Prisma.ListEnumQuemPagaFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumQuemPagaWithAggregatesFilter<$PrismaModel> | $Enums.QuemPaga
   _count?: Prisma.NestedIntFilter<$PrismaModel>
-  _min?: Prisma.NestedBoolFilter<$PrismaModel>
-  _max?: Prisma.NestedBoolFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumQuemPagaFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumQuemPagaFilter<$PrismaModel>
 }
 
 export type NestedStringFilter<$PrismaModel = never> = {
@@ -485,6 +506,13 @@ export type NestedDateTimeNullableFilter<$PrismaModel = never> = {
   not?: Prisma.NestedDateTimeNullableFilter<$PrismaModel> | Date | string | null
 }
 
+export type NestedEnumTipoDespesaFilter<$PrismaModel = never> = {
+  equals?: $Enums.TipoDespesa | Prisma.EnumTipoDespesaFieldRefInput<$PrismaModel>
+  in?: $Enums.TipoDespesa[] | Prisma.ListEnumTipoDespesaFieldRefInput<$PrismaModel>
+  notIn?: $Enums.TipoDespesa[] | Prisma.ListEnumTipoDespesaFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumTipoDespesaFilter<$PrismaModel> | $Enums.TipoDespesa
+}
+
 export type NestedEnumRecorrenciaFilter<$PrismaModel = never> = {
   equals?: $Enums.Recorrencia | Prisma.EnumRecorrenciaFieldRefInput<$PrismaModel>
   in?: $Enums.Recorrencia[] | Prisma.ListEnumRecorrenciaFieldRefInput<$PrismaModel>
@@ -492,9 +520,11 @@ export type NestedEnumRecorrenciaFilter<$PrismaModel = never> = {
   not?: Prisma.NestedEnumRecorrenciaFilter<$PrismaModel> | $Enums.Recorrencia
 }
 
-export type NestedBoolFilter<$PrismaModel = never> = {
-  equals?: boolean | Prisma.BooleanFieldRefInput<$PrismaModel>
-  not?: Prisma.NestedBoolFilter<$PrismaModel> | boolean
+export type NestedEnumQuemPagaFilter<$PrismaModel = never> = {
+  equals?: $Enums.QuemPaga | Prisma.EnumQuemPagaFieldRefInput<$PrismaModel>
+  in?: $Enums.QuemPaga[] | Prisma.ListEnumQuemPagaFieldRefInput<$PrismaModel>
+  notIn?: $Enums.QuemPaga[] | Prisma.ListEnumQuemPagaFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumQuemPagaFilter<$PrismaModel> | $Enums.QuemPaga
 }
 
 export type NestedEnumCategoriaDespesaWithAggregatesFilter<$PrismaModel = never> = {
@@ -521,6 +551,16 @@ export type NestedDateTimeNullableWithAggregatesFilter<$PrismaModel = never> = {
   _max?: Prisma.NestedDateTimeNullableFilter<$PrismaModel>
 }
 
+export type NestedEnumTipoDespesaWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.TipoDespesa | Prisma.EnumTipoDespesaFieldRefInput<$PrismaModel>
+  in?: $Enums.TipoDespesa[] | Prisma.ListEnumTipoDespesaFieldRefInput<$PrismaModel>
+  notIn?: $Enums.TipoDespesa[] | Prisma.ListEnumTipoDespesaFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumTipoDespesaWithAggregatesFilter<$PrismaModel> | $Enums.TipoDespesa
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumTipoDespesaFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumTipoDespesaFilter<$PrismaModel>
+}
+
 export type NestedEnumRecorrenciaWithAggregatesFilter<$PrismaModel = never> = {
   equals?: $Enums.Recorrencia | Prisma.EnumRecorrenciaFieldRefInput<$PrismaModel>
   in?: $Enums.Recorrencia[] | Prisma.ListEnumRecorrenciaFieldRefInput<$PrismaModel>
@@ -531,12 +571,14 @@ export type NestedEnumRecorrenciaWithAggregatesFilter<$PrismaModel = never> = {
   _max?: Prisma.NestedEnumRecorrenciaFilter<$PrismaModel>
 }
 
-export type NestedBoolWithAggregatesFilter<$PrismaModel = never> = {
-  equals?: boolean | Prisma.BooleanFieldRefInput<$PrismaModel>
-  not?: Prisma.NestedBoolWithAggregatesFilter<$PrismaModel> | boolean
+export type NestedEnumQuemPagaWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.QuemPaga | Prisma.EnumQuemPagaFieldRefInput<$PrismaModel>
+  in?: $Enums.QuemPaga[] | Prisma.ListEnumQuemPagaFieldRefInput<$PrismaModel>
+  notIn?: $Enums.QuemPaga[] | Prisma.ListEnumQuemPagaFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumQuemPagaWithAggregatesFilter<$PrismaModel> | $Enums.QuemPaga
   _count?: Prisma.NestedIntFilter<$PrismaModel>
-  _min?: Prisma.NestedBoolFilter<$PrismaModel>
-  _max?: Prisma.NestedBoolFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumQuemPagaFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumQuemPagaFilter<$PrismaModel>
 }
 
 
