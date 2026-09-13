@@ -126,6 +126,7 @@ export const contratoFinanceiroSchema = z.object({
   cliente: z.string().min(1),
   tipoPagamento: z.enum(["fixo", "exito", "misto"]),
   valorTotal: z.number().nonnegative().nullable(),
+  clausulaOriginal: z.string().min(1),
   parcelas: z.array(parcelaFinanceiraSchema),
 });
 
@@ -158,6 +159,45 @@ export const respostaFinanceiraSchema = z.object({
 });
 
 export type RespostaFinanceira = z.infer<typeof respostaFinanceiraSchema>;
+
+// Avaliação qualitativa de um contrato para o advogado (risco financeiro,
+// completude jurídica da cláusula e comparação com a carteira dele).
+export const opiniaoContratoSchema = z.object({
+  classificacao: z.enum(["favoravel", "atencao", "desfavoravel"]),
+  resumo: z.string().min(1),
+  pontosFortes: z.array(z.string().min(1)),
+  riscos: z.array(z.object({
+    categoria: z.enum(["financeiro", "juridico", "carteira"]),
+    descricao: z.string().min(1),
+  })),
+  recomendacao: z.string().min(1),
+});
+
+export type OpiniaoContrato = z.infer<typeof opiniaoContratoSchema>;
+
+export const opiniaoContratoJsonSchema = {
+  type: "object",
+  additionalProperties: false,
+  properties: {
+    classificacao: { type: "string", enum: ["favoravel", "atencao", "desfavoravel"] },
+    resumo: { type: "string" },
+    pontosFortes: { type: "array", items: { type: "string" } },
+    riscos: {
+      type: "array",
+      items: {
+        type: "object",
+        additionalProperties: false,
+        properties: {
+          categoria: { type: "string", enum: ["financeiro", "juridico", "carteira"] },
+          descricao: { type: "string" },
+        },
+        required: ["categoria", "descricao"],
+      },
+    },
+    recomendacao: { type: "string" },
+  },
+  required: ["classificacao", "resumo", "pontosFortes", "riscos", "recomendacao"],
+} as const;
 
 export const respostaFinanceiraJsonSchema = {
   type: "object",

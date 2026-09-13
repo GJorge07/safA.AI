@@ -4,10 +4,9 @@ import { useEffect, useRef, useState } from "react";
 import { AlertTriangle, ArrowUp, Loader2, MessageCircle, Plus, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { gerarTitulo, salvarConversa, obterConversa, type MensagemConversa } from "./conversas";
-import type { ContratoComRelacoes } from "./types";
 
 interface ChatPanelProps {
-  contratos: ContratoComRelacoes[];
+  temContratos: boolean;
   perguntaInicial?: string;
   conversaId?: string;
 }
@@ -18,8 +17,15 @@ const EXEMPLOS = [
   "Compare o contrato da Construtora Alvorada com o do João Pereira",
 ];
 
-// Envia ao chat o mesmo conjunto de contratos apresentado no dashboard.
-export function ChatPanel({ contratos, perguntaInicial, conversaId }: ChatPanelProps) {
+const ROTULO_CLASSIFICACAO = {
+  favoravel: "favorável",
+  atencao: "atenção",
+  desfavoravel: "desfavorável",
+};
+
+// O contexto financeiro é montado pelo servidor a partir do banco; daqui sobe
+// apenas a pergunta.
+export function ChatPanel({ temContratos, perguntaInicial, conversaId }: ChatPanelProps) {
   const idRef = useRef(conversaId ?? crypto.randomUUID());
   const [mensagens, setMensagens] = useState<MensagemConversa[]>(() => {
     if (conversaId) return obterConversa(conversaId)?.mensagens ?? [];
@@ -33,12 +39,12 @@ export function ChatPanel({ contratos, perguntaInicial, conversaId }: ChatPanelP
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (perguntaInicial && !jaEnviouInicial.current && contratos.length > 0) {
+    if (perguntaInicial && !jaEnviouInicial.current && temContratos) {
       jaEnviouInicial.current = true;
       enviar(perguntaInicial);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [perguntaInicial, contratos.length]);
+  }, [perguntaInicial, temContratos]);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
@@ -55,7 +61,7 @@ export function ChatPanel({ contratos, perguntaInicial, conversaId }: ChatPanelP
     });
   }
 
-  if (contratos.length === 0) {
+  if (!temContratos) {
     return (
       <div className="flex h-full flex-col items-center justify-center gap-2 text-center">
         <MessageCircle className="h-6 w-6 text-muted-foreground" aria-hidden="true" />
@@ -82,31 +88,7 @@ export function ChatPanel({ contratos, perguntaInicial, conversaId }: ChatPanelP
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          pergunta: texto,
-          dados: {
-            dataReferencia: new Date().toISOString().slice(0, 10),
-            resumo: contratos.flatMap(c => c.parcelas).reduce((total, p) => {
-              const recebido = p.pagamento?.valorPago ?? 0;
-              const saldo = Math.max(0, p.valor - recebido);
-              return {
-                previsto: total.previsto + p.valor,
-                recebido: total.recebido + recebido,
-                pendente: total.pendente + saldo,
-                atrasado: total.atrasado + (p.vencimento.toISOString().slice(0, 10) < new Date().toISOString().slice(0, 10) ? saldo : 0),
-              };
-            }, { previsto: 0, recebido: 0, pendente: 0, atrasado: 0 }),
-            contratos: contratos.map(c => ({
-              id: c.id, clienteId: c.clienteId, cliente: c.cliente.nome,
-              tipoPagamento: c.tipoPagamento, valorTotal: c.valorTotal,
-              parcelas: c.parcelas.map(p => ({
-                id: p.id, valor: p.valor, vencimento: p.vencimento.toISOString().slice(0, 10),
-                status: (p.pagamento?.valorPago ?? 0) >= p.valor ? 'paga'
-                  : p.vencimento.toISOString().slice(0, 10) < new Date().toISOString().slice(0, 10) ? 'atrasada' : 'prevista',
-              })),
-            })),
-          },
-        }),
+        body: JSON.stringify({ pergunta: texto }),
       });
       if (!res.ok) throw new Error("Falha na resposta");
       const data = await res.json();
@@ -122,31 +104,43 @@ export function ChatPanel({ contratos, perguntaInicial, conversaId }: ChatPanelP
     }
   }
 
-  // TODO(ia): reaproveitar o pipeline real de extração (o mesmo de
-  // components/dashboard/upload-contrato.tsx) quando app/api/contratos
-  // existir de verdade — aqui é uma simulação para o anexo funcionar ponta
-  // a ponta no chat.
-  function anexarArquivo(arquivo: File | undefined) {
+  async function anexarArquivo(arquivo: File | undefined) {
     if (!arquivo) return;
     setErro(false);
-    setMensagens((atuais) => [...atuais, { autor: "usuario", texto: `📎 ${arquivo.name}` }]);
+    setMensagens((atuais) => {
+      const comArquivo = [...atuais, { autor: "usuario", texto: `📎 ${arquivo.name}` } as MensagemConversa];
+      persistir(comArquivo);
+      return comArquivo;
+    });
     setCarregando(true);
-    setTimeout(() => {
+    try {
+      const formData = new FormData();
+      formData.append("file", arquivo);
+      const res = await fetch("/api/contratos/importar", { method: "POST", body: formData });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.erro ?? "Falha ao processar o arquivo.");
+
+      const opiniaoTexto = data.opiniao
+        ? `\n\nOpinião (${ROTULO_CLASSIFICACAO[data.opiniao.classificacao as keyof typeof ROTULO_CLASSIFICACAO]}): ${data.opiniao.resumo} ${data.opiniao.recomendacao}`
+        : "";
+      const texto = data.payloadBackend
+        ? `Li o contrato e extraí: cliente ${data.payloadBackend.cliente}, pagamento ${data.payloadBackend.tipoPagamento}, ` +
+          `${data.payloadBackend.valorTotal.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })} em ` +
+          `${data.payloadBackend.parcelas.length} parcela(s). Quer conferir a cláusula original na aba Contratos?${opiniaoTexto}`
+        : `Consegui ler o arquivo, mas a extração precisa de revisão manual: ${
+            (data.motivosRevisao ?? []).join("; ") || "dados insuficientes para confirmar automaticamente."
+          }${opiniaoTexto}`;
+
       setMensagens((atuais) => {
-        const comResposta: MensagemConversa[] = [
-          ...atuais,
-          {
-            autor: "assistente",
-            texto:
-              `Li o contrato e extraí: cliente Construtora Alvorada Ltda., pagamento misto, ` +
-              `R$ 45.000 em 3 parcelas de R$ 15.000. Quer conferir a cláusula original na aba Contratos?`,
-          },
-        ];
+        const comResposta: MensagemConversa[] = [...atuais, { autor: "assistente", texto }];
         persistir(comResposta);
         return comResposta;
       });
+    } catch {
+      setErro(true);
+    } finally {
       setCarregando(false);
-    }, 1400);
+    }
   }
 
   const semMensagens = mensagens.length === 0;
