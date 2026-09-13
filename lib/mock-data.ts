@@ -5,13 +5,41 @@
 import type { ContratoComRelacoes } from "@/components/dashboard/types";
 import type { FluxoCaixaMes, Insight } from "./types";
 
-const cliente1 = { id: "cli1", nome: "Construtora Alvorada Ltda.", createdAt: new Date("2026-01-10") };
-const cliente2 = { id: "cli2", nome: "João Pereira", createdAt: new Date("2026-02-02") };
-const cliente3 = { id: "cli3", nome: "Mercado Bom Preço S.A.", createdAt: new Date("2026-03-15") };
+// Documentos e contatos são fictícios — servem só para a tela de cobrança ter
+// o que mostrar na demonstração.
+const cliente1 = {
+  id: "cli1",
+  nome: "Construtora Alvorada Ltda.",
+  documento: "12.345.678/0001-90",
+  email: "financeiro@alvorada.exemplo.br",
+  telefone: "(41) 3333-1010",
+  createdAt: new Date("2026-01-10"),
+};
+const cliente2 = {
+  id: "cli2",
+  nome: "João Pereira",
+  documento: "123.456.789-00",
+  email: "joao.pereira@exemplo.br",
+  telefone: "(41) 99888-2020",
+  createdAt: new Date("2026-02-02"),
+};
+const cliente3 = {
+  id: "cli3",
+  nome: "Mercado Bom Preço S.A.",
+  documento: "98.765.432/0001-10",
+  email: "contas@bompreco.exemplo.br",
+  telefone: "(41) 3555-3030",
+  createdAt: new Date("2026-03-15"),
+};
+
+const origemPadrao = { origem: "manual", arquivoNome: null, processo: null } as const;
 
 export const contratosMock: ContratoComRelacoes[] = [
   {
     id: "c1",
+    numero: 1,
+    titulo: "Assessoria contratual — obra Batel",
+    ...origemPadrao,
     clienteId: cliente1.id,
     cliente: cliente1,
     tipoPagamento: "misto",
@@ -27,6 +55,9 @@ export const contratosMock: ContratoComRelacoes[] = [
   },
   {
     id: "c2",
+    numero: 2,
+    titulo: "Reclamatória trabalhista",
+    ...origemPadrao,
     clienteId: cliente2.id,
     cliente: cliente2,
     tipoPagamento: "exito",
@@ -40,6 +71,9 @@ export const contratosMock: ContratoComRelacoes[] = [
   },
   {
     id: "c3",
+    numero: 3,
+    titulo: "Defesa em ação de consumo",
+    ...origemPadrao,
     clienteId: cliente3.id,
     cliente: cliente3,
     tipoPagamento: "fixo",
@@ -53,6 +87,9 @@ export const contratosMock: ContratoComRelacoes[] = [
   },
   {
     id: "c4",
+    numero: 4,
+    titulo: "Parecer societário",
+    ...origemPadrao,
     clienteId: cliente1.id,
     cliente: cliente1,
     tipoPagamento: "fixo",

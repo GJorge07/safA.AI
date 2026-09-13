@@ -175,6 +175,71 @@ export const opiniaoContratoSchema = z.object({
 
 export type OpiniaoContrato = z.infer<typeof opiniaoContratoSchema>;
 
+// Leitura de recibo/nota para virar um RASCUNHO de despesa. Tudo é anulável
+// porque comprovante é um documento bagunçado — o advogado completa o que
+// faltar antes de confirmar o lançamento.
+export const extracaoDespesaSchema = z.object({
+  descricao: z.string().min(1).nullable(),
+  categoria: z
+    .enum([
+      "custas_processuais",
+      "diligencia",
+      "pericia",
+      "software",
+      "estrutura",
+      "tributos",
+      "pessoal",
+      "outros",
+    ])
+    .nullable(),
+  valor: z.number().nonnegative().nullable(),
+  vencimento: z.string().regex(isoDate).nullable(),
+  fornecedor: z.string().min(1).nullable(),
+  textoOriginal: z.string().min(1).nullable(),
+  confianca: z.number().min(0).max(1),
+  avisos: z.array(z.string().min(1)),
+});
+
+export type ExtracaoDespesa = z.infer<typeof extracaoDespesaSchema>;
+
+const CATEGORIAS_DESPESA = [
+  "custas_processuais",
+  "diligencia",
+  "pericia",
+  "software",
+  "estrutura",
+  "tributos",
+  "pessoal",
+  "outros",
+] as const;
+
+export const extracaoDespesaJsonSchema = {
+  type: "object",
+  additionalProperties: false,
+  properties: {
+    descricao: { type: ["string", "null"] },
+    categoria: {
+      anyOf: [{ type: "string", enum: CATEGORIAS_DESPESA }, { type: "null" }],
+    },
+    valor: { type: ["number", "null"], minimum: 0 },
+    vencimento: { type: ["string", "null"] },
+    fornecedor: { type: ["string", "null"] },
+    textoOriginal: { type: ["string", "null"] },
+    confianca: { type: "number", minimum: 0, maximum: 1 },
+    avisos: { type: "array", items: { type: "string" } },
+  },
+  required: [
+    "descricao",
+    "categoria",
+    "valor",
+    "vencimento",
+    "fornecedor",
+    "textoOriginal",
+    "confianca",
+    "avisos",
+  ],
+} as const;
+
 export const opiniaoContratoJsonSchema = {
   type: "object",
   additionalProperties: false,

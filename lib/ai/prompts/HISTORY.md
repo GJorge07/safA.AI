@@ -6,6 +6,14 @@
 - Padroniza caminhos dos campos para validação automática.
 - Inclui página e cláusula e rejeita referência não localizada no documento.
 
+## expense-extraction-v1 — 13/09/2026
+
+- Primeira versão da leitura de recibo/nota/guia para lançar despesa.
+- Todo campo ausente vem null com o motivo em avisos: comprovante é documento
+  bagunçado, e palpite em valor ou vencimento vira lançamento errado.
+- Exige textoOriginal literal, mesmo papel de clausulaOriginal no contrato — o
+  resultado é rascunho e só o advogado confirma a gravação.
+
 ## contract-opinion-v1 — 12/09/2026
 
 - Primeira versão da opinião automática do contrato para o advogado.

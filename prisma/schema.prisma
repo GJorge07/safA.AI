@@ -11,6 +11,12 @@ datasource db {
 model Cliente {
   id        String     @id @default(cuid())
   nome      String
+
+  // Contato — o que a tela de cobrança precisa para responder "de quem é o atraso".
+  documento String?
+  email     String?
+  telefone  String?
+
   contratos Contrato[]
   createdAt DateTime   @default(now())
 }
@@ -20,12 +26,21 @@ model Contrato {
   cliente          Cliente   @relation(fields: [clienteId], references: [id], onDelete: Cascade)
   clienteId        String
 
+  // Número curto para o advogado citar numa cobrança — ninguém lê um cuid().
+  numero           Int       @default(autoincrement()) @unique
+  titulo           String?
+  processo         String?
+
   tipoPagamento    TipoPagamento
   valorTotal       Decimal   @db.Decimal(14, 2)
 
   clausulaOriginal String
 
+  origem           OrigemRegistro @default(MANUAL)
+  arquivoNome      String?
+
   parcelas         Parcela[]
+  despesas         Despesa[]
 
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
@@ -62,8 +77,61 @@ model Pagamento {
   createdAt  DateTime @default(now())
 }
 
+// O que sai. Tabela própria de propósito: Pagamento é 1-para-1 com Parcela e
+// significa "recebi" — sobrecarregá-lo com saídas quebraria o fluxo de caixa.
+model Despesa {
+  id            String   @id @default(cuid())
+  numero        Int      @default(autoincrement()) @unique
+
+  descricao     String
+  categoria     CategoriaDespesa
+  valor         Decimal  @db.Decimal(14, 2)
+  vencimento    DateTime
+  pagoEm        DateTime?
+
+  recorrencia   Recorrencia @default(UNICA)
+  fornecedor    String?
+
+  // Despesa reembolsável amarrada a um caso (custas, perícia, diligência).
+  contrato      Contrato? @relation(fields: [contratoId], references: [id], onDelete: SetNull)
+  contratoId    String?
+  reembolsavel  Boolean  @default(false)
+
+  origem        OrigemRegistro @default(MANUAL)
+  textoOriginal String?
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([vencimento])
+  @@index([contratoId])
+}
+
 enum TipoPagamento {
   FIXO
   EXITO
   MISTO
+}
+
+enum CategoriaDespesa {
+  CUSTAS_PROCESSUAIS
+  DILIGENCIA
+  PERICIA
+  SOFTWARE
+  ESTRUTURA
+  TRIBUTOS
+  PESSOAL
+  OUTROS
+}
+
+enum Recorrencia {
+  UNICA
+  MENSAL
+  ANUAL
+}
+
+enum OrigemRegistro {
+  MANUAL
+  UPLOAD
+  DRIVE
 }

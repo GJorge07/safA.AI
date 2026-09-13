@@ -37,3 +37,8 @@ export type Parcela = Prisma.ParcelaModel
  * 
  */
 export type Pagamento = Prisma.PagamentoModel
+/**
+ * Model Despesa
+ * 
+ */
+export type Despesa = Prisma.DespesaModel
