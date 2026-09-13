@@ -23,7 +23,7 @@ const config: runtime.GetPrismaClientConfig = {
       "value": "prisma-client"
     },
     "output": {
-      "value": "/home/joaoemanuel/Área de trabalho/HackathonOAB/safa2/safA.AI/app/generated/prisma",
+      "value": "/home/guilherme/SAFA/safa-ai/app/generated/prisma",
       "fromEnvVar": null
     },
     "config": {
@@ -37,7 +37,7 @@ const config: runtime.GetPrismaClientConfig = {
       }
     ],
     "previewFeatures": [],
-    "sourceFilePath": "/home/joaoemanuel/Área de trabalho/HackathonOAB/safa2/safA.AI/prisma/schema.prisma",
+    "sourceFilePath": "/home/guilherme/SAFA/safa-ai/prisma/schema.prisma",
     "isCustomOutput": true
   },
   "relativePath": "../../../prisma",
@@ -47,6 +47,7 @@ const config: runtime.GetPrismaClientConfig = {
     "db"
   ],
   "activeProvider": "postgresql",
+  "postinstall": false,
   "inlineDatasources": {
     "db": {
       "url": {
