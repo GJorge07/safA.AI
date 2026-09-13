@@ -1,7 +1,9 @@
 "use client";
 
+import { OpiniaoDetalhada, SeloClassificacao } from "./opiniao-contrato";
+
 import { useRef, useState } from "react";
-import { AlertTriangle, CheckCircle2, FileText, FolderOpen, Loader2, ShieldAlert, ShieldCheck, ShieldQuestion, Upload } from "lucide-react";
+import { AlertTriangle, CheckCircle2, FileText, FolderOpen, Loader2, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import type { ContratoExtraido } from "@/lib/types";
@@ -18,12 +20,6 @@ interface ItemFila {
   opiniao?: OpiniaoContrato | null;
   mensagemErro?: string;
 }
-
-const CLASSIFICACAO_ESTILO: Record<OpiniaoContrato["classificacao"], { rotulo: string; classe: string; Icone: typeof ShieldCheck }> = {
-  favoravel: { rotulo: "Favorável", classe: "text-success", Icone: ShieldCheck },
-  atencao: { rotulo: "Atenção", classe: "text-warning", Icone: ShieldQuestion },
-  desfavoravel: { rotulo: "Desfavorável", classe: "text-destructive", Icone: ShieldAlert },
-};
 
 export function UploadContrato() {
   const [fila, setFila] = useState<ItemFila[]>([]);
@@ -50,6 +46,7 @@ export function UploadContrato() {
 
       const data = await res.json();
       if (!res.ok) throw new Error(data?.erro ?? "Não foi possível processar o arquivo.");
+      setFila((f) => f.map((it) => it.id === id ? { ...it, opiniao: data.opiniao ?? null } : it));
       if (!data.payloadBackend) {
         const motivos: string[] = data.motivosRevisao ?? [];
         throw new Error(
@@ -109,7 +106,7 @@ export function UploadContrato() {
         <input
           ref={inputRef}
           type="file"
-          accept=".pdf,.docx"
+          accept=".pdf,.docx,.txt,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain"
           className="hidden"
           onChange={(e) => handleFile(e.target.files?.[0])}
         />
@@ -165,7 +162,7 @@ export function UploadContrato() {
                     variant="ghost"
                     onClick={() => setAbertoId(abertoId === item.id ? null : item.id)}
                   >
-                    {abertoId === item.id ? "Ocultar" : "Ver cláusula"}
+                    {abertoId === item.id ? "Ocultar" : "Ver avaliação"}
                   </Button>
                 )}
                 {item.status === "erro" && (
@@ -178,6 +175,8 @@ export function UploadContrato() {
               {item.status === "enviando" && (
                 <Progress value={item.progresso} className="mt-2" />
               )}
+
+              {item.status === "erro" && item.opiniao && <OpiniaoDetalhada opiniao={item.opiniao} />}
 
               {item.status === "erro" && item.mensagemErro && (
                 <p className="mt-2 text-xs text-destructive">{item.mensagemErro}</p>
@@ -192,65 +191,13 @@ export function UploadContrato() {
                     </p>
                     <p className="italic text-muted-foreground">&ldquo;{item.extraido.clausulaOriginal}&rdquo;</p>
                   </div>
-                  {item.opiniao && <OpiniaoDetalhada opiniao={item.opiniao} />}
+                  {item.opiniao ? <OpiniaoDetalhada opiniao={item.opiniao} /> : <p className="text-xs text-warning">Contrato salvo, mas a avaliação está indisponível no momento.</p>}
                 </div>
               )}
             </li>
           ))}
         </ul>
       )}
-    </div>
-  );
-}
-
-function SeloClassificacao({ classificacao }: { classificacao: OpiniaoContrato["classificacao"] }) {
-  const { Icone, rotulo, classe } = CLASSIFICACAO_ESTILO[classificacao];
-  return (
-    <span className={`flex shrink-0 items-center gap-1 text-xs font-medium ${classe}`}>
-      <Icone className="h-3.5 w-3.5" aria-hidden="true" />
-      {rotulo}
-    </span>
-  );
-}
-
-const CATEGORIA_ROTULO: Record<OpiniaoContrato["riscos"][number]["categoria"], string> = {
-  financeiro: "Financeiro",
-  juridico: "Jurídico",
-  carteira: "Carteira",
-};
-
-function OpiniaoDetalhada({ opiniao }: { opiniao: OpiniaoContrato }) {
-  return (
-    <div className="rounded-md border border-border p-3 text-xs">
-      <div className="mb-2 flex items-center gap-2">
-        <SeloClassificacao classificacao={opiniao.classificacao} />
-        <span className="text-muted-foreground">Opinião da IA para o advogado</span>
-      </div>
-      <p className="mb-2 text-foreground">{opiniao.resumo}</p>
-
-      {opiniao.pontosFortes.length > 0 && (
-        <ul className="mb-2 flex flex-col gap-1">
-          {opiniao.pontosFortes.map((ponto, i) => (
-            <li key={i} className="flex gap-1.5 text-success">
-              <span aria-hidden="true">+</span>
-              <span className="text-foreground">{ponto}</span>
-            </li>
-          ))}
-        </ul>
-      )}
-
-      {opiniao.riscos.length > 0 && (
-        <ul className="mb-2 flex flex-col gap-1">
-          {opiniao.riscos.map((risco, i) => (
-            <li key={i} className="flex gap-1.5">
-              <span className="shrink-0 font-medium text-warning">[{CATEGORIA_ROTULO[risco.categoria]}]</span>
-              <span className="text-foreground">{risco.descricao}</span>
-            </li>
-          ))}
-        </ul>
-      )}
-
-      <p className="border-t border-border pt-2 font-medium text-foreground">{opiniao.recomendacao}</p>
     </div>
   );
 }

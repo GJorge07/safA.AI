@@ -1,3 +1,6 @@
+import { perguntaDeOpiniao, responderOpiniaoLocal } from "./contract-assessment";
+import { responderConsultaMensal } from "./monthly-finance";
+import { prepararConsultaFinanceira } from "./financial-privacy";
 import { getGeminiClient, getGeminiModel } from "./gemini";
 import { financialChatPrompt } from "./prompts";
 import {
@@ -60,11 +63,21 @@ export async function answerFinancialQuestion(
   input: unknown,
 ): Promise<RespostaFinanceira> {
   const context = contextoFinanceiroSchema.parse(input);
+  const mensal = responderConsultaMensal(context.pergunta, context.dados, context.contratoReferencia);
+  if (mensal) return mensal;
+  // Opiniões nunca seguem para geração livre, mesmo se este módulo for chamado
+  // diretamente pelo fluxo financeiro, fora da rota HTTP.
+  if (perguntaDeOpiniao(context.pergunta)) return responderOpiniaoLocal(context.pergunta, context.dados.contratos, context.contratoReferencia);
+  const protegido = prepararConsultaFinanceira(context.pergunta, context.dados);
+  const indiceReferencia = context.dados.contratos.findIndex(c => c.id === context.contratoReferencia);
+  if (context.contratoReferencia && indiceReferencia < 0) throw new Error("Contrato de referência inexistente.");
+  const referencia = indiceReferencia >= 0 ? `Contrato_${indiceReferencia + 1}` : "Carteira completa";
   const ai = getGeminiClient();
 
   const interaction = await ai.interactions.create({
     model: getGeminiModel(),
-    input: `${financialChatPrompt}\n\nPERGUNTA_DO_USUARIO:\n${context.pergunta}\n\n<DADOS_DO_BACKEND>\n${JSON.stringify(context.dados, null, 2)}\n</DADOS_DO_BACKEND>`,
+    store: false,
+    input: `${financialChatPrompt}\n\nCONTRATO_DE_REFERENCIA: ${referencia}\n\nPERGUNTA_DO_USUARIO:\n${protegido.pergunta}\n\n<DADOS_DO_BACKEND>\n${JSON.stringify(protegido.dados, null, 2)}\n</DADOS_DO_BACKEND>`,
     response_format: {
       type: "text",
       mime_type: "application/json",
@@ -77,8 +90,5 @@ export async function answerFinancialQuestion(
   }
 
   const answer = respostaFinanceiraSchema.parse(JSON.parse(interaction.output_text));
-  return validateAnswerContractCitations(
-    answer,
-    context.dados,
-  );
+  return protegido.restaurarResposta(validateAnswerContractCitations(answer, protegido.dados));
 }

@@ -1,5 +1,7 @@
 "use client";
 
+import { EstimativaEsforco } from "./estimativa-esforco";
+import { temEstimativaEsforco, type ContextoEsforco } from "@/lib/ai/case-effort";
 import { useEffect, useRef, useState } from "react";
 import { AlertTriangle, ArrowUp, Loader2, MessageCircle, Plus, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -14,7 +16,7 @@ interface ChatPanelProps {
 const EXEMPLOS = [
   "Quanto vou receber em outubro?",
   "Qual cliente está mais atrasado?",
-  "Compare o contrato da Construtora Alvorada com o do João Pereira",
+  "Quais contratos são vantajosos e quais exigem atenção?",
 ];
 
 const ROTULO_CLASSIFICACAO = {
@@ -31,12 +33,36 @@ export function ChatPanel({ temContratos, perguntaInicial, conversaId }: ChatPan
     if (conversaId) return obterConversa(conversaId)?.mensagens ?? [];
     return [];
   });
+  const [carregandoContexto, setCarregandoContexto] = useState(false);
+  const [avisoContexto, setAvisoContexto] = useState("");
+  const [estimativa, setEstimativa] = useState<ContextoEsforco>({ fatores: [] });
+  const [contratoId, setContratoId] = useState("");
+  const [contratos, setContratos] = useState<{ id: string; cliente: { nome: string } }[]>([]);
   const [pergunta, setPergunta] = useState("");
   const [carregando, setCarregando] = useState(false);
-  const [erro, setErro] = useState(false);
+  const [erro, setErro] = useState<string | null>(null);
   const jaEnviouInicial = useRef(false);
   const inputArquivoRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    let ativo = true;
+    if (temContratos) fetch("/api/contratos/opcoes").then(res => res.ok ? res.json() : null).then(data => {
+      if (ativo && Array.isArray(data)) setContratos(data);
+    }).catch(() => {});
+    return () => { ativo = false; };
+  }, [temContratos]);
+
+  useEffect(() => {
+    if (!contratoId) return;
+    let ativo = true;
+    fetch(`/api/contratos/${encodeURIComponent(contratoId)}/opiniao`, { cache: "no-store" }).then(async res => {
+      if (!res.ok) throw new Error();
+      const dados = await res.json();
+      if (ativo) { setEstimativa(dados.contextoSugerido ?? { fatores: [] }); setCarregandoContexto(false); }
+    }).catch(() => { if (ativo) { setCarregandoContexto(false); setAvisoContexto("Não foi possível preencher as estimativas do contrato. Você pode completar os campos manualmente."); } });
+    return () => { ativo = false; };
+  }, [contratoId]);
 
   useEffect(() => {
     if (perguntaInicial && !jaEnviouInicial.current && temContratos) {
@@ -73,10 +99,10 @@ export function ChatPanel({ temContratos, perguntaInicial, conversaId }: ChatPan
     );
   }
 
-  async function enviar(textoParam?: string) {
+  async function enviar(textoParam?: string, modo: "conversa" | "opiniao" = "conversa") {
     const texto = (textoParam ?? pergunta).trim();
-    if (!texto || carregando) return;
-    setErro(false);
+    if (!texto || carregando || carregandoContexto) return;
+    setErro(null);
     setPergunta("");
     setCarregando(true);
     setMensagens((atuais) => {
@@ -88,17 +114,17 @@ export function ChatPanel({ temContratos, perguntaInicial, conversaId }: ChatPan
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ pergunta: texto }),
+        body: JSON.stringify({ pergunta: texto, contratoId: contratoId || undefined, modo, contextoEsforco: contratoId && temEstimativaEsforco(estimativa) ? estimativa : undefined }),
       });
-      if (!res.ok) throw new Error("Falha na resposta");
       const data = await res.json();
+      if (!res.ok) throw new Error(data?.erro ?? "Não foi possível responder agora.");
       setMensagens((atuais) => {
-        const comResposta = [...atuais, { autor: "assistente", texto: data.resposta.resposta } as MensagemConversa];
+        const comResposta = [...atuais, { autor: "assistente", texto: data.resposta.resposta, aviso: data.resposta.aviso, fontes: data.resposta.citacoes } as MensagemConversa];
         persistir(comResposta);
         return comResposta;
       });
-    } catch {
-      setErro(true);
+    } catch (error) {
+      setErro(error instanceof Error ? error.message : "Não foi possível responder agora.");
     } finally {
       setCarregando(false);
     }
@@ -106,7 +132,7 @@ export function ChatPanel({ temContratos, perguntaInicial, conversaId }: ChatPan
 
   async function anexarArquivo(arquivo: File | undefined) {
     if (!arquivo) return;
-    setErro(false);
+    setErro(null);
     setMensagens((atuais) => {
       const comArquivo = [...atuais, { autor: "usuario", texto: `📎 ${arquivo.name}` } as MensagemConversa];
       persistir(comArquivo);
@@ -136,8 +162,8 @@ export function ChatPanel({ temContratos, perguntaInicial, conversaId }: ChatPan
         persistir(comResposta);
         return comResposta;
       });
-    } catch {
-      setErro(true);
+    } catch (error) {
+      setErro(error instanceof Error ? error.message : "Não foi possível ler o arquivo.");
     } finally {
       setCarregando(false);
     }
@@ -182,7 +208,12 @@ export function ChatPanel({ temContratos, perguntaInicial, conversaId }: ChatPan
                   : "mr-auto max-w-[80%] rounded-2xl rounded-bl-sm bg-card px-3.5 py-2 text-sm leading-relaxed text-foreground"
               }
             >
-              {m.texto}
+              <span className="whitespace-pre-wrap">{m.texto}</span>
+              {m.autor === "assistente" && m.aviso && <p className="mt-2 text-xs text-muted-foreground">{m.aviso}</p>}
+              {m.autor === "assistente" && Boolean(m.fontes?.length) && <details className="mt-2 text-xs text-muted-foreground">
+                <summary className="cursor-pointer">Fontes da resposta</summary>
+                <ul className="mt-1 space-y-1 break-words">{m.fontes?.map((fonte, indice) => <li key={indice}>{fonte.contratoId ? `Contrato ${fonte.contratoId}` : "Resumo da carteira"}: {fonte.campos.map(campo => campo === "opiniao" ? "avaliação calculada" : campo === "createdAt" ? "data de cadastro" : campo).join(", ")}</li>)}</ul>
+              </details>}
             </div>
           ))}
           {carregando && (
@@ -199,7 +230,7 @@ export function ChatPanel({ temContratos, perguntaInicial, conversaId }: ChatPan
           {erro && (
             <div className="mr-auto flex max-w-[80%] items-center gap-2 rounded-2xl bg-destructive-bg px-3.5 py-2 text-sm text-destructive">
               <AlertTriangle className="h-4 w-4 shrink-0" aria-hidden="true" />
-              Não consegui responder agora.
+              {erro}
               <Button size="sm" variant="secondary" onClick={() => enviar()}>
                 Tentar de novo
               </Button>
@@ -208,11 +239,24 @@ export function ChatPanel({ temContratos, perguntaInicial, conversaId }: ChatPan
         </div>
       )}
 
+      <div className="mt-3 flex flex-wrap items-end gap-2">
+        <label className="flex min-w-0 flex-1 flex-col gap-1 text-xs text-muted-foreground">
+          Contrato de referência
+          <select value={contratoId} onChange={e => { setContratoId(e.target.value); setEstimativa({ fatores: [] }); setCarregandoContexto(Boolean(e.target.value)); setAvisoContexto(""); }} disabled={carregando || carregandoContexto} className="min-w-0 rounded-md border border-input bg-card p-2 text-foreground">
+            <option value="">Toda a carteira</option>
+            {contratos.map(c => <option key={c.id} value={c.id}>{c.cliente.nome} · {c.id.slice(-6)}</option>)}
+          </select>
+        </label>
+        <Button size="sm" variant="secondary" disabled={carregando || carregandoContexto} onClick={() => enviar(contratoId ? "Este contrato é um bom caso?" : "Avalie todos os contratos da carteira", "opiniao")}>Pedir opinião</Button>
+      </div>
+      {carregandoContexto && <p className="text-xs text-muted-foreground">Buscando dados do contrato e do perfil…</p>}
+      {avisoContexto && <p className="text-xs text-warning">{avisoContexto}</p>}
+      {contratoId && <div className="mt-2"><EstimativaEsforco value={estimativa} onChange={setEstimativa} disabled={carregando || carregandoContexto} /></div>}
       <div className="mt-3 flex shrink-0 items-end gap-2 rounded-2xl border border-border bg-card p-2.5">
         <input
           ref={inputArquivoRef}
           type="file"
-          accept=".pdf,.docx"
+          accept=".pdf,.docx,.txt,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain"
           className="hidden"
           onChange={(e) => anexarArquivo(e.target.files?.[0])}
         />
@@ -221,7 +265,7 @@ export function ChatPanel({ temContratos, perguntaInicial, conversaId }: ChatPan
           variant="ghost"
           className="h-10 w-10 shrink-0 rounded-full p-0"
           onClick={() => inputArquivoRef.current?.click()}
-          disabled={carregando}
+          disabled={carregando || carregandoContexto}
           aria-label="Anexar contrato (PDF ou DOCX)"
         >
           <Plus className="h-5 w-5" aria-hidden="true" />
@@ -236,7 +280,7 @@ export function ChatPanel({ temContratos, perguntaInicial, conversaId }: ChatPan
             }
           }}
           placeholder="Pergunte alguma coisa..."
-          disabled={carregando}
+          disabled={carregando || carregandoContexto}
           rows={2}
           className="max-h-48 min-h-[3.5rem] flex-1 resize-none bg-transparent px-2 py-2 text-base outline-none placeholder:text-muted-foreground disabled:opacity-50"
         />
@@ -244,7 +288,7 @@ export function ChatPanel({ temContratos, perguntaInicial, conversaId }: ChatPan
           size="sm"
           className="h-10 w-10 shrink-0 rounded-full p-0"
           onClick={() => enviar()}
-          disabled={carregando || !pergunta.trim()}
+          disabled={carregando || carregandoContexto || !pergunta.trim()}
           aria-label="Enviar pergunta"
         >
           {carregando ? (

@@ -3,6 +3,8 @@
 export interface MensagemConversa {
   autor: "usuario" | "assistente";
   texto: string;
+  aviso?: string | null;
+  fontes?: { contratoId: string | null; campos: string[] }[];
 }
 
 export interface Conversa {

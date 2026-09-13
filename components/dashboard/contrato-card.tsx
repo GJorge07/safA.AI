@@ -1,3 +1,4 @@
+import { AvaliacaoCadastrada } from "./avaliacao-cadastrada";
 import { ArrowDown, ArrowUp } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -78,6 +79,7 @@ export function ContratoCard({ contrato }: { contrato: ContratoComRelacoes }) {
           </span>
         </div>
       )}
+      <AvaliacaoCadastrada contratoId={contrato.id} />
     </div>
   );
 }

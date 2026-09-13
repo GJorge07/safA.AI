@@ -64,3 +64,8 @@ export type Parcela = Prisma.ParcelaModel
  * 
  */
 export type Pagamento = Prisma.PagamentoModel
+/**
+ * Model PerfilAdvogado
+ *
+ */
+export type PerfilAdvogado = Prisma.PerfilAdvogadoModel

@@ -59,6 +59,7 @@ export type ContratoCountAggregateOutputType = {
   clienteId: number
   tipoPagamento: number
   valorTotal: number
+  contextoAnalise: number
   clausulaOriginal: number
   createdAt: number
   updatedAt: number
@@ -99,6 +100,7 @@ export type ContratoCountAggregateInputType = {
   clienteId?: true
   tipoPagamento?: true
   valorTotal?: true
+  contextoAnalise?: true
   clausulaOriginal?: true
   createdAt?: true
   updatedAt?: true
@@ -196,6 +198,7 @@ export type ContratoGroupByOutputType = {
   clienteId: string
   tipoPagamento: $Enums.TipoPagamento
   valorTotal: runtime.Decimal
+  contextoAnalise: runtime.JsonValue | null
   clausulaOriginal: string
   createdAt: Date
   updatedAt: Date
@@ -229,6 +232,7 @@ export type ContratoWhereInput = {
   clienteId?: Prisma.StringFilter<"Contrato"> | string
   tipoPagamento?: Prisma.EnumTipoPagamentoFilter<"Contrato"> | $Enums.TipoPagamento
   valorTotal?: Prisma.DecimalFilter<"Contrato"> | runtime.Decimal | runtime.DecimalJsLike | number | string
+  contextoAnalise?: Prisma.JsonNullableFilter<"Contrato">
   clausulaOriginal?: Prisma.StringFilter<"Contrato"> | string
   createdAt?: Prisma.DateTimeFilter<"Contrato"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Contrato"> | Date | string
@@ -241,6 +245,7 @@ export type ContratoOrderByWithRelationInput = {
   clienteId?: Prisma.SortOrder
   tipoPagamento?: Prisma.SortOrder
   valorTotal?: Prisma.SortOrder
+  contextoAnalise?: Prisma.SortOrderInput | Prisma.SortOrder
   clausulaOriginal?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -256,6 +261,7 @@ export type ContratoWhereUniqueInput = Prisma.AtLeast<{
   clienteId?: Prisma.StringFilter<"Contrato"> | string
   tipoPagamento?: Prisma.EnumTipoPagamentoFilter<"Contrato"> | $Enums.TipoPagamento
   valorTotal?: Prisma.DecimalFilter<"Contrato"> | runtime.Decimal | runtime.DecimalJsLike | number | string
+  contextoAnalise?: Prisma.JsonNullableFilter<"Contrato">
   clausulaOriginal?: Prisma.StringFilter<"Contrato"> | string
   createdAt?: Prisma.DateTimeFilter<"Contrato"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Contrato"> | Date | string
@@ -268,6 +274,7 @@ export type ContratoOrderByWithAggregationInput = {
   clienteId?: Prisma.SortOrder
   tipoPagamento?: Prisma.SortOrder
   valorTotal?: Prisma.SortOrder
+  contextoAnalise?: Prisma.SortOrderInput | Prisma.SortOrder
   clausulaOriginal?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -286,6 +293,7 @@ export type ContratoScalarWhereWithAggregatesInput = {
   clienteId?: Prisma.StringWithAggregatesFilter<"Contrato"> | string
   tipoPagamento?: Prisma.EnumTipoPagamentoWithAggregatesFilter<"Contrato"> | $Enums.TipoPagamento
   valorTotal?: Prisma.DecimalWithAggregatesFilter<"Contrato"> | runtime.Decimal | runtime.DecimalJsLike | number | string
+  contextoAnalise?: Prisma.JsonNullableWithAggregatesFilter<"Contrato">
   clausulaOriginal?: Prisma.StringWithAggregatesFilter<"Contrato"> | string
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"Contrato"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"Contrato"> | Date | string
@@ -295,6 +303,7 @@ export type ContratoCreateInput = {
   id?: string
   tipoPagamento: $Enums.TipoPagamento
   valorTotal: runtime.Decimal | runtime.DecimalJsLike | number | string
+  contextoAnalise?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   clausulaOriginal: string
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -307,6 +316,7 @@ export type ContratoUncheckedCreateInput = {
   clienteId: string
   tipoPagamento: $Enums.TipoPagamento
   valorTotal: runtime.Decimal | runtime.DecimalJsLike | number | string
+  contextoAnalise?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   clausulaOriginal: string
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -317,6 +327,7 @@ export type ContratoUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   tipoPagamento?: Prisma.EnumTipoPagamentoFieldUpdateOperationsInput | $Enums.TipoPagamento
   valorTotal?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  contextoAnalise?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   clausulaOriginal?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -329,6 +340,7 @@ export type ContratoUncheckedUpdateInput = {
   clienteId?: Prisma.StringFieldUpdateOperationsInput | string
   tipoPagamento?: Prisma.EnumTipoPagamentoFieldUpdateOperationsInput | $Enums.TipoPagamento
   valorTotal?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  contextoAnalise?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   clausulaOriginal?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -340,6 +352,7 @@ export type ContratoCreateManyInput = {
   clienteId: string
   tipoPagamento: $Enums.TipoPagamento
   valorTotal: runtime.Decimal | runtime.DecimalJsLike | number | string
+  contextoAnalise?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   clausulaOriginal: string
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -349,6 +362,7 @@ export type ContratoUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   tipoPagamento?: Prisma.EnumTipoPagamentoFieldUpdateOperationsInput | $Enums.TipoPagamento
   valorTotal?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  contextoAnalise?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   clausulaOriginal?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -359,6 +373,7 @@ export type ContratoUncheckedUpdateManyInput = {
   clienteId?: Prisma.StringFieldUpdateOperationsInput | string
   tipoPagamento?: Prisma.EnumTipoPagamentoFieldUpdateOperationsInput | $Enums.TipoPagamento
   valorTotal?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  contextoAnalise?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   clausulaOriginal?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -379,6 +394,7 @@ export type ContratoCountOrderByAggregateInput = {
   clienteId?: Prisma.SortOrder
   tipoPagamento?: Prisma.SortOrder
   valorTotal?: Prisma.SortOrder
+  contextoAnalise?: Prisma.SortOrder
   clausulaOriginal?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -489,6 +505,7 @@ export type ContratoCreateWithoutClienteInput = {
   id?: string
   tipoPagamento: $Enums.TipoPagamento
   valorTotal: runtime.Decimal | runtime.DecimalJsLike | number | string
+  contextoAnalise?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   clausulaOriginal: string
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -499,6 +516,7 @@ export type ContratoUncheckedCreateWithoutClienteInput = {
   id?: string
   tipoPagamento: $Enums.TipoPagamento
   valorTotal: runtime.Decimal | runtime.DecimalJsLike | number | string
+  contextoAnalise?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   clausulaOriginal: string
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -539,6 +557,7 @@ export type ContratoScalarWhereInput = {
   clienteId?: Prisma.StringFilter<"Contrato"> | string
   tipoPagamento?: Prisma.EnumTipoPagamentoFilter<"Contrato"> | $Enums.TipoPagamento
   valorTotal?: Prisma.DecimalFilter<"Contrato"> | runtime.Decimal | runtime.DecimalJsLike | number | string
+  contextoAnalise?: Prisma.JsonNullableFilter<"Contrato">
   clausulaOriginal?: Prisma.StringFilter<"Contrato"> | string
   createdAt?: Prisma.DateTimeFilter<"Contrato"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Contrato"> | Date | string
@@ -548,6 +567,7 @@ export type ContratoCreateWithoutParcelasInput = {
   id?: string
   tipoPagamento: $Enums.TipoPagamento
   valorTotal: runtime.Decimal | runtime.DecimalJsLike | number | string
+  contextoAnalise?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   clausulaOriginal: string
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -559,6 +579,7 @@ export type ContratoUncheckedCreateWithoutParcelasInput = {
   clienteId: string
   tipoPagamento: $Enums.TipoPagamento
   valorTotal: runtime.Decimal | runtime.DecimalJsLike | number | string
+  contextoAnalise?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   clausulaOriginal: string
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -584,6 +605,7 @@ export type ContratoUpdateWithoutParcelasInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   tipoPagamento?: Prisma.EnumTipoPagamentoFieldUpdateOperationsInput | $Enums.TipoPagamento
   valorTotal?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  contextoAnalise?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   clausulaOriginal?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -595,6 +617,7 @@ export type ContratoUncheckedUpdateWithoutParcelasInput = {
   clienteId?: Prisma.StringFieldUpdateOperationsInput | string
   tipoPagamento?: Prisma.EnumTipoPagamentoFieldUpdateOperationsInput | $Enums.TipoPagamento
   valorTotal?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  contextoAnalise?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   clausulaOriginal?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -604,6 +627,7 @@ export type ContratoCreateManyClienteInput = {
   id?: string
   tipoPagamento: $Enums.TipoPagamento
   valorTotal: runtime.Decimal | runtime.DecimalJsLike | number | string
+  contextoAnalise?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   clausulaOriginal: string
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -613,6 +637,7 @@ export type ContratoUpdateWithoutClienteInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   tipoPagamento?: Prisma.EnumTipoPagamentoFieldUpdateOperationsInput | $Enums.TipoPagamento
   valorTotal?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  contextoAnalise?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   clausulaOriginal?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -623,6 +648,7 @@ export type ContratoUncheckedUpdateWithoutClienteInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   tipoPagamento?: Prisma.EnumTipoPagamentoFieldUpdateOperationsInput | $Enums.TipoPagamento
   valorTotal?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  contextoAnalise?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   clausulaOriginal?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -633,6 +659,7 @@ export type ContratoUncheckedUpdateManyWithoutClienteInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   tipoPagamento?: Prisma.EnumTipoPagamentoFieldUpdateOperationsInput | $Enums.TipoPagamento
   valorTotal?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  contextoAnalise?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   clausulaOriginal?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -674,6 +701,7 @@ export type ContratoSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs
   clienteId?: boolean
   tipoPagamento?: boolean
   valorTotal?: boolean
+  contextoAnalise?: boolean
   clausulaOriginal?: boolean
   createdAt?: boolean
   updatedAt?: boolean
@@ -687,6 +715,7 @@ export type ContratoSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Exte
   clienteId?: boolean
   tipoPagamento?: boolean
   valorTotal?: boolean
+  contextoAnalise?: boolean
   clausulaOriginal?: boolean
   createdAt?: boolean
   updatedAt?: boolean
@@ -698,6 +727,7 @@ export type ContratoSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Exte
   clienteId?: boolean
   tipoPagamento?: boolean
   valorTotal?: boolean
+  contextoAnalise?: boolean
   clausulaOriginal?: boolean
   createdAt?: boolean
   updatedAt?: boolean
@@ -709,12 +739,13 @@ export type ContratoSelectScalar = {
   clienteId?: boolean
   tipoPagamento?: boolean
   valorTotal?: boolean
+  contextoAnalise?: boolean
   clausulaOriginal?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type ContratoOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "clienteId" | "tipoPagamento" | "valorTotal" | "clausulaOriginal" | "createdAt" | "updatedAt", ExtArgs["result"]["contrato"]>
+export type ContratoOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "clienteId" | "tipoPagamento" | "valorTotal" | "contextoAnalise" | "clausulaOriginal" | "createdAt" | "updatedAt", ExtArgs["result"]["contrato"]>
 export type ContratoInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   cliente?: boolean | Prisma.ClienteDefaultArgs<ExtArgs>
   parcelas?: boolean | Prisma.Contrato$parcelasArgs<ExtArgs>
@@ -738,6 +769,7 @@ export type $ContratoPayload<ExtArgs extends runtime.Types.Extensions.InternalAr
     clienteId: string
     tipoPagamento: $Enums.TipoPagamento
     valorTotal: runtime.Decimal
+    contextoAnalise: runtime.JsonValue | null
     clausulaOriginal: string
     createdAt: Date
     updatedAt: Date
@@ -1170,6 +1202,7 @@ export interface ContratoFieldRefs {
   readonly clienteId: Prisma.FieldRef<"Contrato", 'String'>
   readonly tipoPagamento: Prisma.FieldRef<"Contrato", 'TipoPagamento'>
   readonly valorTotal: Prisma.FieldRef<"Contrato", 'Decimal'>
+  readonly contextoAnalise: Prisma.FieldRef<"Contrato", 'Json'>
   readonly clausulaOriginal: Prisma.FieldRef<"Contrato", 'String'>
   readonly createdAt: Prisma.FieldRef<"Contrato", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"Contrato", 'DateTime'>

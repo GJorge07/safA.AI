@@ -1,0 +1,4 @@
+DOCUMENTO FICTICIO PARA TESTE DO LEITOR
+
+Objeto: consulta juridica civel.
+Este documento nao informa cliente, honorarios, parcelas ou vencimentos.
