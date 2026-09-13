@@ -5,9 +5,12 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { BlocoCobranca } from "@/components/dashboard/bloco-cobranca";
+import { DespesaForm } from "@/components/dashboard/despesa-form";
+import { MargemCaso } from "@/components/dashboard/margem-caso";
 import { OpiniaoContrato } from "@/components/dashboard/opiniao-contrato";
 import { ParcelasContrato, type ParcelaLinha } from "@/components/dashboard/parcelas-contrato";
 import {
+  aguardandoReembolso,
   diasDeAtraso,
   numeroContrato,
   numeroDespesa,
@@ -18,8 +21,12 @@ import {
   type ContratoComRelacoes,
   type StatusContrato,
 } from "@/components/dashboard/types";
-import { listarContratosDoCliente, obterContratoComRelacoes } from "@/lib/db/contratos";
-import { listarDespesasDoContrato, rotuloCategoria } from "@/lib/db/despesas";
+import {
+  listarContratosDoCliente,
+  listarContratosParaSelecao,
+  obterContratoComRelacoes,
+} from "@/lib/db/contratos";
+import { listarDespesasDoContrato, margemDoCaso, rotuloCategoria } from "@/lib/db/despesas";
 import { cn } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
@@ -67,9 +74,11 @@ export default async function ContratoDetalhePage({ params, searchParams }: Deta
   if (!contrato) notFound();
 
   const aba: Aba = ABAS.includes(ver as Aba) ? (ver as Aba) : "parcelas";
-  const [irmaos, despesas] = await Promise.all([
+  const [irmaos, despesas, margem, contratos] = await Promise.all([
     aba === "cliente" ? listarContratosDoCliente(contrato.clienteId, contrato.id) : Promise.resolve([]),
     aba === "despesas" ? listarDespesasDoContrato(contrato.id) : Promise.resolve([]),
+    margemDoCaso(contrato.id),
+    aba === "despesas" ? listarContratosParaSelecao() : Promise.resolve([]),
   ]);
 
   const status = statusDoContrato(contrato);
@@ -133,10 +142,13 @@ export default async function ContratoDetalhePage({ params, searchParams }: Deta
           {aba === "parcelas" && <ParcelasContrato parcelas={paraLinhas(contrato)} />}
           {aba === "clausula" && <AbaClausula contrato={contrato} />}
           {aba === "cliente" && <AbaCliente contrato={contrato} irmaos={irmaos} />}
-          {aba === "despesas" && <AbaDespesas despesas={despesas} />}
+          {aba === "despesas" && (
+            <AbaDespesas despesas={despesas} contratoId={contrato.id} contratos={contratos} />
+          )}
         </div>
 
         <aside className="flex flex-col gap-4">
+          {margem && <MargemCaso margem={margem} />}
           <OpiniaoContrato contratoId={contrato.id} />
         </aside>
       </div>
@@ -288,65 +300,96 @@ function AbaCliente({ contrato, irmaos }: { contrato: ContratoComRelacoes; irmao
   );
 }
 
-function AbaDespesas({ despesas }: { despesas: Awaited<ReturnType<typeof listarDespesasDoContrato>> }) {
-  if (despesas.length === 0) {
-    return (
-      <div className="flex flex-col items-center gap-2 py-10 text-center">
-        <FileText className="h-6 w-6 text-muted-foreground" aria-hidden="true" />
-        <p className="text-sm font-medium">Nenhuma despesa lançada neste caso</p>
-        <p className="text-xs text-muted-foreground">
-          Custas, diligências e perícias lançadas na aba Despesas aparecem aqui quando amarradas a este contrato.
-        </p>
-      </div>
-    );
-  }
-
+function AbaDespesas({
+  despesas,
+  contratoId,
+  contratos,
+}: {
+  despesas: Awaited<ReturnType<typeof listarDespesasDoContrato>>;
+  contratoId: string;
+  contratos: { id: string; rotulo: string }[];
+}) {
   const total = despesas.reduce((soma, d) => soma + d.valor, 0);
-  const reembolsavel = despesas.filter((d) => d.reembolsavel).reduce((soma, d) => soma + d.valor, 0);
+  const porContaDoAdvogado = despesas
+    .filter((d) => d.quemPaga === "advogado")
+    .reduce((soma, d) => soma + d.valor, 0);
+  const aReembolsar = despesas.filter(aguardandoReembolso).reduce((soma, d) => soma + d.valor, 0);
 
   return (
-    <div className="flex flex-col gap-3">
-      {/* O que sobra do caso: sem isto o advogado só enxerga o bruto. */}
-      <div className="flex flex-wrap gap-4 rounded-lg border border-border bg-card p-3 text-sm">
-        <span>
-          Total de despesas: <strong className="font-mono tabular-nums">{moeda(total)}</strong>
-        </span>
-        <span className="text-muted-foreground">
-          Reembolsável: <strong className="font-mono tabular-nums">{moeda(reembolsavel)}</strong>
-        </span>
-      </div>
+    <div className="flex flex-col gap-4">
+      <details className="group rounded-lg border border-border" open={despesas.length === 0}>
+        <summary className="cursor-pointer list-none px-4 py-3 text-sm font-medium text-muted-foreground [&::-webkit-details-marker]:hidden">
+          <span className="group-open:hidden">+ Lançar um gasto neste caso</span>
+          <span className="hidden group-open:inline">− Lançar um gasto neste caso</span>
+        </summary>
+        <div className="border-t border-border p-4">
+          <DespesaForm contratos={contratos} tipoInicial="processo" contratoFixo={contratoId} />
+        </div>
+      </details>
 
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Descrição</TableHead>
-            <TableHead className="w-24">Nº</TableHead>
-            <TableHead className="w-40">Categoria</TableHead>
-            <TableHead className="w-32 text-right">Valor</TableHead>
-            <TableHead className="w-28">Vencimento</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {despesas.map((despesa) => (
-            <TableRow key={despesa.id}>
-              <TableCell>
-                <Link href={`/pagamentos/despesas/${despesa.id}`} className="font-medium hover:underline">
-                  {despesa.descricao}
-                </Link>
-                {despesa.reembolsavel && (
-                  <Badge variant="warning" className="ml-1.5">
-                    reembolsável
-                  </Badge>
-                )}
-              </TableCell>
-              <TableCell className="font-mono text-xs text-muted-foreground">{numeroDespesa(despesa)}</TableCell>
-              <TableCell className="text-xs">{rotuloCategoria[despesa.categoria]}</TableCell>
-              <TableCell className="text-right font-mono tabular-nums">{moeda(despesa.valor)}</TableCell>
-              <TableCell className="text-xs text-muted-foreground">{data(despesa.vencimento)}</TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+      {despesas.length === 0 ? (
+        <div className="flex flex-col items-center gap-2 py-8 text-center">
+          <FileText className="h-6 w-6 text-muted-foreground" aria-hidden="true" />
+          <p className="text-sm font-medium">Nenhum gasto lançado neste caso</p>
+          <p className="max-w-md text-xs text-muted-foreground">
+            Transporte até o fórum, custas, cópias, diligência. São valores pequenos que passam batido — e são
+            eles que decidem quanto realmente sobra deste processo.
+          </p>
+        </div>
+      ) : (
+        <>
+          <div className="flex flex-wrap gap-4 rounded-lg border border-border bg-card p-3 text-sm">
+            <span>
+              Total gasto: <strong className="font-mono tabular-nums">{moeda(total)}</strong>
+            </span>
+            <span className="text-destructive">
+              Do seu bolso: <strong className="font-mono tabular-nums">{moeda(porContaDoAdvogado)}</strong>
+            </span>
+            {aReembolsar > 0 && (
+              <span className="text-warning">
+                A reembolsar: <strong className="font-mono tabular-nums">{moeda(aReembolsar)}</strong>
+              </span>
+            )}
+          </div>
+
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Gasto</TableHead>
+                <TableHead className="w-20">Nº</TableHead>
+                <TableHead className="w-48">Categoria</TableHead>
+                <TableHead className="w-28 text-right">Valor</TableHead>
+                <TableHead className="w-28">Data</TableHead>
+                <TableHead className="w-32">Quem arca</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {despesas.map((despesa) => (
+                <TableRow key={despesa.id}>
+                  <TableCell>
+                    <Link href={`/pagamentos/despesas/${despesa.id}`} className="font-medium hover:underline">
+                      {despesa.descricao}
+                    </Link>
+                  </TableCell>
+                  <TableCell className="font-mono text-xs text-muted-foreground">{numeroDespesa(despesa)}</TableCell>
+                  <TableCell className="text-xs">{rotuloCategoria[despesa.categoria]}</TableCell>
+                  <TableCell className="text-right font-mono tabular-nums">{moeda(despesa.valor)}</TableCell>
+                  <TableCell className="text-xs text-muted-foreground">{data(despesa.vencimento)}</TableCell>
+                  <TableCell>
+                    {aguardandoReembolso(despesa) ? (
+                      <Badge variant="warning">a reembolsar</Badge>
+                    ) : despesa.quemPaga === "cliente" ? (
+                      <span className="text-xs text-success">cliente</span>
+                    ) : (
+                      <span className="text-xs text-muted-foreground">você</span>
+                    )}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </>
+      )}
     </div>
   );
 }

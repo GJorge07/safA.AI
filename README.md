@@ -107,10 +107,22 @@ que o sistema entendeu**, os dados e os outros contratos do mesmo cliente, e as 
 
 #### Aba **Despesas** — o que sai do caixa
 
-Custas processuais, diligências, perícias, assinatura de software, aluguel, tributos. O lançamento é
-manual — é mais rápido do que procurar um documento para cada boleto. Uma despesa pode ser amarrada a
-um contrato e marcada como **reembolsável**, e aí ela aparece na ficha daquele caso: é assim que você
-enxerga a margem real, e não só o valor bruto do honorário.
+Dividida em duas, porque são coisas diferentes:
+
+- **Do processo** — o transporte até o juizado, o estacionamento no fórum, a guia de custas, a
+  diligência do oficial, as cópias no cartório. Gastos pequenos, frequentes, pagos do próprio bolso.
+  Cada um é amarrado a um caso, e você diz **quem arca**: se é você, o valor é abatido do que aquele
+  processo rende; se é o cliente, fica marcado como **a reembolsar** até você registrar que cobrou.
+- **Do escritório** — aluguel, software, tributos, contabilidade. Custo fixo, não pertence a caso
+  nenhum.
+
+O lançamento é manual e leva segundos: há atalhos para "Ida ao fórum", "Estacionamento", "Custas",
+"Cópias" e "Diligência". Se preferir, "Ler de um comprovante" usa a IA para preencher o formulário a
+partir de um recibo — mas nada é lançado sem você confirmar.
+
+Na ficha de cada contrato aparece **quanto sobra daquele caso**: honorário contratado menos os gastos
+que saem do seu bolso, com o aviso de quanto você já adiantou e ainda não cobrou do cliente. É a conta
+que quase ninguém faz no começo — e é onde o prejuízo costuma aparecer.
 
 ### Tela **Safa AI** — o chat
 
@@ -307,8 +319,9 @@ Cliente ──1:N──> Contrato ──1:N──> Parcela ──1:1(opcional)�
 | `/api/parcelas/[id]` | PUT, DELETE | edita/exclui parcela |
 | `/api/parcelas/[id]/pagamento` | POST, PUT, DELETE | registra, corrige ou remove o pagamento |
 | `/api/fluxo-caixa` | GET | previsto (por vencimento) × recebido (por data do pagamento), por mês |
-| `/api/despesas` | GET, POST | lista paginada (busca, categoria, status, recorrência); lança despesa |
-| `/api/despesas/[id]` | GET, PATCH, DELETE | detalhe; edita ou marca como paga; exclui |
+| `/api/despesas` | GET, POST | lista paginada (busca, tipo, categoria, status, caso); lança despesa |
+| `/api/despesas/[id]` | GET, PATCH, DELETE | detalhe; marca como paga ou cobrada do cliente; exclui |
+| `/api/despesas/extrair` | POST | lê recibo/guia (PDF, DOCX, TXT ou `driveFileId`) e devolve rascunho — não grava |
 | `/api/contratos/[id]/opiniao` | POST | avaliação da IA sob demanda para um contrato já gravado |
 | `/api/insights` | GET | alertas de atraso e concentração de receita |
 | `/api/contratos/extrair` | POST | extração simples (PDF/TXT/texto) para revisão |

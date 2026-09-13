@@ -4,7 +4,13 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { DespesaAcoes } from "./despesa-acoes";
 import { Paginacao } from "./paginacao";
-import { numeroDespesa, statusDaDespesa, type DespesaUI, type StatusDespesa } from "./types";
+import {
+  aguardandoReembolso,
+  numeroDespesa,
+  statusDaDespesa,
+  type DespesaUI,
+  type StatusDespesa,
+} from "./types";
 import { rotuloCategoria, type PaginaDespesas } from "@/lib/db/despesas";
 
 const statusLabel: Record<StatusDespesa, string> = {
@@ -31,10 +37,13 @@ export function DespesasTabela({
   pagina,
   params,
   temFiltro,
+  mostrarCaso = true,
 }: {
   pagina: PaginaDespesas;
   params: URLSearchParams;
   temFiltro: boolean;
+  /** A coluna de caso não faz sentido na aba do escritório. */
+  mostrarCaso?: boolean;
 }) {
   if (pagina.total === 0) {
     return (
@@ -42,7 +51,7 @@ export function DespesasTabela({
         <Receipt className="h-6 w-6 text-muted-foreground" aria-hidden="true" />
         <p className="text-sm font-medium">Nenhuma despesa encontrada</p>
         <p className="text-xs text-muted-foreground">
-          {temFiltro ? "Ajuste a busca ou os filtros." : "Lance a primeira despesa no formulário acima."}
+          {temFiltro ? "Ajuste a busca ou os filtros." : "Lance a primeira no formulário acima."}
         </p>
       </div>
     );
@@ -53,18 +62,18 @@ export function DespesasTabela({
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Descrição</TableHead>
-            <TableHead className="w-24">Nº</TableHead>
-            <TableHead className="w-40">Categoria</TableHead>
-            <TableHead className="w-32 text-right">Valor</TableHead>
-            <TableHead className="w-28">Vencimento</TableHead>
-            <TableHead className="w-28">Status</TableHead>
-            <TableHead className="w-28 text-right">Ação</TableHead>
+            <TableHead>Despesa</TableHead>
+            <TableHead className="w-20">Nº</TableHead>
+            {mostrarCaso && <TableHead className="w-44">Caso</TableHead>}
+            <TableHead className="w-28 text-right">Valor</TableHead>
+            <TableHead className="w-28">Data</TableHead>
+            <TableHead className="w-32">Situação</TableHead>
+            <TableHead className="w-40 text-right">Ação</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {pagina.itens.map((despesa) => (
-            <LinhaDespesa key={despesa.id} despesa={despesa} />
+            <LinhaDespesa key={despesa.id} despesa={despesa} mostrarCaso={mostrarCaso} />
           ))}
         </TableBody>
       </Table>
@@ -82,8 +91,9 @@ export function DespesasTabela({
   );
 }
 
-function LinhaDespesa({ despesa }: { despesa: DespesaUI }) {
+function LinhaDespesa({ despesa, mostrarCaso }: { despesa: DespesaUI; mostrarCaso: boolean }) {
   const status = statusDaDespesa(despesa);
+  const reembolso = aguardandoReembolso(despesa);
 
   return (
     <TableRow>
@@ -95,29 +105,42 @@ function LinhaDespesa({ despesa }: { despesa: DespesaUI }) {
           {despesa.descricao}
         </Link>
         <span className="block truncate text-xs text-muted-foreground">
-          {despesa.fornecedor ?? "sem fornecedor"}
+          {rotuloCategoria[despesa.categoria]}
+          {despesa.fornecedor && ` · ${despesa.fornecedor}`}
           {despesa.recorrencia !== "unica" && ` · ${despesa.recorrencia}`}
-          {despesa.contrato && ` · ${despesa.contrato.cliente.nome}`}
         </span>
       </TableCell>
       <TableCell className="font-mono text-xs text-muted-foreground">{numeroDespesa(despesa)}</TableCell>
-      <TableCell className="text-xs">
-        {rotuloCategoria[despesa.categoria]}
-        {despesa.reembolsavel && (
-          <Badge variant="warning" className="ml-1.5">
-            reembolsável
-          </Badge>
-        )}
-      </TableCell>
+      {mostrarCaso && (
+        <TableCell className="max-w-[176px] text-xs">
+          {despesa.contrato ? (
+            <Link href={`/pagamentos/contratos/${despesa.contrato.id}`} className="block truncate hover:underline">
+              {despesa.contrato.cliente.nome}
+            </Link>
+          ) : (
+            <span className="text-muted-foreground">sem caso</span>
+          )}
+        </TableCell>
+      )}
       <TableCell className="text-right font-mono tabular-nums">{moeda(despesa.valor)}</TableCell>
       <TableCell className="text-xs text-muted-foreground">{dataCurta(despesa.vencimento)}</TableCell>
       <TableCell>
-        <Badge variant={statusVariant[status]} dot>
-          {statusLabel[status]}
-        </Badge>
+        <div className="flex flex-col items-start gap-1">
+          <Badge variant={statusVariant[status]} dot>
+            {statusLabel[status]}
+          </Badge>
+          {/* O rótulo que importa: esse dinheiro é do advogado ou volta? */}
+          {reembolso ? (
+            <Badge variant="warning">a reembolsar</Badge>
+          ) : despesa.tipo === "processo" && despesa.quemPaga === "advogado" ? (
+            <span className="text-[11px] text-muted-foreground">sai do seu bolso</span>
+          ) : despesa.cobradoEm ? (
+            <span className="text-[11px] text-success">cobrado</span>
+          ) : null}
+        </div>
       </TableCell>
       <TableCell className="text-right">
-        <DespesaAcoes id={despesa.id} paga={status === "paga"} />
+        <DespesaAcoes id={despesa.id} paga={status === "paga"} aReembolsar={reembolso} />
       </TableCell>
     </TableRow>
   );

@@ -75,17 +75,40 @@ export interface RascunhoDespesa {
   pronto: boolean;
 }
 
+const CATEGORIAS_DE_PROCESSO = new Set([
+  "deslocamento",
+  "custas",
+  "diligencia",
+  "cartorio",
+  "pericia",
+  "correspondente",
+  "outros_processo",
+]);
+
 export function avaliarRascunho(extracao: ExtracaoDespesa): RascunhoDespesa {
   const motivosRevisao: string[] = [];
   if (!extracao.descricao) motivosRevisao.push("descrição não identificada");
   if (extracao.valor === null) motivosRevisao.push("valor não identificado");
-  if (!extracao.vencimento) motivosRevisao.push("data de vencimento não identificada");
+  if (!extracao.vencimento) motivosRevisao.push("data não identificada");
+  if (!extracao.tipo) motivosRevisao.push("não deu para dizer se é gasto de processo ou de escritório");
   if (!extracao.categoria) motivosRevisao.push("categoria não identificada");
+
+  // Categoria fora do tipo tornaria a margem do caso mentirosa — melhor o
+  // advogado escolher do que gravar um par incoerente.
+  if (extracao.tipo && extracao.categoria) {
+    const doProcesso = CATEGORIAS_DE_PROCESSO.has(extracao.categoria);
+    if (doProcesso !== (extracao.tipo === "processo")) {
+      motivosRevisao.push(`categoria ${extracao.categoria} não combina com um gasto de ${extracao.tipo}`);
+    }
+  }
+
   motivosRevisao.push(...extracao.avisos);
 
   return {
     extracao,
     motivosRevisao,
-    pronto: Boolean(extracao.descricao && extracao.valor !== null && extracao.vencimento && extracao.categoria),
+    pronto: Boolean(
+      extracao.descricao && extracao.valor !== null && extracao.vencimento && extracao.tipo && extracao.categoria,
+    ),
   };
 }

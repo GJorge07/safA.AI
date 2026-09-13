@@ -89,13 +89,22 @@ model Despesa {
   vencimento    DateTime
   pagoEm        DateTime?
 
+  // A separação que importa: gasto do processo (ida ao juizado, custas,
+  // diligência) é o que come a margem do caso; gasto do escritório é custo
+  // fixo e não pertence a caso nenhum.
+  tipo          TipoDespesa @default(PROCESSO)
+
   recorrencia   Recorrencia @default(UNICA)
   fornecedor    String?
 
-  // Despesa reembolsável amarrada a um caso (custas, perícia, diligência).
   contrato      Contrato? @relation(fields: [contratoId], references: [id], onDelete: SetNull)
   contratoId    String?
-  reembolsavel  Boolean  @default(false)
+
+  // quemPaga é o que o contrato prevê; cobradoEm é o que de fato aconteceu.
+  // Despesa de CLIENTE sem cobradoEm é dinheiro que o advogado adiantou e
+  // ainda não repassou — a origem silenciosa do prejuízo.
+  quemPaga      QuemPaga @default(ADVOGADO)
+  cobradoEm     DateTime?
 
   origem        OrigemRegistro @default(MANUAL)
   textoOriginal String?
@@ -113,15 +122,31 @@ enum TipoPagamento {
   MISTO
 }
 
+enum TipoDespesa {
+  PROCESSO
+  ESCRITORIO
+}
+
+enum QuemPaga {
+  CLIENTE
+  ADVOGADO
+}
+
+// Categorias concretas, no vocabulário do dia a dia — o advogado reconhece o
+// gasto sem precisar traduzir. As sete primeiras são de processo.
 enum CategoriaDespesa {
-  CUSTAS_PROCESSUAIS
+  DESLOCAMENTO
+  CUSTAS
   DILIGENCIA
+  CARTORIO
   PERICIA
-  SOFTWARE
+  CORRESPONDENTE
+  OUTROS_PROCESSO
   ESTRUTURA
+  SOFTWARE
   TRIBUTOS
   PESSOAL
-  OUTROS
+  OUTROS_ESCRITORIO
 }
 
 enum Recorrencia {

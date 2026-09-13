@@ -883,10 +883,12 @@ export const DespesaScalarFieldEnum = {
   valor: 'valor',
   vencimento: 'vencimento',
   pagoEm: 'pagoEm',
+  tipo: 'tipo',
   recorrencia: 'recorrencia',
   fornecedor: 'fornecedor',
   contratoId: 'contratoId',
-  reembolsavel: 'reembolsavel',
+  quemPaga: 'quemPaga',
+  cobradoEm: 'cobradoEm',
   origem: 'origem',
   textoOriginal: 'textoOriginal',
   createdAt: 'createdAt',
@@ -1025,6 +1027,20 @@ export type ListEnumCategoriaDespesaFieldRefInput<$PrismaModel> = FieldRefInputT
 
 
 /**
+ * Reference to a field of type 'TipoDespesa'
+ */
+export type EnumTipoDespesaFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'TipoDespesa'>
+    
+
+
+/**
+ * Reference to a field of type 'TipoDespesa[]'
+ */
+export type ListEnumTipoDespesaFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'TipoDespesa[]'>
+    
+
+
+/**
  * Reference to a field of type 'Recorrencia'
  */
 export type EnumRecorrenciaFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Recorrencia'>
@@ -1039,9 +1055,16 @@ export type ListEnumRecorrenciaFieldRefInput<$PrismaModel> = FieldRefInputType<$
 
 
 /**
- * Reference to a field of type 'Boolean'
+ * Reference to a field of type 'QuemPaga'
  */
-export type BooleanFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Boolean'>
+export type EnumQuemPagaFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'QuemPaga'>
+    
+
+
+/**
+ * Reference to a field of type 'QuemPaga[]'
+ */
+export type ListEnumQuemPagaFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'QuemPaga[]'>
     
 
 

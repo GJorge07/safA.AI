@@ -180,16 +180,21 @@ export type OpiniaoContrato = z.infer<typeof opiniaoContratoSchema>;
 // faltar antes de confirmar o lançamento.
 export const extracaoDespesaSchema = z.object({
   descricao: z.string().min(1).nullable(),
+  tipo: z.enum(["processo", "escritorio"]).nullable(),
   categoria: z
     .enum([
-      "custas_processuais",
+      "deslocamento",
+      "custas",
       "diligencia",
+      "cartorio",
       "pericia",
-      "software",
+      "correspondente",
+      "outros_processo",
       "estrutura",
+      "software",
       "tributos",
       "pessoal",
-      "outros",
+      "outros_escritorio",
     ])
     .nullable(),
   valor: z.number().nonnegative().nullable(),
@@ -203,14 +208,18 @@ export const extracaoDespesaSchema = z.object({
 export type ExtracaoDespesa = z.infer<typeof extracaoDespesaSchema>;
 
 const CATEGORIAS_DESPESA = [
-  "custas_processuais",
+  "deslocamento",
+  "custas",
   "diligencia",
+  "cartorio",
   "pericia",
-  "software",
+  "correspondente",
+  "outros_processo",
   "estrutura",
+  "software",
   "tributos",
   "pessoal",
-  "outros",
+  "outros_escritorio",
 ] as const;
 
 export const extracaoDespesaJsonSchema = {
@@ -218,6 +227,9 @@ export const extracaoDespesaJsonSchema = {
   additionalProperties: false,
   properties: {
     descricao: { type: ["string", "null"] },
+    tipo: {
+      anyOf: [{ type: "string", enum: ["processo", "escritorio"] }, { type: "null" }],
+    },
     categoria: {
       anyOf: [{ type: "string", enum: CATEGORIAS_DESPESA }, { type: "null" }],
     },
@@ -230,6 +242,7 @@ export const extracaoDespesaJsonSchema = {
   },
   required: [
     "descricao",
+    "tipo",
     "categoria",
     "valor",
     "vencimento",

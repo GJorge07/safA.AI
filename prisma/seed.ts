@@ -274,7 +274,7 @@ async function semearContratos(clienteIds: string[], hoje: Date): Promise<string
   return criados;
 }
 
-const DESPESAS_FIXAS = [
+const DESPESAS_ESCRITORIO = [
   { descricao: "Assinatura do sistema jurídico", categoria: "SOFTWARE", valor: 249.9, fornecedor: "Jurídico Cloud" },
   { descricao: "Aluguel da sala comercial", categoria: "ESTRUTURA", valor: 1800, fornecedor: "Imobiliária Centro" },
   { descricao: "Internet e telefonia", categoria: "ESTRUTURA", valor: 189.9, fornecedor: "Conecta Telecom" },
@@ -282,49 +282,80 @@ const DESPESAS_FIXAS = [
   { descricao: "Simples Nacional (DAS)", categoria: "TRIBUTOS", valor: 980, fornecedor: "Receita Federal" },
 ] as const;
 
-const DESPESAS_AVULSAS = [
-  { descricao: "Custas iniciais", categoria: "CUSTAS_PROCESSUAIS", fornecedor: "TJPR" },
-  { descricao: "Diligência de oficial de justiça", categoria: "DILIGENCIA", fornecedor: "TJPR" },
-  { descricao: "Honorários periciais", categoria: "PERICIA", fornecedor: "Perito nomeado" },
-  { descricao: "Correspondente em comarca do interior", categoria: "PESSOAL", fornecedor: "Rede Correspondentes" },
-  { descricao: "Cópias e autenticações", categoria: "OUTROS", fornecedor: "Cartório 2º Ofício" },
-  { descricao: "Guia de preparo recursal", categoria: "CUSTAS_PROCESSUAIS", fornecedor: "TJPR" },
+// Gastos de processo do jeito que aparecem na vida real: em maioria pequenos,
+// frequentes e pagos do bolso. Somados, são eles que comem a margem do caso —
+// a ida ao juizado é o exemplo que a advogada deu.
+const DESPESAS_PROCESSO = [
+  { descricao: "Transporte até o Juizado Especial", categoria: "DESLOCAMENTO", min: 18, max: 60, fornecedor: "App de transporte" },
+  { descricao: "Estacionamento no fórum", categoria: "DESLOCAMENTO", min: 12, max: 35, fornecedor: "Estacionamento Fórum" },
+  { descricao: "Combustível para audiência em comarca vizinha", categoria: "DESLOCAMENTO", min: 60, max: 180, fornecedor: "Posto" },
+  { descricao: "Custas iniciais", categoria: "CUSTAS", min: 120, max: 900, fornecedor: "TJPR" },
+  { descricao: "Guia de preparo recursal", categoria: "CUSTAS", min: 200, max: 1200, fornecedor: "TJPR" },
+  { descricao: "Porte de remessa e retorno", categoria: "CUSTAS", min: 35, max: 90, fornecedor: "TJPR" },
+  { descricao: "Diligência de oficial de justiça", categoria: "DILIGENCIA", min: 90, max: 260, fornecedor: "TJPR" },
+  { descricao: "Cópias e autenticação de documentos", categoria: "CARTORIO", min: 8, max: 70, fornecedor: "Cartório 2º Ofício" },
+  { descricao: "Certidão de distribuição", categoria: "CARTORIO", min: 15, max: 60, fornecedor: "Cartório distribuidor" },
+  { descricao: "Honorários periciais", categoria: "PERICIA", min: 800, max: 3500, fornecedor: "Perito nomeado" },
+  { descricao: "Correspondente para audiência no interior", categoria: "CORRESPONDENTE", min: 150, max: 400, fornecedor: "Rede Correspondentes" },
 ] as const;
 
 async function semearDespesas(contratoIds: string[], hoje: Date) {
   for (let i = 1; i <= QUANTIDADE_DESPESAS; i += 1) {
     const despesaId = id("dp-seed", i);
-    // Um terço é custo recorrente do escritório; o resto é custo de caso,
-    // amarrado a um contrato e normalmente reembolsável.
-    const recorrente = i % 3 === 0;
+    // Só um quarto é custo fixo de escritório: o volume do dia a dia de quem
+    // está começando é gasto de processo.
+    const doEscritorio = i % 4 === 0;
     const mes = inteiro(-3, 2);
     const vencimento = dia(hoje.getUTCFullYear(), hoje.getUTCMonth() + mes, escolher([5, 10, 15, 20, 25]));
     const jaVenceu = vencimento < hoje;
 
-    const base = recorrente
-      ? { ...escolher(DESPESAS_FIXAS), recorrencia: "MENSAL" as const, contratoId: null, reembolsavel: false }
-      : {
-          ...escolher(DESPESAS_AVULSAS),
-          valor: inteiro(4, 240) * 25,
-          recorrencia: "UNICA" as const,
-          contratoId: escolher(contratoIds),
-          reembolsavel: aleatorio() < 0.7,
-        };
+    const base = doEscritorio
+      ? {
+          ...escolher(DESPESAS_ESCRITORIO),
+          tipo: "ESCRITORIO" as const,
+          recorrencia: "MENSAL" as const,
+          contratoId: null,
+          quemPaga: "ADVOGADO" as const,
+        }
+      : (() => {
+          const modelo = escolher(DESPESAS_PROCESSO);
+          return {
+            descricao: modelo.descricao,
+            categoria: modelo.categoria,
+            fornecedor: modelo.fornecedor,
+            valor: inteiro(modelo.min, modelo.max),
+            tipo: "PROCESSO" as const,
+            recorrencia: "UNICA" as const,
+            contratoId: escolher(contratoIds),
+            // Metade dos contratos não prevê reembolso: esse gasto sai do
+            // bolso do advogado e nunca volta.
+            quemPaga: aleatorio() < 0.55 ? ("CLIENTE" as const) : ("ADVOGADO" as const),
+          };
+        })();
 
     // Nem tudo o que venceu está pago — é o que dá conteúdo ao filtro "atrasada".
-    const pagoEm = jaVenceu && aleatorio() < 0.75 ? new Date(vencimento.getTime() + inteiro(0, 5) * 86400000) : null;
+    const pagoEm = jaVenceu && aleatorio() < 0.8 ? new Date(vencimento.getTime() + inteiro(0, 5) * 86400000) : null;
+
+    // Só parte do que era do cliente foi efetivamente repassada: o resto é o
+    // dinheiro que o advogado adiantou sem perceber.
+    const cobradoEm =
+      base.quemPaga === "CLIENTE" && pagoEm && aleatorio() < 0.35
+        ? new Date(pagoEm.getTime() + inteiro(1, 20) * 86400000)
+        : null;
 
     const dados = {
       descricao: base.descricao,
+      tipo: base.tipo,
       categoria: base.categoria,
       valor: base.valor,
       vencimento,
       pagoEm,
+      cobradoEm,
       recorrencia: base.recorrencia,
       fornecedor: base.fornecedor,
       contratoId: base.contratoId,
-      reembolsavel: base.reembolsavel,
-      origem: recorrente ? ("MANUAL" as const) : escolher(["MANUAL", "UPLOAD", "DRIVE"] as const),
+      quemPaga: base.quemPaga,
+      origem: doEscritorio ? ("MANUAL" as const) : escolher(["MANUAL", "UPLOAD", "DRIVE"] as const),
     };
 
     await prisma.despesa.upsert({
@@ -337,6 +368,97 @@ async function semearDespesas(contratoIds: string[], hoje: Date) {
 
 // Trocar de volume para demo precisa limpar o que o modo anterior criou,
 // senão os 180 contratos gerados continuariam distorcendo os totais do pitch.
+// Gastos fixos nos contratos da demonstração: sem eles, a ficha de c1 abriria
+// sem margem nenhuma para mostrar no pitch — e é justamente a conta que a
+// tela existe para fazer.
+const DESPESAS_DEMO = [
+  {
+    id: "dp-demo-001",
+    contratoId: "c1",
+    descricao: "Transporte até o Juizado Especial",
+    categoria: "DESLOCAMENTO",
+    valor: 42,
+    quemPaga: "ADVOGADO",
+    diasAtras: 21,
+    cobrada: false,
+  },
+  {
+    id: "dp-demo-002",
+    contratoId: "c1",
+    descricao: "Estacionamento no fórum",
+    categoria: "DESLOCAMENTO",
+    valor: 18,
+    quemPaga: "ADVOGADO",
+    diasAtras: 21,
+    cobrada: false,
+  },
+  {
+    id: "dp-demo-003",
+    contratoId: "c1",
+    descricao: "Custas iniciais",
+    categoria: "CUSTAS",
+    valor: 680,
+    quemPaga: "CLIENTE",
+    diasAtras: 45,
+    cobrada: false,
+  },
+  {
+    id: "dp-demo-004",
+    contratoId: "c1",
+    descricao: "Cópias e autenticação de documentos",
+    categoria: "CARTORIO",
+    valor: 34,
+    quemPaga: "ADVOGADO",
+    diasAtras: 38,
+    cobrada: false,
+  },
+  {
+    id: "dp-demo-005",
+    contratoId: "c2",
+    descricao: "Diligência de oficial de justiça",
+    categoria: "DILIGENCIA",
+    valor: 145,
+    quemPaga: "CLIENTE",
+    diasAtras: 30,
+    cobrada: true,
+  },
+  {
+    id: "dp-demo-006",
+    contratoId: "c2",
+    descricao: "Combustível para audiência em comarca vizinha",
+    categoria: "DESLOCAMENTO",
+    valor: 120,
+    quemPaga: "ADVOGADO",
+    diasAtras: 14,
+    cobrada: false,
+  },
+] as const;
+
+async function semearDespesasDemo(hoje: Date) {
+  for (const modelo of DESPESAS_DEMO) {
+    const vencimento = new Date(hoje.getTime() - modelo.diasAtras * 86400000);
+    const dados = {
+      descricao: modelo.descricao,
+      tipo: "PROCESSO" as const,
+      categoria: modelo.categoria,
+      valor: modelo.valor,
+      vencimento,
+      pagoEm: vencimento,
+      cobradoEm: modelo.cobrada ? new Date(vencimento.getTime() + 5 * 86400000) : null,
+      recorrencia: "UNICA" as const,
+      fornecedor: null,
+      contratoId: modelo.contratoId,
+      quemPaga: modelo.quemPaga,
+      origem: "MANUAL" as const,
+    };
+    await prisma.despesa.upsert({
+      where: { id: modelo.id },
+      update: dados,
+      create: { id: modelo.id, ...dados },
+    });
+  }
+}
+
 async function limparVolume() {
   await prisma.despesa.deleteMany({ where: { id: { startsWith: "dp-seed-" } } });
   await prisma.contrato.deleteMany({ where: { id: { startsWith: "ct-seed-" } } });
@@ -351,6 +473,7 @@ async function main() {
   const clienteIds = await semearClientes();
   const contratoIds = await semearContratos(clienteIds, hoje);
   await semearDespesas([...contratoIds, ...contratosMock.map((c) => c.id)], hoje);
+  await semearDespesasDemo(hoje);
 
   const [totalClientes, totalContratos, totalParcelas, totalPagamentos, totalDespesas] = await Promise.all([
     prisma.cliente.count(),

@@ -6,6 +6,17 @@
 - Padroniza caminhos dos campos para validação automática.
 - Inclui página e cláusula e rejeita referência não localizada no documento.
 
+## expense-extraction-v1.1 — 13/09/2026
+
+- Passa a classificar a despesa em tipo processo x escritório, e amarra a
+  categoria ao tipo — categoria de escritório num gasto de caso tornaria a
+  margem do processo mentirosa.
+- Categorias reescritas no vocabulário do dia a dia (deslocamento, custas,
+  cartório) no lugar das genéricas da v1.
+- Instrui a não descartar valores pequenos: corrida até o fórum,
+  estacionamento e cópias são os gastos que o advogado iniciante mais esquece
+  de lançar e que, somados, comem a margem do caso.
+
 ## expense-extraction-v1 — 13/09/2026
 
 - Primeira versão da leitura de recibo/nota/guia para lançar despesa.
