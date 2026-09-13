@@ -75,7 +75,7 @@ function Botao({
       aria-pressed={ativo}
       className={cn(
         "flex h-7 w-7 items-center justify-center rounded transition-colors",
-        ativo ? "bg-accent text-accent-foreground" : "text-muted-foreground hover:text-foreground",
+        ativo ? "bg-accent text-accent-foreground" : "text-muted-foreground hover:bg-hover hover:text-foreground",
       )}
     >
       {children}

@@ -175,7 +175,7 @@ export function DespesaForm({
                 setDescricao(atalho.descricao);
                 setCategoria(atalho.categoria);
               }}
-              className="rounded-full border border-border px-3 py-1 text-xs text-muted-foreground transition-colors hover:border-primary/50 hover:text-foreground"
+              className="rounded-full border border-border px-3 py-1 text-xs text-muted-foreground transition-colors hover:border-primary/50 hover:bg-hover hover:text-foreground"
             >
               {atalho.texto}
             </button>
@@ -341,7 +341,7 @@ function BotaoTipo({
         "flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-medium transition-colors",
         ativo
           ? "border-primary bg-accent text-accent-foreground"
-          : "border-border text-muted-foreground hover:text-foreground",
+          : "border-border text-muted-foreground hover:border-input hover:bg-hover hover:text-foreground",
       )}
     >
       {children}

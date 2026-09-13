@@ -36,7 +36,7 @@ export function Sidebar() {
           onClick={() => setAberta((v) => !v)}
           aria-label={aberta ? "Ocultar barra lateral" : "Mostrar barra lateral"}
           aria-pressed={!aberta}
-          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-card hover:text-foreground"
+          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-hover-strong hover:text-foreground"
         >
           {aberta ? (
             <PanelLeftClose className="h-4 w-4" aria-hidden="true" />
@@ -67,7 +67,7 @@ export function Sidebar() {
                 aberta ? "px-3 py-2" : "h-9 w-9 justify-center",
                 active
                   ? "bg-accent text-accent-foreground"
-                  : "text-muted-foreground hover:bg-card hover:text-foreground",
+                  : "text-muted-foreground hover:bg-hover-strong hover:text-foreground",
               )}
             >
               <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />

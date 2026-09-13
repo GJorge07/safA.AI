@@ -11,7 +11,7 @@ export default function ContratoNaoEncontrado() {
       </p>
       <Link
         href="/pagamentos"
-        className="rounded-md border border-border px-3 py-1.5 text-xs font-medium hover:bg-card"
+        className="rounded-md border border-border px-3 py-1.5 text-xs font-medium hover:bg-hover"
       >
         Voltar para Pagamentos
       </Link>

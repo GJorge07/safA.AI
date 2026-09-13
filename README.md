@@ -76,14 +76,17 @@ Pagamentos — por isso aqui não há lista de contratos.
 
 **Como estou:**
 
-- **o gráfico Entra e sai:** por mês, o previsto, o que entrou e o que saiu em despesas. Clique no
-  card para abrir a visão expandida (barra, linha ou pizza, com o detalhe por cliente);
+- **o gráfico Fluxo de caixa:** por mês, o previsto, o que entrou e o que saiu em despesas. Clique no
+  card para abrir a visão expandida (barras, linha ou por cliente, em 3, 6 ou 12 meses);
 - **quanto sobrou este mês:** o recebido menos as despesas pagas — o número que o honorário sozinho
   não conta;
 - **quanto está em atraso** e **quantos clientes ativos** você tem;
 - **a carteira por tipo:** quanto do seu contratado depende de ganhar a causa (êxito) e quanto é fixo.
 
-**O que faço agora:** o painel **Precisa de você** junta as três formas de o seu dinheiro ficar
+Os três números da coluna da direita são clicáveis e caem na lista que os explica: as despesas do
+mês, os contratos vencidos e a relação de clientes ativos (`/clientes`).
+
+**O que faço agora:** o painel **Pendências** junta as três formas de o seu dinheiro ficar
 parado — parcela vencida, serviço prestado e não recebido, e o que você adiantou pelo cliente e não
 cobrou. Sempre o mais antigo primeiro, com um clique que leva direto ao lugar de resolver.
 

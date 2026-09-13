@@ -170,7 +170,7 @@ export function ChatPanel({ temContratos, perguntaInicial, conversaId }: ChatPan
               <button
                 key={exemplo}
                 onClick={() => enviar(exemplo)}
-                className="flex items-center gap-1.5 rounded-full border border-border bg-card px-3.5 py-2 text-sm text-muted-foreground transition-colors hover:border-primary/50 hover:text-foreground"
+                className="flex items-center gap-1.5 rounded-full border border-border bg-card px-3.5 py-2 text-sm text-muted-foreground transition-colors hover:border-primary/50 hover:bg-hover hover:text-foreground"
               >
                 <Sparkles className="h-3.5 w-3.5 shrink-0 text-primary" aria-hidden="true" />
                 {exemplo}

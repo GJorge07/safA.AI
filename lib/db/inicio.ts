@@ -141,7 +141,7 @@ export async function resumoDoInicio(hoje = new Date()): Promise<ResumoInicio> {
 }
 
 // ---------------------------------------------------------------------------
-// "Precisa de você": o dinheiro parado, em uma lista curta e acionável
+// "Pendências": o dinheiro parado, em uma lista curta e acionável
 
 export type TipoAcao = "parcela" | "servico" | "reembolso";
 
@@ -290,35 +290,55 @@ export interface FatiaCliente {
   recebido: number;
 }
 
-// De onde veio o dinheiro, para a visão expandida do gráfico. Agregado no
-// banco: antes era calculado no cliente sobre a carteira inteira.
-export async function receitaPorCliente(hoje = new Date(), meses = 6, limite = 6): Promise<FatiaCliente[]> {
+/**
+ * Recebido por cliente **e por mês**. Vem quebrado por mês porque a visão
+ * expandida troca o período (3/6/12 meses) sem ir ao servidor de novo — a
+ * soma por cliente e o agrupamento em "outros clientes" acontecem lá, já
+ * sobre o recorte escolhido.
+ */
+export interface RecebidoClienteMes extends FatiaCliente {
+  /** YYYY-MM, na mesma chave usada por carregarFluxoComDespesas. */
+  mes: string;
+}
+
+// De onde veio o dinheiro. Conta pagamento de parcela E serviço avulso pelo
+// mesmo critério de "recebido" do gráfico de fluxo — senão a soma das fatias
+// não fecha com a barra de Recebido do mesmo mês.
+export async function receitaPorCliente(hoje = new Date(), meses = 12): Promise<RecebidoClienteMes[]> {
   const gte = new Date(Date.UTC(hoje.getUTCFullYear(), hoje.getUTCMonth() - Math.floor(meses / 2), 1));
   const lt = new Date(Date.UTC(gte.getUTCFullYear(), gte.getUTCMonth() + meses, 1));
 
-  const pagamentos = await prisma.pagamento.findMany({
-    where: { dataPago: { gte, lt } },
-    select: {
-      valorPago: true,
-      parcela: { select: { contrato: { select: { cliente: { select: { nome: true } } } } } },
-    },
-  });
+  const [pagamentos, servicos] = await prisma.$transaction([
+    prisma.pagamento.findMany({
+      where: { dataPago: { gte, lt } },
+      select: {
+        valorPago: true,
+        dataPago: true,
+        parcela: { select: { contrato: { select: { cliente: { select: { nome: true } } } } } },
+      },
+    }),
+    prisma.servico.findMany({
+      where: { recebidoEm: { gte, lt } },
+      select: { valor: true, recebidoEm: true, cliente: { select: { nome: true } } },
+    }),
+  ]);
 
-  const porCliente = new Map<string, number>();
+  const porChave = new Map<string, RecebidoClienteMes>();
+  const somar = (nome: string, data: Date, valor: number) => {
+    const mes = data.toISOString().slice(0, 7);
+    const chave = `${mes}|${nome}`;
+    const atual = porChave.get(chave);
+    if (atual) atual.recebido += valor;
+    else porChave.set(chave, { nome, mes, recebido: valor });
+  };
+
   for (const pagamento of pagamentos) {
-    const nome = pagamento.parcela.contrato.cliente.nome;
-    porCliente.set(nome, (porCliente.get(nome) ?? 0) + pagamento.valorPago.toNumber());
+    somar(pagamento.parcela.contrato.cliente.nome, pagamento.dataPago, pagamento.valorPago.toNumber());
+  }
+  for (const servico of servicos) {
+    if (!servico.recebidoEm) continue;
+    somar(servico.cliente?.nome ?? "Serviços avulsos", servico.recebidoEm, servico.valor.toNumber());
   }
 
-  const ordenado = Array.from(porCliente, ([nome, recebido]) => ({ nome, recebido: centavos(recebido) })).sort(
-    (a, b) => b.recebido - a.recebido,
-  );
-
-  if (ordenado.length <= limite) return ordenado;
-
-  // Com carteira grande, uma fatia por cliente viraria ruído; o resto some
-  // dentro de "outros".
-  const topo = ordenado.slice(0, limite);
-  const resto = ordenado.slice(limite).reduce((total, c) => total + c.recebido, 0);
-  return [...topo, { nome: "Outros clientes", recebido: centavos(resto) }];
+  return Array.from(porChave.values(), (linha) => ({ ...linha, recebido: centavos(linha.recebido) }));
 }

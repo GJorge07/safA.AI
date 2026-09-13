@@ -64,7 +64,7 @@ export function ContratosTabela({ pagina, visao, params, temFiltro }: ContratosT
             <Link
               key={contrato.id}
               href={hrefContrato(contrato.id)}
-              className="rounded-lg transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className="rounded-lg transition-shadow hover:ring-2 hover:ring-primary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
               <ContratoCard contrato={contrato} />
             </Link>
