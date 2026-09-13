@@ -448,7 +448,7 @@ export async function aReceberNoMes(hoje = new Date()): Promise<AReceber> {
 
   const [parcelas, servicos] = await prisma.$transaction([
     prisma.parcela.findMany({
-      where: { vencimento: { gte: inicio, lt: fim } },
+      where: { vencimento: { gte: inicio, lt: fim }, baixadaEm: null },
       select: { valor: true, pagamento: { select: { valorPago: true } } },
     }),
     prisma.servico.findMany({

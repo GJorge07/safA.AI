@@ -25,6 +25,12 @@
 - Exige textoOriginal literal, mesmo papel de clausulaOriginal no contrato — o
   resultado é rascunho e só o advogado confirma a gravação.
 
+## financial-chat-v1.5 — 13/09/2026
+
+- Ensina o estado "baixada": honorário de êxito que não se confirmou e deixou
+  de ser devido. Sem isso a IA somava no "quanto vou receber" um valor que o
+  advogado já sabe que não vem, e o apontava como atraso.
+
 ## contract-opinion-v1 — 12/09/2026
 
 - Primeira versão da opinião automática do contrato para o advogado.

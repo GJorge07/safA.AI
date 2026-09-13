@@ -5,6 +5,7 @@
 import type { Cliente, Contrato, Despesa, Parcela, Pagamento, Servico } from "@/app/generated/prisma/client";
 import type {
   CategoriaDespesa,
+  MotivoBaixa,
   CategoriaServico,
   OrigemRegistro,
   QuemPaga,
@@ -15,7 +16,21 @@ import type {
 // Modelo de apresentação: valores numéricos e enum compartilhado em minúsculas.
 // Os campos de auditoria não usados na UI podem ser omitidos nos dados de demonstração.
 type PagamentoUI = Omit<Pagamento, 'valorPago' | 'createdAt'> & { valorPago: number };
-export type ParcelaComPagamento = Omit<Parcela, 'valor' | 'createdAt'> & { valor: number; pagamento: PagamentoUI | null };
+export type ParcelaComPagamento = Omit<Parcela, 'valor' | 'createdAt' | 'motivoBaixa'> & {
+  valor: number;
+  pagamento: PagamentoUI | null;
+  motivoBaixa: MotivoBaixa | null;
+};
+
+/** Parcela baixada não é dívida: saiu do previsto, do atraso e da cobrança. */
+export function estaBaixada(parcela: ParcelaComPagamento): boolean {
+  return parcela.baixadaEm !== null;
+}
+
+/** Ainda pode entrar dinheiro por esta parcela? */
+export function estaEmAberto(parcela: ParcelaComPagamento): boolean {
+  return !parcela.pagamento && !estaBaixada(parcela);
+}
 
 export type ContratoComRelacoes = Omit<Contrato, 'valorTotal' | 'tipoPagamento' | 'origem' | 'updatedAt'> & {
   valorTotal: number;
@@ -55,10 +70,12 @@ export type StatusContrato = "em_dia" | "atrasado" | "quitado";
 
 export function statusDoContrato(contrato: ContratoComRelacoes): StatusContrato {
   if (contrato.parcelas.length === 0) return "em_dia";
-  const todasPagas = contrato.parcelas.every((p) => p.pagamento);
-  if (todasPagas) return "quitado";
+  // Encerrado = nada mais a receber. Uma parcela baixada fecha o assunto tanto
+  // quanto uma paga: em nenhum dos dois casos ainda se espera dinheiro.
+  const nadaEmAberto = contrato.parcelas.every((p) => !estaEmAberto(p));
+  if (nadaEmAberto) return "quitado";
   const hoje = new Date();
-  const temAtraso = contrato.parcelas.some((p) => !p.pagamento && p.vencimento < hoje);
+  const temAtraso = contrato.parcelas.some((p) => estaEmAberto(p) && p.vencimento < hoje);
   return temAtraso ? "atrasado" : "em_dia";
 }
 
@@ -103,7 +120,9 @@ export function parcelasAtrasadas(
   const total = contrato.parcelas.length;
   return contrato.parcelas
     .map((parcela, i) => {
-      const saldo = Math.max(0, parcela.valor - (parcela.pagamento?.valorPago ?? 0));
+      const saldo = estaBaixada(parcela)
+        ? 0
+        : Math.max(0, parcela.valor - (parcela.pagamento?.valorPago ?? 0));
       return { parcela, indice: i + 1, total, dias: diasDeAtraso(parcela.vencimento, hoje), saldo };
     })
     .filter((item) => item.saldo > 0 && item.dias > 0)
@@ -116,7 +135,7 @@ export function totalPagoDoContrato(contrato: ContratoComRelacoes): number {
 
 export function saldoEmAberto(contrato: ContratoComRelacoes): number {
   return contrato.parcelas.reduce(
-    (soma, p) => soma + Math.max(0, p.valor - (p.pagamento?.valorPago ?? 0)),
+    (soma, p) => soma + (estaBaixada(p) ? 0 : Math.max(0, p.valor - (p.pagamento?.valorPago ?? 0))),
     0,
   );
 }
@@ -136,7 +155,7 @@ export function statusDaDespesa(despesa: DespesaUI, hoje: Date = new Date()): St
 
 export function proximoVencimento(contrato: ContratoComRelacoes): Date | null {
   const pendentes = contrato.parcelas
-    .filter((p) => !p.pagamento)
+    .filter(estaEmAberto)
     .sort((a, b) => a.vencimento.getTime() - b.vencimento.getTime());
   return pendentes[0]?.vencimento ?? null;
 }
@@ -158,7 +177,10 @@ export function totalPrevistoNoMes(contratos: ContratoComRelacoes[], ano: number
   let total = 0;
   for (const c of contratos) {
     for (const p of c.parcelas) {
-      if (p.vencimento.getFullYear() === ano && p.vencimento.getMonth() === mes) total += p.valor;
+      // Baixada não entra na projeção: esse dinheiro não vem mais.
+      if (!estaBaixada(p) && p.vencimento.getFullYear() === ano && p.vencimento.getMonth() === mes) {
+        total += p.valor;
+      }
     }
   }
   return total;
@@ -168,7 +190,7 @@ export function totalEmAtraso(contratos: ContratoComRelacoes[], hoje: Date = new
   let total = 0;
   for (const c of contratos) {
     for (const p of c.parcelas) {
-      if (!p.pagamento && p.vencimento < hoje) total += p.valor;
+      if (estaEmAberto(p) && p.vencimento < hoje) total += p.valor;
     }
   }
   return total;

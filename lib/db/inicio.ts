@@ -31,7 +31,11 @@ export async function carregarFluxoComDespesas(hoje = new Date(), meses = 6): Pr
   const lt = new Date(Date.UTC(gte.getUTCFullYear(), gte.getUTCMonth() + meses, 1));
 
   const [parcelas, pagamentos, servicos, despesas] = await prisma.$transaction([
-    prisma.parcela.findMany({ where: { vencimento: { gte, lt } }, select: { valor: true, vencimento: true } }),
+    // O previsto do gráfico ignora baixadas: esse dinheiro não vem mais.
+    prisma.parcela.findMany({
+      where: { vencimento: { gte, lt }, baixadaEm: null },
+      select: { valor: true, vencimento: true },
+    }),
     prisma.pagamento.findMany({ where: { dataPago: { gte, lt } }, select: { valorPago: true, dataPago: true } }),
     prisma.servico.findMany({
       where: { vencimento: { gte, lt } },
@@ -111,7 +115,8 @@ export async function resumoDoInicio(hoje = new Date()): Promise<ResumoInicio> {
       prisma.servico.findMany({ where: { recebidoEm: { gte: anterior, lt: comeco } }, select: { valor: true } }),
       prisma.despesa.findMany({ where: { pagoEm: { gte: comeco, lt: proximo } }, select: { valor: true } }),
       prisma.parcela.findMany({
-        where: { pagamento: { is: null }, vencimento: { lt: hoje } },
+        // Baixada não é atraso: o honorário de êxito que não veio não é dívida.
+        where: { pagamento: { is: null }, baixadaEm: null, vencimento: { lt: hoje } },
         select: { valor: true },
       }),
       prisma.servico.findMany({
@@ -120,7 +125,7 @@ export async function resumoDoInicio(hoje = new Date()): Promise<ResumoInicio> {
       }),
       // "Ativo" = tem ao menos uma parcela ainda em aberto.
       prisma.cliente.count({
-        where: { contratos: { some: { parcelas: { some: { pagamento: { is: null } } } } } },
+        where: { contratos: { some: { parcelas: { some: { pagamento: { is: null }, baixadaEm: null } } } } },
       }),
     ]);
 
@@ -168,7 +173,7 @@ function diasDesde(data: Date, hoje: Date): number {
 export async function acoesPendentes(hoje = new Date(), limite = 5): Promise<AcaoPendente[]> {
   const [parcelas, servicos, reembolsos] = await prisma.$transaction([
     prisma.parcela.findMany({
-      where: { pagamento: { is: null }, vencimento: { lt: hoje } },
+      where: { pagamento: { is: null }, baixadaEm: null, vencimento: { lt: hoje } },
       select: {
         id: true,
         valor: true,

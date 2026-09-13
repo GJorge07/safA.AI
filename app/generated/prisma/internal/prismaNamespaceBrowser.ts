@@ -108,6 +108,9 @@ export const ParcelaScalarFieldEnum = {
   contratoId: 'contratoId',
   valor: 'valor',
   vencimento: 'vencimento',
+  baixadaEm: 'baixadaEm',
+  motivoBaixa: 'motivoBaixa',
+  notaBaixa: 'notaBaixa',
   createdAt: 'createdAt'
 } as const
 

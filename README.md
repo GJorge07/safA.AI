@@ -120,6 +120,18 @@ documento ou número e um filtro de situação (atrasados, vencem em 7 dias, em 
 mostra a contagem de cada um. Os filtros ficam no endereço da página: dá para mandar para alguém o
 link de *todos os atrasados*.
 
+##### Honorário de êxito que não vem
+
+Contrato de êxito só é devido se a causa der certo — e nenhum sistema adivinha o desfecho. Na ficha do
+contrato, cada parcela em aberto tem dois caminhos: **Recebi** e **Não recebi**. O segundo pergunta o
+que aconteceu (a causa não teve êxito, acordo por valor menor, desistência ou outro motivo) e dá baixa
+no valor.
+
+Baixa **não é** inadimplência. Parcela baixada deixa de ser dívida: sai do previsto, para de contar
+como atraso e some da cobrança. Já a parcela de um honorário devido que o cliente não pagou continua
+em atraso, como antes — são situações opostas e o sistema não as mistura. Dá para desfazer a baixa se
+o desfecho mudar (recurso provido, acordo retomado).
+
 **Clique em qualquer contrato** para abrir a ficha dele. Se estiver atrasado, a primeira coisa que
 aparece é o bloco de cobrança: qual parcela venceu, há quantos dias, quanto está em aberto, e o
 telefone e o e-mail de quem deve — com um botão que copia a mensagem de cobrança já escrita. Nas abas
@@ -339,6 +351,7 @@ Cliente ──1:N──> Contrato ──1:N──> Parcela ──1:1(opcional)�
 | `/api/contratos/[id]/parcelas` | GET, POST | parcelas do contrato |
 | `/api/parcelas/[id]` | PUT, DELETE | edita/exclui parcela |
 | `/api/parcelas/[id]/pagamento` | POST, PUT, DELETE | registra, corrige ou remove o pagamento |
+| `/api/parcelas/[id]/baixa` | POST, DELETE | marca que o valor não será recebido (com motivo); desfaz a baixa |
 | `/api/fluxo-caixa` | GET | previsto (por vencimento) × recebido (por data do pagamento), por mês |
 | `/api/servicos` | GET, POST | lista paginada (busca, tipo, situação, caso); registra serviço avulso |
 | `/api/servicos/[id]` | GET, PATCH, DELETE | detalhe; marca como recebido; exclui |

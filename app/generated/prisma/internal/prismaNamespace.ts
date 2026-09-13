@@ -933,6 +933,9 @@ export const ParcelaScalarFieldEnum = {
   contratoId: 'contratoId',
   valor: 'valor',
   vencimento: 'vencimento',
+  baixadaEm: 'baixadaEm',
+  motivoBaixa: 'motivoBaixa',
+  notaBaixa: 'notaBaixa',
   createdAt: 'createdAt'
 } as const
 
@@ -1101,6 +1104,20 @@ export type EnumOrigemRegistroFieldRefInput<$PrismaModel> = FieldRefInputType<$P
  * Reference to a field of type 'OrigemRegistro[]'
  */
 export type ListEnumOrigemRegistroFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'OrigemRegistro[]'>
+    
+
+
+/**
+ * Reference to a field of type 'MotivoBaixa'
+ */
+export type EnumMotivoBaixaFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'MotivoBaixa'>
+    
+
+
+/**
+ * Reference to a field of type 'MotivoBaixa[]'
+ */
+export type ListEnumMotivoBaixaFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'MotivoBaixa[]'>
     
 
 

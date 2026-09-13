@@ -61,6 +61,14 @@ model Parcela {
 
   pagamento  Pagamento?
 
+  // Honorário de êxito só é devido se a causa der certo, e isso nenhum sistema
+  // adivinha: quem dá baixa é o advogado. Parcela baixada deixa de ser dívida —
+  // sai do previsto, do atraso e da cobrança. Diferente de "devido e não pago",
+  // que continua sendo atraso.
+  baixadaEm   DateTime?
+  motivoBaixa MotivoBaixa?
+  notaBaixa   String?
+
   createdAt  DateTime   @default(now())
 
   @@index([contratoId])
@@ -156,6 +164,15 @@ model Despesa {
 
   @@index([vencimento])
   @@index([contratoId])
+}
+
+// Só motivos que tornam o valor NÃO DEVIDO. Inadimplência não entra aqui:
+// nesse caso o honorário continua devido e a parcela segue em cobrança.
+enum MotivoBaixa {
+  SEM_EXITO
+  ACORDO_MENOR
+  DESISTENCIA
+  OUTRO
 }
 
 enum TipoPagamento {
