@@ -23,7 +23,7 @@ const config: runtime.GetPrismaClientConfig = {
       "value": "prisma-client"
     },
     "output": {
-      "value": "/home/guilherme/SAFA/safa-ai/app/generated/prisma",
+      "value": "C:\\Users\\Gabriel Jorge\\OneDrive\\Documentos\\safA.AI\\app\\generated\\prisma",
       "fromEnvVar": null
     },
     "config": {
@@ -32,12 +32,12 @@ const config: runtime.GetPrismaClientConfig = {
     "binaryTargets": [
       {
         "fromEnvVar": null,
-        "value": "debian-openssl-3.0.x",
+        "value": "windows",
         "native": true
       }
     ],
     "previewFeatures": [],
-    "sourceFilePath": "/home/guilherme/SAFA/safa-ai/prisma/schema.prisma",
+    "sourceFilePath": "C:\\Users\\Gabriel Jorge\\OneDrive\\Documentos\\safA.AI\\prisma\\schema.prisma",
     "isCustomOutput": true
   },
   "relativePath": "../../../prisma",
@@ -47,6 +47,7 @@ const config: runtime.GetPrismaClientConfig = {
     "db"
   ],
   "activeProvider": "postgresql",
+  "postinstall": false,
   "inlineDatasources": {
     "db": {
       "url": {

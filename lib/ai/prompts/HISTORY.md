@@ -6,6 +6,12 @@
 - Padroniza caminhos dos campos para validação automática.
 - Inclui página e cláusula e rejeita referência não localizada no documento.
 
+## financial-chat-v1.3 — 12/09/2026
+
+- Cobre saudações e conversa fora do tema financeiro, que antes derrubavam a
+  resposta na validação de grounding.
+- Proíbe explicitamente `citacoes` vazio junto de `aviso` null.
+
 ## financial-chat-v1.2 — 12/09/2026
 
 - Exige os caminhos exatos do JSON usados nas afirmações factuais.
