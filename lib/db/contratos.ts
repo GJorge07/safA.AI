@@ -66,6 +66,15 @@ export function contarContratos(): Promise<number> {
   return prisma.contrato.count();
 }
 
+// Só o suficiente para o <select> de cliente num serviço avulso.
+export function listarClientesParaSelecao(limite = 500) {
+  return prisma.cliente.findMany({
+    select: { id: true, nome: true },
+    orderBy: { nome: "asc" },
+    take: limite,
+  });
+}
+
 // Só o suficiente para o <select> de "despesa amarrada a um caso".
 export async function listarContratosParaSelecao(limite = 200) {
   const contratos = await prisma.contrato.findMany({

@@ -65,6 +65,11 @@ export type Parcela = Prisma.ParcelaModel
  */
 export type Pagamento = Prisma.PagamentoModel
 /**
+ * Model Servico
+ * 
+ */
+export type Servico = Prisma.ServicoModel
+/**
  * Model Despesa
  * 
  */

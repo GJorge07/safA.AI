@@ -21,6 +21,7 @@ const COM_VOLUME = process.env.SEED_VOLUME !== "0";
 const QUANTIDADE_CLIENTES = COM_VOLUME ? 120 : 0;
 const QUANTIDADE_CONTRATOS = COM_VOLUME ? 180 : 0;
 const QUANTIDADE_DESPESAS = COM_VOLUME ? 60 : 8;
+const QUANTIDADE_SERVICOS = COM_VOLUME ? 45 : 5;
 
 // mulberry32: PRNG minúsculo e determinístico. Semente fixa para o seed gerar
 // exatamente a mesma base toda vez, sem dependência nova no projeto.
@@ -366,6 +367,98 @@ async function semearDespesas(contratoIds: string[], hoje: Date) {
   }
 }
 
+
+// Serviços avulsos: o que o advogado cobra fora do contrato. Dois sabores —
+// o solto (consulta de balcão) e o extra dentro de um caso já contratado.
+const SERVICOS = [
+  { descricao: "Consulta sobre rescisão contratual", categoria: "CONSULTA", min: 150, max: 400 },
+  { descricao: "Consulta inicial sobre ação trabalhista", categoria: "CONSULTA", min: 150, max: 350 },
+  { descricao: "Parecer sobre cláusula de não concorrência", categoria: "PARECER", min: 600, max: 2500 },
+  { descricao: "Petição avulsa de habilitação", categoria: "PETICAO", min: 300, max: 900 },
+  { descricao: "Audiência de conciliação fora do contrato", categoria: "AUDIENCIA", min: 400, max: 1200 },
+  { descricao: "Elaboração de contrato de prestação de serviços", categoria: "ELABORACAO_CONTRATO", min: 500, max: 2000 },
+] as const;
+
+async function semearServicos(clienteIds: string[], contratoIds: string[], hoje: Date) {
+  for (let i = 1; i <= QUANTIDADE_SERVICOS; i += 1) {
+    const servicoId = id("sv-seed", i);
+    const modelo = escolher(SERVICOS);
+    // Um terço acontece dentro de um caso já contratado — é o "extra" que o
+    // advogado presta no meio do processo e esquece de cobrar.
+    const dentroDeUmCaso = i % 3 === 0 && contratoIds.length > 0;
+    const realizadoEm = new Date(hoje.getTime() - inteiro(0, 90) * 86400000);
+    const vencimento = new Date(realizadoEm.getTime() + escolher([0, 7, 15, 30]) * 86400000);
+    const jaVenceu = vencimento < hoje;
+
+    const dados = {
+      descricao: modelo.descricao,
+      categoria: modelo.categoria,
+      valor: inteiro(modelo.min, modelo.max),
+      realizadoEm,
+      vencimento,
+      // Boa parte do que venceu ainda não foi recebida: é o buraco que a aba
+      // de serviços existe para mostrar.
+      recebidoEm: jaVenceu && aleatorio() < 0.6 ? new Date(vencimento.getTime() + inteiro(0, 10) * 86400000) : null,
+      clienteId: clienteIds.length > 0 ? escolher(clienteIds) : null,
+      contratoId: dentroDeUmCaso ? escolher(contratoIds) : null,
+      observacao: null,
+    };
+
+    await prisma.servico.upsert({
+      where: { id: servicoId },
+      update: dados,
+      create: { id: servicoId, ...dados },
+    });
+  }
+}
+
+// Serviços fixos nos contratos da demonstração, para a receita do caso mostrar
+// as duas vias somadas já no pitch.
+const SERVICOS_DEMO = [
+  {
+    id: "sv-demo-001",
+    contratoId: "c1",
+    clienteId: "cli1",
+    descricao: "Audiência de conciliação não prevista no contrato",
+    categoria: "AUDIENCIA",
+    valor: 900,
+    diasAtras: 20,
+    recebido: false,
+  },
+  {
+    id: "sv-demo-002",
+    contratoId: null,
+    clienteId: "cli2",
+    descricao: "Consulta sobre acordo extrajudicial",
+    categoria: "CONSULTA",
+    valor: 300,
+    diasAtras: 9,
+    recebido: true,
+  },
+] as const;
+
+async function semearServicosDemo(hoje: Date) {
+  for (const modelo of SERVICOS_DEMO) {
+    const realizadoEm = new Date(hoje.getTime() - modelo.diasAtras * 86400000);
+    const dados = {
+      descricao: modelo.descricao,
+      categoria: modelo.categoria,
+      valor: modelo.valor,
+      realizadoEm,
+      vencimento: realizadoEm,
+      recebidoEm: modelo.recebido ? realizadoEm : null,
+      clienteId: modelo.clienteId,
+      contratoId: modelo.contratoId,
+      observacao: null,
+    };
+    await prisma.servico.upsert({
+      where: { id: modelo.id },
+      update: dados,
+      create: { id: modelo.id, ...dados },
+    });
+  }
+}
+
 // Trocar de volume para demo precisa limpar o que o modo anterior criou,
 // senão os 180 contratos gerados continuariam distorcendo os totais do pitch.
 // Gastos fixos nos contratos da demonstração: sem eles, a ficha de c1 abriria
@@ -460,6 +553,7 @@ async function semearDespesasDemo(hoje: Date) {
 }
 
 async function limparVolume() {
+  await prisma.servico.deleteMany({ where: { id: { startsWith: "sv-seed-" } } });
   await prisma.despesa.deleteMany({ where: { id: { startsWith: "dp-seed-" } } });
   await prisma.contrato.deleteMany({ where: { id: { startsWith: "ct-seed-" } } });
   await prisma.cliente.deleteMany({ where: { id: { startsWith: "cli-seed-" } } });
@@ -474,17 +568,25 @@ async function main() {
   const contratoIds = await semearContratos(clienteIds, hoje);
   await semearDespesas([...contratoIds, ...contratosMock.map((c) => c.id)], hoje);
   await semearDespesasDemo(hoje);
+  await semearServicos(
+    [...clienteIds, ...contratosMock.map((c) => c.clienteId)],
+    [...contratoIds, ...contratosMock.map((c) => c.id)],
+    hoje,
+  );
+  await semearServicosDemo(hoje);
 
-  const [totalClientes, totalContratos, totalParcelas, totalPagamentos, totalDespesas] = await Promise.all([
+  const [totalClientes, totalContratos, totalParcelas, totalPagamentos, totalDespesas, totalServicos] =
+    await Promise.all([
     prisma.cliente.count(),
     prisma.contrato.count(),
     prisma.parcela.count(),
     prisma.pagamento.count(),
     prisma.despesa.count(),
+    prisma.servico.count(),
   ]);
   console.log(
     `Seed concluído: ${totalClientes} clientes, ${totalContratos} contratos, ${totalParcelas} parcelas, ` +
-      `${totalPagamentos} pagamentos, ${totalDespesas} despesas.`,
+      `${totalPagamentos} pagamentos, ${totalServicos} serviços, ${totalDespesas} despesas.`,
   );
 }
 

@@ -2,9 +2,10 @@
 // dados. Nada aqui é um schema novo: são apenas as relações que o dashboard
 // precisa incluídas (cliente, parcelas, pagamento), como uma query real do
 // Prisma devolveria.
-import type { Cliente, Contrato, Despesa, Parcela, Pagamento } from "@/app/generated/prisma/client";
+import type { Cliente, Contrato, Despesa, Parcela, Pagamento, Servico } from "@/app/generated/prisma/client";
 import type {
   CategoriaDespesa,
+  CategoriaServico,
   OrigemRegistro,
   QuemPaga,
   Recorrencia,
@@ -38,6 +39,20 @@ export type DespesaUI = Omit<
   contrato: { id: string; numero: number; cliente: { nome: string } } | null;
 };
 
+export type ServicoUI = Omit<Servico, 'valor' | 'categoria' | 'updatedAt'> & {
+  valor: number;
+  categoria: CategoriaServico;
+  cliente: { id: string; nome: string } | null;
+  contrato: { id: string; numero: number } | null;
+};
+
+export type StatusServico = "recebido" | "atrasado" | "a_receber";
+
+export function statusDoServico(servico: ServicoUI, hoje: Date = new Date()): StatusServico {
+  if (servico.recebidoEm) return "recebido";
+  return diasDeAtraso(servico.vencimento, hoje) > 0 ? "atrasado" : "a_receber";
+}
+
 export type StatusContrato = "em_dia" | "atrasado" | "quitado";
 
 export function statusDoContrato(contrato: ContratoComRelacoes): StatusContrato {
@@ -56,6 +71,10 @@ export function numeroContrato(contrato: { numero: number }): string {
 
 export function numeroDespesa(despesa: { numero: number }): string {
   return `DP-${String(despesa.numero).padStart(4, "0")}`;
+}
+
+export function numeroServico(servico: { numero: number }): string {
+  return `SV-${String(servico.numero).padStart(4, "0")}`;
 }
 
 // Comparação só por dia civil — usar o horário faria o mesmo vencimento contar

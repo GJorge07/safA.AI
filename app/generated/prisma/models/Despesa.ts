@@ -675,10 +675,6 @@ export type EnumCategoriaDespesaFieldUpdateOperationsInput = {
   set?: $Enums.CategoriaDespesa
 }
 
-export type NullableDateTimeFieldUpdateOperationsInput = {
-  set?: Date | string | null
-}
-
 export type EnumTipoDespesaFieldUpdateOperationsInput = {
   set?: $Enums.TipoDespesa
 }

@@ -14,6 +14,16 @@ export interface ContratoExtraido {
   clausulaOriginal: string; // trecho literal do contrato, para checagem do advogado
 }
 
+// O que o advogado cobra fora do contrato: consulta, parecer, audiência
+// avulsa. Cobrança única, sem parcela nem cláusula.
+export type CategoriaServico =
+  | "consulta"
+  | "parecer"
+  | "peticao"
+  | "audiencia"
+  | "elaboracao_contrato"
+  | "outros_servico";
+
 // O que sai do caixa. Espelha o modelo Despesa do schema, com os enums em
 // minúsculas como TipoPagamento já faz.
 //

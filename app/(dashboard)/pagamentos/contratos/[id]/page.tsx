@@ -7,6 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { BlocoCobranca } from "@/components/dashboard/bloco-cobranca";
 import { DespesaForm } from "@/components/dashboard/despesa-form";
 import { MargemCaso } from "@/components/dashboard/margem-caso";
+import { ServicoForm } from "@/components/dashboard/servico-form";
 import { OpiniaoContrato } from "@/components/dashboard/opiniao-contrato";
 import { ParcelasContrato, type ParcelaLinha } from "@/components/dashboard/parcelas-contrato";
 import {
@@ -14,31 +15,36 @@ import {
   diasDeAtraso,
   numeroContrato,
   numeroDespesa,
+  numeroServico,
   parcelasAtrasadas,
   saldoEmAberto,
   statusDoContrato,
+  statusDoServico,
   totalPagoDoContrato,
   type ContratoComRelacoes,
   type StatusContrato,
 } from "@/components/dashboard/types";
 import {
+  listarClientesParaSelecao,
   listarContratosDoCliente,
   listarContratosParaSelecao,
   obterContratoComRelacoes,
 } from "@/lib/db/contratos";
+import { listarServicosDoContrato, rotuloCategoriaServico } from "@/lib/db/servicos";
 import { listarDespesasDoContrato, margemDoCaso, rotuloCategoria } from "@/lib/db/despesas";
 import { cn } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
-const ABAS = ["parcelas", "clausula", "cliente", "despesas"] as const;
+const ABAS = ["parcelas", "clausula", "cliente", "despesas", "servicos"] as const;
 type Aba = (typeof ABAS)[number];
 
 const rotuloAba: Record<Aba, string> = {
   parcelas: "Parcelas",
   clausula: "Cláusula original",
   cliente: "Cliente",
-  despesas: "Despesas do caso",
+  despesas: "Gastos do caso",
+  servicos: "Serviços extras",
 };
 
 const statusLabel: Record<StatusContrato, string> = {
@@ -74,11 +80,13 @@ export default async function ContratoDetalhePage({ params, searchParams }: Deta
   if (!contrato) notFound();
 
   const aba: Aba = ABAS.includes(ver as Aba) ? (ver as Aba) : "parcelas";
-  const [irmaos, despesas, margem, contratos] = await Promise.all([
+  const [irmaos, despesas, servicos, margem, contratos, clientes] = await Promise.all([
     aba === "cliente" ? listarContratosDoCliente(contrato.clienteId, contrato.id) : Promise.resolve([]),
     aba === "despesas" ? listarDespesasDoContrato(contrato.id) : Promise.resolve([]),
+    aba === "servicos" ? listarServicosDoContrato(contrato.id) : Promise.resolve([]),
     margemDoCaso(contrato.id),
     aba === "despesas" ? listarContratosParaSelecao() : Promise.resolve([]),
+    aba === "servicos" ? listarClientesParaSelecao() : Promise.resolve([]),
   ]);
 
   const status = statusDoContrato(contrato);
@@ -144,6 +152,9 @@ export default async function ContratoDetalhePage({ params, searchParams }: Deta
           {aba === "cliente" && <AbaCliente contrato={contrato} irmaos={irmaos} />}
           {aba === "despesas" && (
             <AbaDespesas despesas={despesas} contratoId={contrato.id} contratos={contratos} />
+          )}
+          {aba === "servicos" && (
+            <AbaServicos servicos={servicos} contratoId={contrato.id} clientes={clientes} />
           )}
         </div>
 
@@ -386,6 +397,96 @@ function AbaDespesas({
                   </TableCell>
                 </TableRow>
               ))}
+            </TableBody>
+          </Table>
+        </>
+      )}
+    </div>
+  );
+}
+
+// O que foi cobrado além do contrato dentro deste mesmo caso — a audiência
+// extra, o parecer pedido no meio do processo. Entra na receita do caso.
+function AbaServicos({
+  servicos,
+  contratoId,
+  clientes,
+}: {
+  servicos: Awaited<ReturnType<typeof listarServicosDoContrato>>;
+  contratoId: string;
+  clientes: { id: string; nome: string }[];
+}) {
+  const total = servicos.reduce((soma, s) => soma + s.valor, 0);
+  const recebido = servicos.filter((s) => s.recebidoEm).reduce((soma, s) => soma + s.valor, 0);
+
+  return (
+    <div className="flex flex-col gap-4">
+      <details className="group rounded-lg border border-border" open={servicos.length === 0}>
+        <summary className="cursor-pointer list-none px-4 py-3 text-sm font-medium text-muted-foreground [&::-webkit-details-marker]:hidden">
+          <span className="group-open:hidden">+ Registrar serviço extra neste caso</span>
+          <span className="hidden group-open:inline">− Registrar serviço extra neste caso</span>
+        </summary>
+        <div className="border-t border-border p-4">
+          <ServicoForm clientes={clientes} contratos={[]} contratoFixo={contratoId} />
+        </div>
+      </details>
+
+      {servicos.length === 0 ? (
+        <div className="flex flex-col items-center gap-2 py-8 text-center">
+          <FileText className="h-6 w-6 text-muted-foreground" aria-hidden="true" />
+          <p className="text-sm font-medium">Nenhum serviço extra neste caso</p>
+          <p className="max-w-md text-xs text-muted-foreground">
+            Audiência que não estava no contrato, parecer pedido no meio do processo, petição avulsa —
+            registre aqui para não trabalhar de graça.
+          </p>
+        </div>
+      ) : (
+        <>
+          <div className="flex flex-wrap gap-4 rounded-lg border border-border bg-card p-3 text-sm">
+            <span>
+              Total cobrado: <strong className="font-mono tabular-nums">{moeda(total)}</strong>
+            </span>
+            <span className="text-success">
+              Já recebido: <strong className="font-mono tabular-nums">{moeda(recebido)}</strong>
+            </span>
+          </div>
+
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Serviço</TableHead>
+                <TableHead className="w-20">Nº</TableHead>
+                <TableHead className="w-44">Tipo</TableHead>
+                <TableHead className="w-28 text-right">Valor</TableHead>
+                <TableHead className="w-28">Prestado em</TableHead>
+                <TableHead className="w-28">Situação</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {servicos.map((servico) => {
+                const status = statusDoServico(servico);
+                return (
+                  <TableRow key={servico.id}>
+                    <TableCell className="font-medium">{servico.descricao}</TableCell>
+                    <TableCell className="font-mono text-xs text-muted-foreground">
+                      {numeroServico(servico)}
+                    </TableCell>
+                    <TableCell className="text-xs">{rotuloCategoriaServico[servico.categoria]}</TableCell>
+                    <TableCell className="text-right font-mono tabular-nums">{moeda(servico.valor)}</TableCell>
+                    <TableCell className="text-xs text-muted-foreground">{data(servico.realizadoEm)}</TableCell>
+                    <TableCell>
+                      <Badge
+                        variant={
+                          status === "recebido" ? "success" : status === "atrasado" ? "destructive" : "neutral"
+                        }
+                        dot
+                      >
+                        {status === "recebido" ? "Recebido" : status === "atrasado" ? "Atrasado" : "A receber"}
+                      </Badge>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
             </TableBody>
           </Table>
         </>

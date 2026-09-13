@@ -35,6 +35,10 @@ export function MargemCaso({ margem }: { margem: MargemDoCaso }) {
         <>
           <div className="flex flex-col gap-1 text-xs">
             <Linha rotulo="Honorários contratados" valor={moeda(margem.honorarios)} />
+            {/* Serviço extra prestado dentro do caso também é receita dele. */}
+            {margem.servicos > 0 && (
+              <Linha rotulo="Serviços extras neste caso" valor={`+ ${moeda(margem.servicos)}`} positivo />
+            )}
             <Linha rotulo="Gastos por sua conta" valor={`− ${moeda(margem.porContaDoAdvogado)}`} negativo />
             {margem.aReembolsar > 0 && (
               <Linha rotulo="Adiantado, a reembolsar" valor={moeda(margem.aReembolsar)} aviso />
@@ -78,11 +82,13 @@ function Linha({
   rotulo,
   valor,
   negativo,
+  positivo,
   aviso,
 }: {
   rotulo: string;
   valor: string;
   negativo?: boolean;
+  positivo?: boolean;
   aviso?: boolean;
 }) {
   return (
@@ -92,6 +98,7 @@ function Linha({
         className={cn(
           "font-mono tabular-nums",
           negativo && "text-destructive",
+          positivo && "text-success",
           aviso && "text-warning",
         )}
       >
