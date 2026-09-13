@@ -1,6 +1,6 @@
 import { ApiError, body, Context, date, handle, money, text } from "@/lib/api/http";
 import { atualizarDespesa, excluirDespesa, obterDespesa } from "@/lib/db/despesas";
-import { categoria, conferirParTipoCategoria, quemPaga, recorrencia, tipoDespesa } from "../route";
+import { categoria, conferirParTipoCategoria, quemPaga, tipoDespesa } from "../route";
 
 export async function GET(_request: Request, { params }: Context) {
   return handle(async () => {
@@ -33,7 +33,6 @@ export async function PATCH(request: Request, { params }: Context) {
         ...(cat === undefined ? {} : { categoria: cat }),
         ...(dados.valor === undefined ? {} : { valor: money(dados.valor, "valor").toNumber() }),
         ...(dados.vencimento === undefined ? {} : { vencimento: date(dados.vencimento, "vencimento") }),
-        ...(dados.recorrencia === undefined ? {} : { recorrencia: recorrencia(dados.recorrencia) }),
         ...(dados.quemPaga === undefined ? {} : { quemPaga: quemPaga(dados.quemPaga) }),
         ...(dados.fornecedor === undefined
           ? {}

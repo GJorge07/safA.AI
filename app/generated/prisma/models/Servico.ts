@@ -47,7 +47,6 @@ export type ServicoMinAggregateOutputType = {
   recebidoEm: Date | null
   clienteId: string | null
   contratoId: string | null
-  observacao: string | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -63,7 +62,6 @@ export type ServicoMaxAggregateOutputType = {
   recebidoEm: Date | null
   clienteId: string | null
   contratoId: string | null
-  observacao: string | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -79,7 +77,6 @@ export type ServicoCountAggregateOutputType = {
   recebidoEm: number
   clienteId: number
   contratoId: number
-  observacao: number
   createdAt: number
   updatedAt: number
   _all: number
@@ -107,7 +104,6 @@ export type ServicoMinAggregateInputType = {
   recebidoEm?: true
   clienteId?: true
   contratoId?: true
-  observacao?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -123,7 +119,6 @@ export type ServicoMaxAggregateInputType = {
   recebidoEm?: true
   clienteId?: true
   contratoId?: true
-  observacao?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -139,7 +134,6 @@ export type ServicoCountAggregateInputType = {
   recebidoEm?: true
   clienteId?: true
   contratoId?: true
-  observacao?: true
   createdAt?: true
   updatedAt?: true
   _all?: true
@@ -242,7 +236,6 @@ export type ServicoGroupByOutputType = {
   recebidoEm: Date | null
   clienteId: string | null
   contratoId: string | null
-  observacao: string | null
   createdAt: Date
   updatedAt: Date
   _count: ServicoCountAggregateOutputType | null
@@ -281,7 +274,6 @@ export type ServicoWhereInput = {
   recebidoEm?: Prisma.DateTimeNullableFilter<"Servico"> | Date | string | null
   clienteId?: Prisma.StringNullableFilter<"Servico"> | string | null
   contratoId?: Prisma.StringNullableFilter<"Servico"> | string | null
-  observacao?: Prisma.StringNullableFilter<"Servico"> | string | null
   createdAt?: Prisma.DateTimeFilter<"Servico"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Servico"> | Date | string
   cliente?: Prisma.XOR<Prisma.ClienteNullableScalarRelationFilter, Prisma.ClienteWhereInput> | null
@@ -299,7 +291,6 @@ export type ServicoOrderByWithRelationInput = {
   recebidoEm?: Prisma.SortOrderInput | Prisma.SortOrder
   clienteId?: Prisma.SortOrderInput | Prisma.SortOrder
   contratoId?: Prisma.SortOrderInput | Prisma.SortOrder
-  observacao?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   cliente?: Prisma.ClienteOrderByWithRelationInput
@@ -320,7 +311,6 @@ export type ServicoWhereUniqueInput = Prisma.AtLeast<{
   recebidoEm?: Prisma.DateTimeNullableFilter<"Servico"> | Date | string | null
   clienteId?: Prisma.StringNullableFilter<"Servico"> | string | null
   contratoId?: Prisma.StringNullableFilter<"Servico"> | string | null
-  observacao?: Prisma.StringNullableFilter<"Servico"> | string | null
   createdAt?: Prisma.DateTimeFilter<"Servico"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Servico"> | Date | string
   cliente?: Prisma.XOR<Prisma.ClienteNullableScalarRelationFilter, Prisma.ClienteWhereInput> | null
@@ -338,7 +328,6 @@ export type ServicoOrderByWithAggregationInput = {
   recebidoEm?: Prisma.SortOrderInput | Prisma.SortOrder
   clienteId?: Prisma.SortOrderInput | Prisma.SortOrder
   contratoId?: Prisma.SortOrderInput | Prisma.SortOrder
-  observacao?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   _count?: Prisma.ServicoCountOrderByAggregateInput
@@ -362,7 +351,6 @@ export type ServicoScalarWhereWithAggregatesInput = {
   recebidoEm?: Prisma.DateTimeNullableWithAggregatesFilter<"Servico"> | Date | string | null
   clienteId?: Prisma.StringNullableWithAggregatesFilter<"Servico"> | string | null
   contratoId?: Prisma.StringNullableWithAggregatesFilter<"Servico"> | string | null
-  observacao?: Prisma.StringNullableWithAggregatesFilter<"Servico"> | string | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"Servico"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"Servico"> | Date | string
 }
@@ -376,7 +364,6 @@ export type ServicoCreateInput = {
   realizadoEm: Date | string
   vencimento: Date | string
   recebidoEm?: Date | string | null
-  observacao?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   cliente?: Prisma.ClienteCreateNestedOneWithoutServicosInput
@@ -394,7 +381,6 @@ export type ServicoUncheckedCreateInput = {
   recebidoEm?: Date | string | null
   clienteId?: string | null
   contratoId?: string | null
-  observacao?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -407,7 +393,6 @@ export type ServicoUpdateInput = {
   realizadoEm?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   vencimento?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   recebidoEm?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  observacao?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   cliente?: Prisma.ClienteUpdateOneWithoutServicosNestedInput
@@ -425,7 +410,6 @@ export type ServicoUncheckedUpdateInput = {
   recebidoEm?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   clienteId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   contratoId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  observacao?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -441,7 +425,6 @@ export type ServicoCreateManyInput = {
   recebidoEm?: Date | string | null
   clienteId?: string | null
   contratoId?: string | null
-  observacao?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -454,7 +437,6 @@ export type ServicoUpdateManyMutationInput = {
   realizadoEm?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   vencimento?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   recebidoEm?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  observacao?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -470,7 +452,6 @@ export type ServicoUncheckedUpdateManyInput = {
   recebidoEm?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   clienteId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   contratoId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  observacao?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -496,7 +477,6 @@ export type ServicoCountOrderByAggregateInput = {
   recebidoEm?: Prisma.SortOrder
   clienteId?: Prisma.SortOrder
   contratoId?: Prisma.SortOrder
-  observacao?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -517,7 +497,6 @@ export type ServicoMaxOrderByAggregateInput = {
   recebidoEm?: Prisma.SortOrder
   clienteId?: Prisma.SortOrder
   contratoId?: Prisma.SortOrder
-  observacao?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -533,7 +512,6 @@ export type ServicoMinOrderByAggregateInput = {
   recebidoEm?: Prisma.SortOrder
   clienteId?: Prisma.SortOrder
   contratoId?: Prisma.SortOrder
-  observacao?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -644,7 +622,6 @@ export type ServicoCreateWithoutClienteInput = {
   realizadoEm: Date | string
   vencimento: Date | string
   recebidoEm?: Date | string | null
-  observacao?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   contrato?: Prisma.ContratoCreateNestedOneWithoutServicosInput
@@ -660,7 +637,6 @@ export type ServicoUncheckedCreateWithoutClienteInput = {
   vencimento: Date | string
   recebidoEm?: Date | string | null
   contratoId?: string | null
-  observacao?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -705,7 +681,6 @@ export type ServicoScalarWhereInput = {
   recebidoEm?: Prisma.DateTimeNullableFilter<"Servico"> | Date | string | null
   clienteId?: Prisma.StringNullableFilter<"Servico"> | string | null
   contratoId?: Prisma.StringNullableFilter<"Servico"> | string | null
-  observacao?: Prisma.StringNullableFilter<"Servico"> | string | null
   createdAt?: Prisma.DateTimeFilter<"Servico"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Servico"> | Date | string
 }
@@ -719,7 +694,6 @@ export type ServicoCreateWithoutContratoInput = {
   realizadoEm: Date | string
   vencimento: Date | string
   recebidoEm?: Date | string | null
-  observacao?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   cliente?: Prisma.ClienteCreateNestedOneWithoutServicosInput
@@ -735,7 +709,6 @@ export type ServicoUncheckedCreateWithoutContratoInput = {
   vencimento: Date | string
   recebidoEm?: Date | string | null
   clienteId?: string | null
-  observacao?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -776,7 +749,6 @@ export type ServicoCreateManyClienteInput = {
   vencimento: Date | string
   recebidoEm?: Date | string | null
   contratoId?: string | null
-  observacao?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -789,7 +761,6 @@ export type ServicoUpdateWithoutClienteInput = {
   realizadoEm?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   vencimento?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   recebidoEm?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  observacao?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   contrato?: Prisma.ContratoUpdateOneWithoutServicosNestedInput
@@ -805,7 +776,6 @@ export type ServicoUncheckedUpdateWithoutClienteInput = {
   vencimento?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   recebidoEm?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   contratoId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  observacao?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -820,7 +790,6 @@ export type ServicoUncheckedUpdateManyWithoutClienteInput = {
   vencimento?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   recebidoEm?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   contratoId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  observacao?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -835,7 +804,6 @@ export type ServicoCreateManyContratoInput = {
   vencimento: Date | string
   recebidoEm?: Date | string | null
   clienteId?: string | null
-  observacao?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -848,7 +816,6 @@ export type ServicoUpdateWithoutContratoInput = {
   realizadoEm?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   vencimento?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   recebidoEm?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  observacao?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   cliente?: Prisma.ClienteUpdateOneWithoutServicosNestedInput
@@ -864,7 +831,6 @@ export type ServicoUncheckedUpdateWithoutContratoInput = {
   vencimento?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   recebidoEm?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   clienteId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  observacao?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -879,7 +845,6 @@ export type ServicoUncheckedUpdateManyWithoutContratoInput = {
   vencimento?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   recebidoEm?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   clienteId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  observacao?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -897,7 +862,6 @@ export type ServicoSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs 
   recebidoEm?: boolean
   clienteId?: boolean
   contratoId?: boolean
-  observacao?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   cliente?: boolean | Prisma.Servico$clienteArgs<ExtArgs>
@@ -915,7 +879,6 @@ export type ServicoSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Exten
   recebidoEm?: boolean
   clienteId?: boolean
   contratoId?: boolean
-  observacao?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   cliente?: boolean | Prisma.Servico$clienteArgs<ExtArgs>
@@ -933,7 +896,6 @@ export type ServicoSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Exten
   recebidoEm?: boolean
   clienteId?: boolean
   contratoId?: boolean
-  observacao?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   cliente?: boolean | Prisma.Servico$clienteArgs<ExtArgs>
@@ -951,12 +913,11 @@ export type ServicoSelectScalar = {
   recebidoEm?: boolean
   clienteId?: boolean
   contratoId?: boolean
-  observacao?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type ServicoOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "numero" | "descricao" | "categoria" | "valor" | "realizadoEm" | "vencimento" | "recebidoEm" | "clienteId" | "contratoId" | "observacao" | "createdAt" | "updatedAt", ExtArgs["result"]["servico"]>
+export type ServicoOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "numero" | "descricao" | "categoria" | "valor" | "realizadoEm" | "vencimento" | "recebidoEm" | "clienteId" | "contratoId" | "createdAt" | "updatedAt", ExtArgs["result"]["servico"]>
 export type ServicoInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   cliente?: boolean | Prisma.Servico$clienteArgs<ExtArgs>
   contrato?: boolean | Prisma.Servico$contratoArgs<ExtArgs>
@@ -987,7 +948,6 @@ export type $ServicoPayload<ExtArgs extends runtime.Types.Extensions.InternalArg
     recebidoEm: Date | null
     clienteId: string | null
     contratoId: string | null
-    observacao: string | null
     createdAt: Date
     updatedAt: Date
   }, ExtArgs["result"]["servico"]>
@@ -1425,7 +1385,6 @@ export interface ServicoFieldRefs {
   readonly recebidoEm: Prisma.FieldRef<"Servico", 'DateTime'>
   readonly clienteId: Prisma.FieldRef<"Servico", 'String'>
   readonly contratoId: Prisma.FieldRef<"Servico", 'String'>
-  readonly observacao: Prisma.FieldRef<"Servico", 'String'>
   readonly createdAt: Prisma.FieldRef<"Servico", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"Servico", 'DateTime'>
 }

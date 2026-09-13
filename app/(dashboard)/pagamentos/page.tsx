@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { ArrowDownRight, ArrowUpRight, Briefcase, Building2, FileText, Scale } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ChipsFiltro, type Chip } from "@/components/dashboard/chips-filtro";
 import { ContratosTabela } from "@/components/dashboard/contratos-tabela";
 import { DespesaForm } from "@/components/dashboard/despesa-form";
 import { DespesasTabela } from "@/components/dashboard/despesas-tabela";
@@ -13,7 +12,7 @@ import { UploadContrato } from "@/components/dashboard/upload-contrato";
 import { VisaoToggle } from "@/components/dashboard/visao-toggle";
 import {
   contadoresContratos,
-  contarContratos,
+  type ContadoresContratos,
   listarClientesParaSelecao,
   listarContratosPaginado,
   listarContratosParaSelecao,
@@ -65,7 +64,7 @@ export default async function PagamentosPage({ searchParams }: PagamentosPagePro
   const busca = await searchParams;
   const aba = texto(busca, "aba") === "despesas" ? "despesas" : "recebimentos";
 
-  // A query string atual é a base dos links de paginação e dos chips.
+  // A query string atual é a base dos links de paginação.
   const params = new URLSearchParams();
   for (const [nome, valor] of Object.entries(busca)) {
     const primeiro = Array.isArray(valor) ? valor[0] : valor;
@@ -149,13 +148,13 @@ async function SecaoRecebimentos({ busca, params }: { busca: Busca; params: URLS
   // parcelas e cláusula, e o serviço avulso, que é cobrança única.
   const sub = texto(busca, "sub") === "servicos" ? "servicos" : "contratos";
 
-  // Contado uma vez só e repassado: as sub-abas e a lista pedem o mesmo número.
-  const [totalContratos, servicos] = await Promise.all([contarContratos(), contadoresServicos()]);
+  // Contados uma vez só e repassados: sub-abas e lista pedem os mesmos números.
+  const [contratos, servicos] = await Promise.all([contadoresContratos(), contadoresServicos()]);
 
   return (
     <div className="flex flex-col gap-6">
       <nav className="flex flex-wrap gap-2" aria-label="Origem do recebimento">
-        <SubAba href="/pagamentos" ativa={sub === "contratos"} contagem={totalContratos}>
+        <SubAba href="/pagamentos" ativa={sub === "contratos"} contagem={contratos.total}>
           <FileText className="h-4 w-4" aria-hidden="true" />
           Por contrato
         </SubAba>
@@ -166,7 +165,7 @@ async function SecaoRecebimentos({ busca, params }: { busca: Busca; params: URLS
       </nav>
 
       {sub === "contratos" ? (
-        <ViaContratos busca={busca} params={params} />
+        <ViaContratos busca={busca} params={params} contadores={contratos} />
       ) : (
         <ViaServicos busca={busca} params={params} contadores={servicos} />
       )}
@@ -183,7 +182,15 @@ function hrefServicos(params: URLSearchParams) {
   return `/pagamentos?${copia.toString()}`;
 }
 
-async function ViaContratos({ busca, params }: { busca: Busca; params: URLSearchParams }) {
+async function ViaContratos({
+  busca,
+  params,
+  contadores,
+}: {
+  busca: Busca;
+  params: URLSearchParams;
+  contadores: ContadoresContratos;
+}) {
   const visao = texto(busca, "visao") === "cards" ? "cards" : "tabela";
   const filtro = {
     pagina: Number(texto(busca, "pagina") ?? 1) || 1,
@@ -191,31 +198,15 @@ async function ViaContratos({ busca, params }: { busca: Busca; params: URLSearch
     tipo: (texto(busca, "tipo") ?? "todos") as TipoPagamento | "todos",
     status: (texto(busca, "status") ?? "todos") as StatusFiltro,
     ordenar: (texto(busca, "ordenar") ?? "recentes") as OrdenacaoContratos,
-    vence7: texto(busca, "vence") === "7",
   };
 
-  const [pagina, contadores] = await Promise.all([
-    listarContratosPaginado(filtro),
-    contadoresContratos(),
-  ]);
+  const pagina = await listarContratosPaginado(filtro);
 
-  const chips: Chip[] = [
-    { texto: "Todos", aplica: { status: null, vence: null }, contagem: contadores.total },
-    { texto: "Atrasados", aplica: { status: "atrasado", vence: null }, contagem: contadores.atrasados, tom: "destructive" },
-    { texto: "Vencem em 7 dias", aplica: { status: null, vence: "7" }, contagem: contadores.vencendoEm7Dias, tom: "warning" },
-    { texto: "Quitados", aplica: { status: "quitado", vence: null }, contagem: contadores.quitados },
-  ];
 
-  const temFiltro = Boolean(
-    filtro.busca || filtro.tipo !== "todos" || filtro.status !== "todos" || filtro.vence7,
-  );
+  const temFiltro = Boolean(filtro.busca || filtro.tipo !== "todos" || filtro.status !== "todos");
 
   return (
     <>
-      <p className="text-sm text-muted-foreground">
-        Honorários contratados: valor fechado, parcelas com vencimento e cláusula original para conferir.
-      </p>
-
       <DriveSync />
 
       <details className="group rounded-lg border border-border">
@@ -233,7 +224,6 @@ async function ViaContratos({ busca, params }: { busca: Busca; params: URLSearch
           <CardTitle>Contratos de honorários</CardTitle>
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
-          <ChipsFiltro chips={chips} params={params} basePath="/pagamentos" />
 
           <div className="flex flex-wrap items-center gap-2">
             <BuscaUrl placeholder="Buscar por cliente, documento ou nº..." rotulo="Buscar contrato" />
@@ -249,13 +239,14 @@ async function ViaContratos({ busca, params }: { busca: Busca; params: URLSearch
             />
             <SelectUrl
               nome="status"
-              rotulo="Filtrar por status"
-              limpa={["vence"]}
+              rotulo="Filtrar por situação"
+              className="w-48"
               opcoes={[
-                { valor: "todos", texto: "Todos os status" },
+                { valor: "todos", texto: `Todos (${contadores.total})` },
+                { valor: "atrasado", texto: `Atrasados (${contadores.atrasados})` },
+                { valor: "vence_7", texto: `Vencem em 7 dias (${contadores.vencendoEm7Dias})` },
                 { valor: "em_dia", texto: "Em dia" },
-                { valor: "atrasado", texto: "Atrasado" },
-                { valor: "quitado", texto: "Quitado" },
+                { valor: "quitado", texto: `Quitados (${contadores.quitados})` },
               ]}
             />
             <SelectUrl
@@ -302,12 +293,6 @@ async function ViaServicos({
     listarContratosParaSelecao(),
   ]);
 
-  const chips: Chip[] = [
-    { texto: "Todos", aplica: { status: null }, contagem: contadores.total },
-    { texto: "Atrasados", aplica: { status: "atrasado" }, contagem: contadores.atrasados, tom: "destructive" },
-    { texto: "A receber", aplica: { status: "a_receber" }, contagem: contadores.aReceber, tom: "warning" },
-    { texto: "Recebidos", aplica: { status: "recebido" }, contagem: contadores.recebidos },
-  ];
 
   const temFiltro = Boolean(filtro.busca || filtro.categoria !== "todos" || filtro.status !== "todos");
 
@@ -347,7 +332,6 @@ async function ViaServicos({
           <CardTitle>Serviços avulsos</CardTitle>
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
-          <ChipsFiltro chips={chips} params={params} basePath="/pagamentos" />
 
           <div className="flex flex-wrap items-center gap-2">
             <BuscaUrl placeholder="Buscar por serviço, cliente ou nº..." rotulo="Buscar serviço" />
@@ -406,7 +390,6 @@ async function SecaoDespesas({
     categoria: (texto(busca, "categoria") ?? "todos") as CategoriaDespesa | "todos",
     status: (texto(busca, "status") ?? "todos") as FiltroDespesas["status"],
     ordenar: (texto(busca, "ordenar") ?? "recentes") as OrdenacaoDespesas,
-    vence7: texto(busca, "vence") === "7",
   };
 
   const [pagina, contadores, contratos] = await Promise.all([
@@ -415,25 +398,8 @@ async function SecaoDespesas({
     doProcesso ? listarContratosParaSelecao() : Promise.resolve([]),
   ]);
 
-  const chips: Chip[] = [
-    { texto: "Todas", aplica: { status: null, vence: null }, contagem: contadores.total },
-    { texto: "Atrasadas", aplica: { status: "atrasada", vence: null }, contagem: contadores.atrasadas, tom: "destructive" },
-    { texto: "Vencem em 7 dias", aplica: { status: null, vence: "7" }, contagem: contadores.vencendoEm7Dias, tom: "warning" },
-    ...(doProcesso
-      ? [
-          {
-            texto: "A reembolsar",
-            aplica: { status: "a_reembolsar", vence: null },
-            contagem: contadores.aReembolsar,
-            tom: "warning" as const,
-          },
-        ]
-      : []),
-  ];
 
-  const temFiltro = Boolean(
-    filtro.busca || filtro.categoria !== "todos" || filtro.status !== "todos" || filtro.vence7,
-  );
+  const temFiltro = Boolean(filtro.busca || filtro.categoria !== "todos" || filtro.status !== "todos");
 
   return (
     <div className="flex flex-col gap-6">
@@ -470,16 +436,7 @@ async function SecaoDespesas({
           </div>
         </>
       ) : (
-        <>
-          <p className="text-sm text-muted-foreground">
-            Aluguel, software, tributos e contabilidade — custo fixo que não pertence a caso nenhum.
-          </p>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-            <MiniResumo rotulo="Custo fixo no mês" valor={moeda(resumo.doEscritorioNoMes)} />
-            <MiniResumo rotulo="Em aberto no mês" valor={moeda(resumo.emAbertoMes)} />
-            <MiniResumo rotulo="Já vencido e não pago" valor={moeda(resumo.atrasado)} destaque={resumo.atrasado > 0} />
-          </div>
-        </>
+        <MiniResumo rotulo="Custo fixo no mês" valor={moeda(resumo.doEscritorioNoMes)} />
       )}
 
       <details className="group rounded-lg border border-border" open={pagina.total === 0}>
@@ -497,7 +454,6 @@ async function SecaoDespesas({
           <CardTitle>{doProcesso ? "Gastos dos processos" : "Custos do escritório"}</CardTitle>
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
-          <ChipsFiltro chips={chips} params={params} basePath="/pagamentos" />
 
           <div className="flex flex-wrap items-center gap-2">
             <BuscaUrl
@@ -519,15 +475,14 @@ async function SecaoDespesas({
             <SelectUrl
               nome="status"
               rotulo="Filtrar por situação do pagamento"
-              className="w-44"
-              limpa={["vence"]}
+              className="w-48"
               // Cobre todos os valores que o filtro aceita — assim nenhuma URL
               // válida deixa o campo em branco.
               opcoes={[
                 { valor: "todos", texto: `Todas (${contadores.total})` },
                 { valor: "em_aberto", texto: `Não pagas (${contadores.emAberto})` },
                 { valor: "atrasada", texto: `Atrasadas (${contadores.atrasadas})` },
-                { valor: "prevista", texto: `A vencer (${contadores.emAberto - contadores.atrasadas})` },
+                { valor: "vence_7", texto: `Vencem em 7 dias (${contadores.vencendoEm7Dias})` },
                 { valor: "paga", texto: `Pagas (${contadores.pagas})` },
                 ...(doProcesso
                   ? [{ valor: "a_reembolsar", texto: `A reembolsar (${contadores.aReembolsar})` }]
@@ -569,9 +524,6 @@ function hrefSub(params: URLSearchParams, sub: TipoDespesa) {
 
   const status = params.get("status");
   if (status && !(sub === "escritorio" && status === "a_reembolsar")) copia.set("status", status);
-
-  const ordenar = params.get("ordenar");
-  if (ordenar) copia.set("ordenar", ordenar);
 
   return `/pagamentos?${copia.toString()}`;
 }

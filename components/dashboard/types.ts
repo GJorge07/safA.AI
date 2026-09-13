@@ -8,7 +8,6 @@ import type {
   CategoriaServico,
   OrigemRegistro,
   QuemPaga,
-  Recorrencia,
   TipoDespesa,
   TipoPagamento,
 } from "@/lib/types";
@@ -28,12 +27,11 @@ export type ContratoComRelacoes = Omit<Contrato, 'valorTotal' | 'tipoPagamento' 
 
 export type DespesaUI = Omit<
   Despesa,
-  'valor' | 'tipo' | 'categoria' | 'recorrencia' | 'quemPaga' | 'origem' | 'updatedAt'
+  'valor' | 'tipo' | 'categoria' | 'quemPaga' | 'origem' | 'updatedAt'
 > & {
   valor: number;
   tipo: TipoDespesa;
   categoria: CategoriaDespesa;
-  recorrencia: Recorrencia;
   quemPaga: QuemPaga;
   origem: OrigemRegistro;
   contrato: { id: string; numero: number; cliente: { nome: string } } | null;

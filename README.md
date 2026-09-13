@@ -105,9 +105,9 @@ Duas formas de colocar um contrato no sistema:
   (PDF, Word ou texto) e pronto.
 
 Logo abaixo fica a lista dos contratos lidos, em tabela, 20 por página — com busca por cliente,
-documento ou número, filtros de tipo e situação, e atalhos para "Atrasados", "Vencem em 7 dias" e
-"Quitados". Os filtros ficam no endereço da página: dá para mandar para alguém o link de
-*todos os atrasados*.
+documento ou número e um filtro de situação (atrasados, vencem em 7 dias, em dia, quitados) que já
+mostra a contagem de cada um. Os filtros ficam no endereço da página: dá para mandar para alguém o
+link de *todos os atrasados*.
 
 **Clique em qualquer contrato** para abrir a ficha dele. Se estiver atrasado, a primeira coisa que
 aparece é o bloco de cobrança: qual parcela venceu, há quantos dias, quanto está em aberto, e o
@@ -331,7 +331,7 @@ Cliente ──1:N──> Contrato ──1:N──> Parcela ──1:1(opcional)�
 | `/api/fluxo-caixa` | GET | previsto (por vencimento) × recebido (por data do pagamento), por mês |
 | `/api/servicos` | GET, POST | lista paginada (busca, tipo, situação, caso); registra serviço avulso |
 | `/api/servicos/[id]` | GET, PATCH, DELETE | detalhe; marca como recebido; exclui |
-| `/api/despesas` | GET, POST | lista paginada (busca, tipo, categoria, status, caso); lança despesa |
+| `/api/despesas` | GET, POST | lista paginada (busca, tipo, categoria, situação, ordenação, caso); lança despesa |
 | `/api/despesas/[id]` | GET, PATCH, DELETE | detalhe; marca como paga ou cobrada do cliente; exclui |
 | `/api/despesas/extrair` | POST | lê recibo/guia (PDF, DOCX, TXT ou `driveFileId`) e devolve rascunho — não grava |
 | `/api/contratos/[id]/opiniao` | POST | avaliação da IA sob demanda para um contrato já gravado |

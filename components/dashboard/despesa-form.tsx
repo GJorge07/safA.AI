@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
-import type { CategoriaDespesa, QuemPaga, Recorrencia, TipoDespesa } from "@/lib/types";
+import type { CategoriaDespesa, QuemPaga, TipoDespesa } from "@/lib/types";
 
 // Os atalhos cobrem o que o advogado iniciante mais lança e mais esquece: o
 // gasto pequeno de ir até o fórum. Um clique já preenche descrição e categoria.
@@ -38,12 +38,6 @@ const CATEGORIAS: Record<TipoDespesa, { valor: CategoriaDespesa; texto: string }
   ],
 };
 
-const RECORRENCIAS: { valor: Recorrencia; texto: string }[] = [
-  { valor: "unica", texto: "Única" },
-  { valor: "mensal", texto: "Mensal" },
-  { valor: "anual", texto: "Anual" },
-];
-
 const hoje = () => new Date().toISOString().slice(0, 10);
 
 // Lançamento manual é a via principal: a ida ao juizado o advogado lança em
@@ -63,7 +57,6 @@ export function DespesaForm({
   const [categoria, setCategoria] = useState<CategoriaDespesa>(CATEGORIAS[tipoInicial][0].valor);
   const [valor, setValor] = useState("");
   const [vencimento, setVencimento] = useState(hoje);
-  const [recorrencia, setRecorrencia] = useState<Recorrencia>("unica");
   const [fornecedor, setFornecedor] = useState("");
   const [contratoId, setContratoId] = useState(contratoFixo ?? "");
   const [quemPaga, setQuemPaga] = useState<QuemPaga>("advogado");
@@ -81,9 +74,6 @@ export function DespesaForm({
     if (novo === "escritorio") {
       setContratoId("");
       setQuemPaga("advogado");
-      setRecorrencia("mensal");
-    } else {
-      setRecorrencia("unica");
     }
   }
 
@@ -132,7 +122,6 @@ export function DespesaForm({
           categoria,
           valor: Number(valor.replace(",", ".")),
           vencimento,
-          recorrencia,
           fornecedor: fornecedor.trim() || null,
           contratoId: contratoId || null,
           quemPaga,
@@ -254,17 +243,7 @@ export function DespesaForm({
               </Select>
             </Campo>
           </>
-        ) : (
-          <Campo rotulo="Recorrência">
-            <Select value={recorrencia} onChange={(e) => setRecorrencia(e.target.value as Recorrencia)}>
-              {RECORRENCIAS.map((r) => (
-                <option key={r.valor} value={r.valor}>
-                  {r.texto}
-                </option>
-              ))}
-            </Select>
-          </Campo>
-        )}
+        ) : null}
       </div>
 
       {doProcesso && quemPaga === "advogado" && (

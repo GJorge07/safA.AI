@@ -53,8 +53,6 @@ export type CategoriaDespesa = CategoriaDespesaProcesso | CategoriaDespesaEscrit
 /** Quem o contrato prevê que arca com o gasto. */
 export type QuemPaga = "cliente" | "advogado";
 
-export type Recorrencia = "unica" | "mensal" | "anual";
-
 export type OrigemRegistro = "manual" | "upload" | "drive";
 
 export interface DespesaExtraida {

@@ -9,7 +9,7 @@ import {
   statusDaDespesa,
   type StatusDespesa,
 } from "@/components/dashboard/types";
-import { obterDespesa, rotuloCategoria, rotuloRecorrencia, rotuloTipo } from "@/lib/db/despesas";
+import { obterDespesa, rotuloCategoria, rotuloTipo } from "@/lib/db/despesas";
 
 export const dynamic = "force-dynamic";
 
@@ -79,7 +79,6 @@ export default async function DespesaDetalhePage({ params }: { params: Promise<{
       </div>
 
       <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <Campo rotulo="Recorrência" valor={rotuloRecorrencia[despesa.recorrencia]} />
         <Campo rotulo="Pagamento" valor={despesa.pagoEm ? `pago em ${data(despesa.pagoEm)}` : "em aberto"} />
         <Campo
           rotulo="Quem arca com o gasto"
@@ -92,7 +91,6 @@ export default async function DespesaDetalhePage({ params }: { params: Promise<{
           }
         />
         <Campo rotulo="Origem do registro" valor={rotuloOrigem[despesa.origem]} />
-        <Campo rotulo="Lançada em" valor={data(despesa.createdAt)} />
         <div className="rounded-lg border border-border bg-card p-4">
           <dt className="text-xs text-muted-foreground">Caso vinculado</dt>
           <dd className="mt-1 text-sm">

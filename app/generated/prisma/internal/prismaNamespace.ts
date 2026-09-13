@@ -961,7 +961,6 @@ export const ServicoScalarFieldEnum = {
   recebidoEm: 'recebidoEm',
   clienteId: 'clienteId',
   contratoId: 'contratoId',
-  observacao: 'observacao',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
@@ -978,7 +977,6 @@ export const DespesaScalarFieldEnum = {
   vencimento: 'vencimento',
   pagoEm: 'pagoEm',
   tipo: 'tipo',
-  recorrencia: 'recorrencia',
   fornecedor: 'fornecedor',
   contratoId: 'contratoId',
   quemPaga: 'quemPaga',
@@ -1145,20 +1143,6 @@ export type EnumTipoDespesaFieldRefInput<$PrismaModel> = FieldRefInputType<$Pris
  * Reference to a field of type 'TipoDespesa[]'
  */
 export type ListEnumTipoDespesaFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'TipoDespesa[]'>
-    
-
-
-/**
- * Reference to a field of type 'Recorrencia'
- */
-export type EnumRecorrenciaFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Recorrencia'>
-    
-
-
-/**
- * Reference to a field of type 'Recorrencia[]'
- */
-export type ListEnumRecorrenciaFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Recorrencia[]'>
     
 
 
