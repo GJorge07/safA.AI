@@ -13,10 +13,13 @@ function useAtualizarParam() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  return (nome: string, valor: string, padrao = "") => {
+  return (nome: string, valor: string, padrao = "", limpa: string[] = []) => {
     const params = new URLSearchParams(searchParams.toString());
     if (!valor || valor === padrao) params.delete(nome);
     else params.set(nome, valor);
+    // Filtros que não podem conviver com este — "pagas" e "vencem em 7 dias"
+    // juntos nunca casam com nada e devolveriam uma lista vazia sem explicação.
+    for (const outro of limpa) params.delete(outro);
     // Qualquer filtro novo volta para a primeira página — senão a pessoa cai
     // numa página 7 que não existe mais depois de filtrar.
     params.delete("pagina");
@@ -81,12 +84,15 @@ export function SelectUrl({
   padrao = "todos",
   opcoes,
   className = "w-40",
+  limpa,
 }: {
   nome: string;
   rotulo: string;
   padrao?: string;
   opcoes: { valor: string; texto: string }[];
   className?: string;
+  /** Parâmetros conflitantes a remover quando este mudar. */
+  limpa?: string[];
 }) {
   const searchParams = useSearchParams();
   const atualizar = useAtualizarParam();
@@ -94,7 +100,7 @@ export function SelectUrl({
   return (
     <Select
       value={searchParams.get(nome) ?? padrao}
-      onChange={(e) => atualizar(nome, e.target.value, padrao)}
+      onChange={(e) => atualizar(nome, e.target.value, padrao, limpa)}
       className={className}
       aria-label={rotulo}
     >

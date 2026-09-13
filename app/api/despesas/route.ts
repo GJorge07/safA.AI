@@ -75,6 +75,7 @@ export async function GET(request: Request) {
       tipo: (url.searchParams.get("tipo") as TipoDespesa | "todos" | null) ?? undefined,
       categoria: (url.searchParams.get("categoria") as CategoriaDespesa | "todos" | null) ?? undefined,
       status: (url.searchParams.get("status") as FiltroDespesas["status"]) ?? undefined,
+      ordenar: (url.searchParams.get("ordenar") as FiltroDespesas["ordenar"]) ?? undefined,
       recorrencia: (url.searchParams.get("recorrencia") as Recorrencia | "todos" | null) ?? undefined,
       contratoId: url.searchParams.get("contratoId") ?? undefined,
     };

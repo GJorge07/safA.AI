@@ -26,6 +26,8 @@ import {
   listarDespesasPaginado,
   resumoDespesasDoMes,
   rotuloCategoria,
+  type OrdenacaoDespesas,
+  type ResumoDespesas,
   CATEGORIAS_ESCRITORIO,
   CATEGORIAS_PROCESSO,
   type FiltroDespesas,
@@ -36,6 +38,7 @@ import {
   resumoServicosDoMes,
   rotuloCategoriaServico,
   CATEGORIAS_SERVICO,
+  type ContadoresServicos,
   type FiltroServicos,
 } from "@/lib/db/servicos";
 import type { CategoriaDespesa, CategoriaServico, TipoDespesa, TipoPagamento } from "@/lib/types";
@@ -124,7 +127,7 @@ export default async function PagamentosPage({ searchParams }: PagamentosPagePro
       {aba === "recebimentos" ? (
         <SecaoRecebimentos busca={busca} params={params} />
       ) : (
-        <SecaoDespesas busca={busca} params={params} />
+        <SecaoDespesas busca={busca} params={params} resumo={despesasResumo} />
       )}
     </div>
   );
@@ -146,33 +149,38 @@ async function SecaoRecebimentos({ busca, params }: { busca: Busca; params: URLS
   // parcelas e cláusula, e o serviço avulso, que é cobrança única.
   const sub = texto(busca, "sub") === "servicos" ? "servicos" : "contratos";
 
+  // Contado uma vez só e repassado: as sub-abas e a lista pedem o mesmo número.
+  const [totalContratos, servicos] = await Promise.all([contarContratos(), contadoresServicos()]);
+
   return (
     <div className="flex flex-col gap-6">
-      <SubAbasRecebimento sub={sub} />
+      <nav className="flex flex-wrap gap-2" aria-label="Origem do recebimento">
+        <SubAba href="/pagamentos" ativa={sub === "contratos"} contagem={totalContratos}>
+          <FileText className="h-4 w-4" aria-hidden="true" />
+          Por contrato
+        </SubAba>
+        <SubAba href={hrefServicos(params)} ativa={sub === "servicos"} contagem={servicos.total}>
+          <Briefcase className="h-4 w-4" aria-hidden="true" />
+          Serviços avulsos
+        </SubAba>
+      </nav>
+
       {sub === "contratos" ? (
         <ViaContratos busca={busca} params={params} />
       ) : (
-        <ViaServicos busca={busca} params={params} />
+        <ViaServicos busca={busca} params={params} contadores={servicos} />
       )}
     </div>
   );
 }
 
-async function SubAbasRecebimento({ sub }: { sub: "contratos" | "servicos" }) {
-  const [contratos, servicos] = await Promise.all([contarContratos(), contadoresServicos()]);
-
-  return (
-    <nav className="flex flex-wrap gap-2" aria-label="Origem do recebimento">
-      <SubAba href="/pagamentos" ativa={sub === "contratos"} contagem={contratos}>
-        <FileText className="h-4 w-4" aria-hidden="true" />
-        Por contrato
-      </SubAba>
-      <SubAba href="/pagamentos?sub=servicos" ativa={sub === "servicos"} contagem={servicos.total}>
-        <Briefcase className="h-4 w-4" aria-hidden="true" />
-        Serviços avulsos
-      </SubAba>
-    </nav>
-  );
+// Mesma regra das despesas: a situação do recebimento vale nos dois lados, o
+// resto é específico de contrato.
+function hrefServicos(params: URLSearchParams) {
+  const copia = new URLSearchParams({ sub: "servicos" });
+  const status = params.get("status");
+  if (status === "atrasado") copia.set("status", "atrasado");
+  return `/pagamentos?${copia.toString()}`;
 }
 
 async function ViaContratos({ busca, params }: { busca: Busca; params: URLSearchParams }) {
@@ -242,6 +250,7 @@ async function ViaContratos({ busca, params }: { busca: Busca; params: URLSearch
             <SelectUrl
               nome="status"
               rotulo="Filtrar por status"
+              limpa={["vence"]}
               opcoes={[
                 { valor: "todos", texto: "Todos os status" },
                 { valor: "em_dia", texto: "Em dia" },
@@ -270,7 +279,15 @@ async function ViaContratos({ busca, params }: { busca: Busca; params: URLSearch
   );
 }
 
-async function ViaServicos({ busca, params }: { busca: Busca; params: URLSearchParams }) {
+async function ViaServicos({
+  busca,
+  params,
+  contadores,
+}: {
+  busca: Busca;
+  params: URLSearchParams;
+  contadores: ContadoresServicos;
+}) {
   const filtro: FiltroServicos = {
     pagina: Number(texto(busca, "pagina") ?? 1) || 1,
     busca: texto(busca, "busca"),
@@ -278,9 +295,8 @@ async function ViaServicos({ busca, params }: { busca: Busca; params: URLSearchP
     status: (texto(busca, "status") ?? "todos") as FiltroServicos["status"],
   };
 
-  const [pagina, contadores, resumo, clientes, contratos] = await Promise.all([
+  const [pagina, resumo, clientes, contratos] = await Promise.all([
     listarServicosPaginado(filtro),
-    contadoresServicos(),
     resumoServicosDoMes(),
     listarClientesParaSelecao(),
     listarContratosParaSelecao(),
@@ -347,6 +363,17 @@ async function ViaServicos({ busca, params }: { busca: Busca; params: URLSearchP
                 })),
               ]}
             />
+            <SelectUrl
+              nome="status"
+              rotulo="Filtrar por situação do recebimento"
+              className="w-44"
+              opcoes={[
+                { valor: "todos", texto: `Todos (${contadores.total})` },
+                { valor: "a_receber", texto: `A receber (${contadores.aReceber})` },
+                { valor: "atrasado", texto: `Atrasados (${contadores.atrasados})` },
+                { valor: "recebido", texto: `Recebidos (${contadores.recebidos})` },
+              ]}
+            />
           </div>
 
           <ServicosTabela pagina={pagina} params={params} temFiltro={temFiltro} />
@@ -357,7 +384,16 @@ async function ViaServicos({ busca, params }: { busca: Busca; params: URLSearchP
 }
 
 
-async function SecaoDespesas({ busca, params }: { busca: Busca; params: URLSearchParams }) {
+async function SecaoDespesas({
+  busca,
+  params,
+  resumo,
+}: {
+  busca: Busca;
+  params: URLSearchParams;
+  // Vem pronto da página: era a mesma consulta rodando duas vezes por render.
+  resumo: ResumoDespesas;
+}) {
   // A separação que o advogado precisa enxergar: gasto de caso (que come a
   // margem daquele processo) x custo fixo do escritório.
   const sub: TipoDespesa = texto(busca, "sub") === "escritorio" ? "escritorio" : "processo";
@@ -369,13 +405,13 @@ async function SecaoDespesas({ busca, params }: { busca: Busca; params: URLSearc
     tipo: sub,
     categoria: (texto(busca, "categoria") ?? "todos") as CategoriaDespesa | "todos",
     status: (texto(busca, "status") ?? "todos") as FiltroDespesas["status"],
+    ordenar: (texto(busca, "ordenar") ?? "recentes") as OrdenacaoDespesas,
     vence7: texto(busca, "vence") === "7",
   };
 
-  const [pagina, contadores, resumo, contratos] = await Promise.all([
+  const [pagina, contadores, contratos] = await Promise.all([
     listarDespesasPaginado(filtro),
     contadoresDespesas(new Date(), sub),
-    resumoDespesasDoMes(),
     doProcesso ? listarContratosParaSelecao() : Promise.resolve([]),
   ]);
 
@@ -480,6 +516,35 @@ async function SecaoDespesas({ busca, params }: { busca: Busca; params: URLSearc
                 })),
               ]}
             />
+            <SelectUrl
+              nome="status"
+              rotulo="Filtrar por situação do pagamento"
+              className="w-44"
+              limpa={["vence"]}
+              // Cobre todos os valores que o filtro aceita — assim nenhuma URL
+              // válida deixa o campo em branco.
+              opcoes={[
+                { valor: "todos", texto: `Todas (${contadores.total})` },
+                { valor: "em_aberto", texto: `Não pagas (${contadores.emAberto})` },
+                { valor: "atrasada", texto: `Atrasadas (${contadores.atrasadas})` },
+                { valor: "prevista", texto: `A vencer (${contadores.emAberto - contadores.atrasadas})` },
+                { valor: "paga", texto: `Pagas (${contadores.pagas})` },
+                ...(doProcesso
+                  ? [{ valor: "a_reembolsar", texto: `A reembolsar (${contadores.aReembolsar})` }]
+                  : []),
+              ]}
+            />
+            <SelectUrl
+              nome="ordenar"
+              rotulo="Ordenar despesas"
+              padrao="recentes"
+              className="w-44"
+              opcoes={[
+                { valor: "recentes", texto: "Mais recentes" },
+                { valor: "maior_valor", texto: "Maior valor" },
+                { valor: "vencimento", texto: "Vence primeiro" },
+              ]}
+            />
           </div>
 
           <DespesasTabela
@@ -494,12 +559,20 @@ async function SecaoDespesas({ busca, params }: { busca: Busca; params: URLSearc
   );
 }
 
-// Trocar de sub-aba zera filtros de categoria e página: as categorias de
-// processo não existem no escritório.
+// Trocar de sub-aba zera categoria e página — as categorias de processo não
+// existem no escritório — mas preserva a situação do pagamento, que vale nos
+// dois lados. A exceção é "a reembolsar", que só existe em gasto de processo.
 function hrefSub(params: URLSearchParams, sub: TipoDespesa) {
   const copia = new URLSearchParams();
   copia.set("aba", "despesas");
   if (sub === "escritorio") copia.set("sub", "escritorio");
+
+  const status = params.get("status");
+  if (status && !(sub === "escritorio" && status === "a_reembolsar")) copia.set("status", status);
+
+  const ordenar = params.get("ordenar");
+  if (ordenar) copia.set("ordenar", ordenar);
+
   return `/pagamentos?${copia.toString()}`;
 }
 
