@@ -90,7 +90,7 @@ function PaginaLink({
 }) {
   const classe = cn(
     "flex h-7 min-w-7 items-center justify-center rounded-md border border-border px-2 transition-colors",
-    atual ? "border-primary bg-primary text-primary-foreground" : "hover:bg-card hover:text-foreground",
+    atual ? "border-primary bg-primary text-primary-foreground" : "hover:bg-hover hover:text-foreground",
   );
 
   if (desabilitado) {

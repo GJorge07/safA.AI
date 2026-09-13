@@ -20,7 +20,7 @@ const paraEnumDb = { fixo: "FIXO", exito: "EXITO", misto: "MISTO" } as const;
 const COM_VOLUME = process.env.SEED_VOLUME !== "0";
 const QUANTIDADE_CLIENTES = COM_VOLUME ? 120 : 0;
 const QUANTIDADE_CONTRATOS = COM_VOLUME ? 180 : 0;
-const QUANTIDADE_DESPESAS = COM_VOLUME ? 60 : 8;
+const QUANTIDADE_DESPESAS = COM_VOLUME ? 140 : 16;
 const QUANTIDADE_SERVICOS = COM_VOLUME ? 45 : 5;
 
 // mulberry32: PRNG minúsculo e determinístico. Semente fixa para o seed gerar
@@ -306,7 +306,10 @@ async function semearDespesas(contratoIds: string[], hoje: Date) {
     // Só um quarto é custo fixo de escritório: o volume do dia a dia de quem
     // está começando é gasto de processo.
     const doEscritorio = i % 4 === 0;
-    const mes = inteiro(-3, 2);
+    // Cobre a janela inteira do gráfico: com um intervalo curto, metade da
+    // série aparecia zerada — e zero no gráfico se lê como "não gastei",
+    // não como "não tenho o dado".
+    const mes = inteiro(-9, 3);
     const vencimento = dia(hoje.getUTCFullYear(), hoje.getUTCMonth() + mes, escolher([5, 10, 15, 20, 25]));
     const jaVenceu = vencimento < hoje;
 

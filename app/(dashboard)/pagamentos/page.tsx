@@ -547,7 +547,7 @@ function SubAba({
         "flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-medium transition-colors",
         ativa
           ? "border-primary bg-accent text-accent-foreground"
-          : "border-border text-muted-foreground hover:text-foreground",
+          : "border-border text-muted-foreground hover:border-input hover:bg-hover hover:text-foreground",
       )}
     >
       {children}
@@ -566,7 +566,7 @@ function Aba({ href, ativa, children }: { href: string; ativa: boolean; children
         "-mb-px border-b-2 px-4 py-2 text-sm font-medium transition-colors",
         ativa
           ? "border-primary text-foreground"
-          : "border-transparent text-muted-foreground hover:text-foreground",
+          : "border-transparent text-muted-foreground hover:border-input hover:text-foreground",
       )}
     >
       {children}

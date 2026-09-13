@@ -37,7 +37,7 @@ export function ThemeToggle() {
   return (
     <button
       onClick={alternar}
-      className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-card hover:text-foreground"
+      className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-hover-strong hover:text-foreground"
       aria-label={tema === "dark" ? "Mudar para tema claro" : "Mudar para tema escuro"}
     >
       {tema === "dark" ? <Sun className="h-4 w-4" aria-hidden="true" /> : <Moon className="h-4 w-4" aria-hidden="true" />}

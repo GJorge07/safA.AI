@@ -22,7 +22,7 @@ function tempoParado(dias: number) {
 
 // A única lista do Início. Não navega a carteira — mostra o dinheiro parado,
 // do mais antigo para o mais recente, com um caminho direto para resolver.
-export function PrecisaDeVoce({ acoes }: { acoes: AcaoPendente[] }) {
+export function Pendencias({ acoes }: { acoes: AcaoPendente[] }) {
   if (acoes.length === 0) {
     return (
       <div className="flex flex-col items-center gap-2 rounded-2xl bg-accent/60 p-8 text-center">
@@ -39,7 +39,7 @@ export function PrecisaDeVoce({ acoes }: { acoes: AcaoPendente[] }) {
     <section className="rounded-2xl bg-accent/60 p-5">
       {/* Sem total no cabeçalho: seria a soma só do que está listado, e ficaria
           colado no card "Em atraso agora", que traz o valor cheio. */}
-      <h2 className="text-sm font-semibold">Precisa de você</h2>
+      <h2 className="text-sm font-semibold">Pendências</h2>
       <p className="mb-3 text-[11px] text-muted-foreground">
         Parcelas vencidas, serviços não recebidos e o que você adiantou e não cobrou.
       </p>
@@ -51,7 +51,7 @@ export function PrecisaDeVoce({ acoes }: { acoes: AcaoPendente[] }) {
             <li key={acao.id} className="border-t border-border/60 first:border-t-0">
               <Link
                 href={acao.href}
-                className="group flex items-center gap-3 py-2.5 transition-opacity hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                className="group -mx-2 flex items-center gap-3 rounded-md px-2 py-2.5 transition-colors hover:bg-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               >
                 <Icone className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
                 <span className="min-w-0 flex-1">
