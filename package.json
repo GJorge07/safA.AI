@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "prisma generate && next build --webpack",
+    "build": "prisma generate && next build --webpack && node scripts/copiar-engine-prisma.mjs",
     "start": "next start",
     "lint": "eslint",
     "test": "npm run test:api && npm run test:ai",
