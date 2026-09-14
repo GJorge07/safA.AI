@@ -32,7 +32,14 @@ export function estaEmAberto(parcela: ParcelaComPagamento): boolean {
   return !parcela.pagamento && !estaBaixada(parcela);
 }
 
-export type ContratoComRelacoes = Omit<Contrato, 'valorTotal' | 'tipoPagamento' | 'origem' | 'updatedAt'> & {
+// contextoAnalise fica de fora de propósito: é um JSON de análise que só o
+// servidor lê (para avaliar o contrato e comparar com o perfil do advogado).
+// Mandá-lo para o navegador engordaria o payload de cada contrato sem que
+// nenhuma tela use o dado.
+export type ContratoComRelacoes = Omit<
+  Contrato,
+  'valorTotal' | 'tipoPagamento' | 'origem' | 'updatedAt' | 'contextoAnalise'
+> & {
   valorTotal: number;
   tipoPagamento: TipoPagamento;
   origem: OrigemRegistro;
