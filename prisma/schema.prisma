@@ -1,7 +1,11 @@
 generator client {
   provider      = "prisma-client"
   output        = "../app/generated/prisma"
-  binaryTargets = ["native", "windows"]
+  // "native" cobre a máquina de quem desenvolve; "windows" existe porque o
+  // client é versionado e parte do time gera no Windows. "rhel-openssl-3.0.x"
+  // é o runtime das funções da Vercel — sem ele, o deploy sobe e só quebra na
+  // primeira consulta, com "could not locate the Query Engine".
+  binaryTargets = ["native", "windows", "rhel-openssl-3.0.x"]
 }
 
 datasource db {
